@@ -16,7 +16,7 @@ RunJob(CronFile *file, CronLine *line)
 {
     char mailFile[128];
     int mailFd;
-
+     
     line->cl_Pid = 0;
     line->cl_MailFlag = 0;
 
@@ -51,20 +51,12 @@ RunJob(CronFile *file, CronLine *line)
 	 */
 
 	if (ChangeUser(file->cf_UserName, 1) < 0) {
-	    log9("ChangeUser failed (%s): %s\n", file->cf_UserName, line->cl_Shell);
+	 log_err("ChangeUser failed (%s): %s\n", file->cf_UserName, line->cl_Shell);
 	    exit(0);
 	}
 
 	if (DebugOpt)
 	    logn(5, "Child Running %s\n", line->cl_Shell);
-
-	/*
-	 * Setup close-on-exec descriptor in case exec fails
-	 */
-
-	dup2(2, 8);
-	fcntl(8, F_SETFD, 1);
-	fclose(stderr);
 
 	/*
 	 * stdin is already /dev/null, setup stdout and stderr
@@ -75,19 +67,13 @@ RunJob(CronFile *file, CronLine *line)
 	    dup2(mailFd, 2);
 	    close(mailFd);
 	} else {
-	    /*
-	     * note: 8 is a descriptor, not a log level
-	     */
-	    logfd(8, "unable to create mail file user %s file %s, output to /dev/null\n",
+	    log_err("unable to create mail file user %s file %s, output to /dev/null\n",
 	        file->cf_UserName,
 	        mailFile
 	    );
 	}
 	execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL, NULL);
-	/*
-	 * note: 8 is a descriptor, not a log level
-	 */
-	logfd(8, "unable to exec, user %s cmd /bin/sh -c %s\n", 
+	log_err("unable to exec, user %s cmd /bin/sh -c %s\n", 
 	    file->cf_UserName,
 	    line->cl_Shell
 	);
@@ -97,7 +83,7 @@ RunJob(CronFile *file, CronLine *line)
 	/*
 	 * PARENT, FORK FAILED
 	 */
-        log9("couldn't fork, user %s\n", file->cf_UserName);
+     log_err("couldn't fork, user %s\n", file->cf_UserName);
         line->cl_Pid = 0;
         remove(mailFile);
     } else {
@@ -166,6 +152,7 @@ EndJob(CronFile *file, CronLine *line)
     if (mailFd < 0) {
         return;
     }
+
     if (fstat(mailFd, &sbuf) < 0 || 
         sbuf.st_uid != DaemonUid || 
         sbuf.st_nlink != 0 ||
@@ -187,18 +174,9 @@ EndJob(CronFile *file, CronLine *line)
 	 */
 
 	if (ChangeUser(file->cf_UserName, 1) < 0) {
-	    log9("ChangeUser failed (%s), unable to send mail\n", file->cf_UserName);
+	    log_err("ChangeUser failed (%s), unable to send mail\n", file->cf_UserName);
 	    exit(0);
 	}
-
-	/*
-	 * create close-on-exec log descriptor in case exec fails
-	 */
-
-	dup2(2, 8);
-	fcntl(8, F_SETFD, 1);
-
-	fclose(stderr);
 
 	/*
 	 * run sendmail with mail file as standard input, only if
@@ -210,10 +188,7 @@ EndJob(CronFile *file, CronLine *line)
 	close(mailFd);
 
 	execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
-	/*
-	 * note: 8 is a file descriptor
-	 */
-	logfd(8, "unable to exec %s %s, user %s, output to sink null\n", 
+	log_err("unable to exec %s %s, user %s, output to sink null\n", 
 	    SENDMAIL,
 	    SENDMAIL_ARGS,
 	    file->cf_UserName
@@ -223,7 +198,7 @@ EndJob(CronFile *file, CronLine *line)
 	/*
 	 * PARENT, FORK FAILED
 	 */
-	log9("unable to fork, user %s", file->cf_UserName);
+	log_err("unable to fork, user %s", file->cf_UserName);
 	line->cl_Pid = 0;
     } else {
 	/*

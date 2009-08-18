@@ -10,11 +10,13 @@
 
 Prototype void logn(int level, const char *ctl, ...);
 Prototype void log9(const char *ctl, ...);
-Prototype void logfd(int fd, const char *ctl, ...);
+Prototype void log_err(const char *ctl, ...);
 Prototype void fdprintf(int fd, const char *ctl, ...);
-Prototype int ChangeUser(const char *user, short dochdir);
-Prototype void vlog(int level, int fd, const char *ctl, va_list va);
-Prototype int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate);
+Prototype int  ChangeUser(const char *user, short dochdir);
+Prototype void vlog(int level, int MLOG_LEVEL, const char *ctl, va_list va);
+Prototype char *xx_strdup(const char *);
+Prototype void startlogger(void);
+Prototype void initsignals(void);
 
 void 
 log9(const char *ctl, ...)
@@ -22,7 +24,7 @@ log9(const char *ctl, ...)
     va_list va;
 
     va_start(va, ctl);
-    vlog(9, 2, ctl, va);
+    vlog(9, LOG_WARNING, ctl, va);
     va_end(va);
 }
 
@@ -32,17 +34,17 @@ logn(int level, const char *ctl, ...)
     va_list va;
 
     va_start(va, ctl);
-    vlog(level, 2, ctl, va);
+    vlog(level, LOG_NOTICE, ctl, va);
     va_end(va);
 }
 
 void 
-logfd(int fd, const char *ctl, ...)
+log_err(const char *ctl, ...)
 {
     va_list va;
 
     va_start(va, ctl);
-    vlog(9, fd, ctl, va);
+    vlog(20, LOG_ERR, ctl, va);
     va_end(va);
 }
 
@@ -58,34 +60,29 @@ fdprintf(int fd, const char *ctl, ...)
     va_end(va);
 }
 
-void
-vlog(int level, int fd, const char *ctl, va_list va)
-{
+  void
+vlog(int level, int MLOG_LEVEL, const char *ctl, va_list va)
+  {
     char buf[2048];
-    short n;
-    static short useDate = 1;
-
-    if (level >= LogLevel) {
-        write(fd, buf, n = slog(buf, ctl, sizeof(buf), va, useDate));
-	useDate = (n && buf[n-1] == '\n');
-    }
-}
-
-int
-slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
-{
-    time_t t = time(NULL);
-    struct tm *tp = localtime(&t);
-
-    buf[0] = 0;
-    if (useDate)
-	strftime(buf, 128, "%d-%b-%Y %H:%M  ", tp);
-    vsnprintf(buf + strlen(buf), nmax, ctl, va);
-    return(strlen(buf));
-}
-
-int
-ChangeUser(const char *user, short dochdir)
+    int  logfd;
+  
+      if (level >= LogLevel) {
+	vsnprintf(buf,sizeof(buf), ctl, va);
+	if (DebugOpt) fprintf(stderr,"%s",buf);
+	else
+	    if (LoggerOpt == 0) syslog(MLOG_LEVEL, "%s", buf);
+	    else {
+		if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0){
+		    write(logfd, buf, strlen(buf));
+		    close(logfd);
+		} else
+		    fprintf(stderr,"Can't open log file. Err: %s",strerror(errno));
+	    }
+      }
+  }
+  
+  int
+  ChangeUser(const char *user, short dochdir)
 {
     struct passwd *pas;
 
@@ -133,7 +130,7 @@ ChangeUser(const char *user, short dochdir)
 #if 0
 
 char *
-strdup(const char *str)
+xx_strdup(const char *str)
 {
     char *ptr = malloc(strlen(str) + 1);
 
@@ -143,3 +140,22 @@ strdup(const char *str)
 }
 
 #endif
+
+void
+startlogger (void) {
+int logfd;
+
+    if (LoggerOpt == 0)
+	openlog("crond",LOG_CONS|LOG_PID,LOG_CRON);
+    else {
+	if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0)
+	    close(logfd);
+	else
+	    printf("Failed to open logfile '%s' reason: %s",LogFile,strerror(errno));
+    }
+}
+
+void
+initsignals (void) {
+    signal(SIGHUP,SIG_IGN);
+}

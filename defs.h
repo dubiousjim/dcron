@@ -22,6 +22,9 @@
 #include <pwd.h>
 #include <unistd.h>
 #include <grp.h>
+#include <syslog.h>
+#include <signal.h>
+#include <getopt.h>
 #include <err.h>
 
 #define Prototype extern
@@ -34,18 +37,17 @@
 #define SCRONTABS	"/etc/cron.d"
 #endif
 #ifndef TMPDIR
-#define TMPDIR		"/tmp"
+#define TMPDIR		"/var/spool/cron"
+#endif
+#ifndef LOG_FILE
+#define LOG_FILE	"/var/log/cron"
 #endif
 #ifndef OPEN_MAX
 #define OPEN_MAX	256
 #endif
 
 #ifndef SENDMAIL
-#if defined(__DragonFly__)
 #define SENDMAIL	"/usr/sbin/sendmail"
-#else
-#define SENDMAIL	"/usr/sbin/sendmail"
-#endif
 #endif
 
 #ifndef SENDMAIL_ARGS

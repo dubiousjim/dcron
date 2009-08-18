@@ -15,16 +15,20 @@
 Prototype short DebugOpt;
 Prototype short LogLevel;
 Prototype short ForegroundOpt;
+Prototype short LoggerOpt;
 Prototype const char *CDir;
 Prototype const char *SCDir;
+Prototype char  *LogFile;
 Prototype uid_t DaemonUid;
 Prototype int InSyncFileRoot;
 
 short DebugOpt;
 short LogLevel = 8;
-short ForegroundOpt;
+short ForegroundOpt = 0;
+short LoggerOpt;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
+char  *LogFile = LOG_FILE;
 uid_t DaemonUid;
 int InSyncFileRoot;
 
@@ -39,60 +43,59 @@ main(int ac, char **av)
 
     DaemonUid = getuid();
 
-    for (i = 1; i < ac; ++i) {
-        char *ptr = av[i];
-
-        if (*ptr == '-') {
-	    ptr += 2;
-
-	    switch(ptr[-1]) {
-	    case 'l':
-		LogLevel = (*ptr) ? strtol(ptr, NULL, 0) : 1;
-		continue;
+    opterr = 0;
+  
+    while ((i = getopt(ac,av,"d:l:L:fbSc:")) != EOF) {
+ 	switch (i) {
+  	    case 'l':
+		LogLevel = atoi(optarg);
+		break;
 	    case 'd':
-		DebugOpt = (*ptr) ? strtol(ptr, NULL, 0) : 1;
+		DebugOpt = atoi(optarg);
 		LogLevel = 0;
 		/* fall through */
-	    case 'f':
-		ForegroundOpt = 1;
-		continue;
-	    case 'b':
-	        ForegroundOpt = 0;
-	        continue;
-	    case 'c':
-		CDir = (*ptr) ? ptr : av[++i];
-		continue;
-	    case 's':
-		SCDir = (*ptr) ? ptr : av[++i];
-		continue;
-	    default:
 		break;
-	    }
-	}
-	break;	/* error */
+		case 'f':
+  		ForegroundOpt = 1;
+		break;
+  	    case 'b':
+  	        ForegroundOpt = 0;
+ 	        break;
+ 	    case 'S':
+ 		LoggerOpt = 0;
+ 		break;
+ 	    case 'L':
+ 		LoggerOpt = 1;
+ 		if (*optarg != 0) LogFile = optarg;
+ 		break;
+ 	    case 'c':
+ 		if (*optarg != 0) CDir = optarg;
+ 		break;
+        case 's':
+			SCDir = (*ptr) ? ptr : av[++i];
+			continue;
+  	    default:
+ 		/*
+ 		* check for parse error
+ 		*/
+ 		printf("dcron " VERSION "\n");
+ 		printf("crond -d [#] -l [#] -S -L logfile -f -b -c dir -s dir\n");
+ 		printf("-d num\tdebug level\n-l num\tlog level (8 - default)\n-S\tlog to syslod (default)\n");
+ 		printf("-L file\tlog to file\n-f\trun in foreground\n");
+ 		printf("-b\trun in background (default)\n-c dir\tworking dir\n");
+ 		exit(1);
     }
 
     /*
-     * check for parse error
-     */
-
-    if (i != ac) {
-        if (i > ac)
-            puts("expected argument for option");
-	printf("dcron " VERSION "\n");
-	printf("dcron -d[#] -l[#] -f -b -c dir -s dir\n");
-	exit(1);
-    }
-
-    /*
-     * close stdin and stdout (stderr normally redirected by caller).
-     * close unused descriptors
+     * close stdin and stdout, stderr.
+     * close unused descriptors -  don't need.
      * optional detach from controlling terminal
      */
 
     fclose(stdin);
     fclose(stdout);
-
+    fclose(stderr);
+    
     i = open("/dev/null", O_RDWR);
     if (i < 0) {
         perror("open: /dev/null:");
@@ -100,15 +103,14 @@ main(int ac, char **av)
     }
     dup2(i, 0);
     dup2(i, 1);
-
-    for (i = 3; i < OPEN_MAX; ++i) {
-        close(i);
-    }
+    dup2(i, 2);
 
     if (ForegroundOpt == 0) {
         int fd;
         int pid;
-
+	if (setsid() < 0)
+	    perror("setsid");
+	    
         if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
             ioctl(fd, TIOCNOTTY, 0);
             close(fd);
@@ -124,12 +126,15 @@ main(int ac, char **av)
             exit(0);
     }
 
+    (void)startlogger();
+    (void)initsignals();
+
     /* 
      * main loop - synchronize to 1 second after the minute, minimum sleep
      *             of 1 second.
      */
 
-    log9("%s " VERSION " dillon, started\n", av[0]);
+    log(9, "%s " VERSION " dillon, started, loglevel %d\n", av[0], LogLevel);
     SynchronizeDir(CDir, NULL, 1);
     SynchronizeDir(SCDir, "root", 1);
 
@@ -174,7 +179,7 @@ main(int ac, char **av)
 	        logn(5, "Wakeup dt=%d\n", dt);
 	    if (dt < -60*60 || dt > 60*60) {
 	        t1 = t2;
-	        log9("time disparity of %d minutes detected\n", dt / 60);
+	        log(9, "time disparity of %d minutes detected\n", dt / 60);
 	    } else if (dt > 0) {
 	        TestJobs(t1, t2);
 	        RunJobs();
