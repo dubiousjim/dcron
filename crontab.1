@@ -1,0 +1,116 @@
+.\" Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+.\" May be distributed under the GNU General Public License
+.TH CRONTAB 1 "1 May 1994"
+.SH NAME
+crontab \- manipulate per-user crontabs (Dillon's Cron)
+.SH SYNOPSIS
+.B crontab file [-u user]
+\- replace crontab from file
+
+.B crontab - [-u user]
+\- replace crontab from stdin
+
+.B crontab -l [user]
+\- list crontab for user
+
+.B crontab -e [user]
+\- edit crontab for user
+
+.B crontab -d [user]
+\- delete crontab for user
+
+.B crontab -c dir
+\- specify crontab directory
+.SH DESCRIPTION
+.B crontab
+manipulates the crontab for a particular user.  Only the superuser may 
+specify a different user and/or crontab directory.  Generally the -e
+option is used to edit your crontab.  crontab will use /usr/bin/vi or
+the editor specified by your VISUAL environment variable to edit the
+crontab.
+.PP
+Unlike other crond/crontabs, this crontab does not try to do everything
+under the sun.  Frankly, a shell script is much more able to manipulate
+the environment then cron and I see no particular reason to use the
+user's shell (from his password entry) to run cron commands when this
+requires special casing of non-user crontabs, such as those for UUCP.
+When a crontab command is run, this crontab runs it with /bin/sh and
+sets up only three environment variables: USER, HOME, and SHELL.
+.PP
+crond automatically detects changes in the time.  Reverse-indexed
+time changes less then an hour old will NOT re-run crontab commands
+already issued in the recovered period. Forward-indexed changes less 
+then an hour
+into the future will issue missed commands exactly once.  Changes
+greater then an hour into the past or future cause crond to resynchronize
+and not issue missed commands.  No attempt will be made to issue commands
+lost due to a reboot, and commands are not reissued if the previously
+issued command is still running.  For example, if you have a crontab
+command 'sleep 70' that you wish to run once a minute, cron will only be 
+able to issue the command once every two minutes.  If you do not like
+this feature, you can run your commands in the background with an '&'.
+.PP
+The crontab format is roughly similar to that used by vixiecron, but
+without complex features.  Individual fields may contain a time, a 
+time range, a time range with a skip factor, a symbolic range for the
+day of week and month in year, and additional subranges delimited with
+commas.  Blank lines in the crontab or lines that begin with a hash (#)
+are ignored.  If you specify both a day in the month and a day of week,
+the result is effectively ORd... the crontab entry will be run on the
+specified day of week and on the specified day in the month.
+
+.sp 1
+.br
+# MIN HOUR DAY MONTH DAYOFWEEK   COMMAND
+.br
+# at 6:10 a.m. every day
+.br
+10 6 * * * date
+
+.br
+# every two hours at the top of the hour
+.br
+0 */2 * * * date
+
+.br
+# every two hours from 11p.m. to 7a.m., and at 8a.m.
+.br
+0 23-7/2,8 * * * date
+
+.br
+# at 11:00 a.m. on the 4th and on every mon, tue, wed
+.br
+0 11 4 * mon-wed date
+
+.br
+# 4:00 a.m. on january 1st
+.br
+0 4 1 jan * date
+
+.br
+# once an hour, all output appended to log file
+.br
+0 4 1 jan * date >>/var/log/messages 2>&1
+
+The command portion of the line is run with 
+.B /bin/sh \-c <command>
+and may therefore contain any valid bourne shell command.  A common
+practice is to run your command with
+.B exec
+to keep the process table uncluttered.  It is also common to redirect
+output to a log file.  If you do not, and the command generates output
+on stdout or stderr, the result will be mailed to the user in question.
+If you use this mechanism for special users, such as UUCP, you may want
+to create an alias for the user to direct the mail to someone else, such
+as root or postmaster.
+.PP
+Internally, this cron uses a quick indexing system to reduce CPU overhead
+when looking for commands to execute.  Several hundred crontabs with
+several thousand entries can be handled without using noticable CPU 
+resources.
+.SH BUGS
+Ought to be able to have several crontab files for any given user, as
+an organizational tool.
+.SH AUTHOR
+Matthew Dillon (dillon@apollo.backplane.com)
+

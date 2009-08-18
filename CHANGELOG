@@ -1,0 +1,40 @@
+v3.2
+    Fixed a minor bug, remove the newline terminating a line only if there
+    is a newline to remove.
+
+v3.1
+    Add support for root-run crontab files in /etc/cron.d and rewrite a
+    good chunk of the crontab file management code.  By VMiklos and Matt
+    Dillon.
+
+v3.0
+    Fix /tmp race and misc cleanups from Emiel Kollof <emiel@gamepoint.net>
+
+v2.9
+    Modernize the code, remove strcpy() and sprintf() in favor of snprintf().
+    (Supplied by Christine Jamison <technobabe@mail.nwmagic.net>)
+
+v2.8
+    Fixed bug found by Christian HOFFMANN.  newline removal was broken
+    for lines that began with whitespace, causing crontab lines to be
+    chopped off.
+
+v2.7
+
+    Committed changes suggested by 
+    Ragnar Hojland Espinosa <ragnar@redestb.es>
+
+    Fixed a few printfs, removed strdup() function ( strdup() is now standard 
+    in all major clib's )
+
+v2.4-2.6
+
+	( changes lost )
+
+v2.3
+    dillon:	Fixed bug in job.c -- if ChangeUser() fails, would return from child fork rather
+		then exit!  Oops.
+
+v2.2
+    dillon:	Initial release
+

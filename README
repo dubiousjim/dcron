@@ -1,0 +1,135 @@
+
+			DCRON - SIMPLE CRON PROGRAM
+				Matthew Dillon
+
+			Originally written: 1 May 1994
+
+
+CREDITS
+
+    I finally got tired of all of these wild cron programs that take the
+    task of running timed jobs to ridiculous extremes in terms of 
+    capabilities and unnecessary features.  So here is my entry:  a 
+    crond/crontab combination that is simple and elegant, and hopefully
+    secure to boot.  This cron implements reasonable features in terms
+    of field specification in the crontab and allows individual user 
+    crontabs.  
+
+    This program is written entirely from scratch by yours Truely (sig
+    at bottom).
+
+    All jobs are run with /bin/sh for conformity and portability, thereby
+    avoiding the mess that occurs with other cron's that try to use the
+    user's perfered shell, which breaks down for special users and even makes
+    some of us normal users unhappy (for example, /bin/csh does not use a true
+    O_APPEND mode and has difficulty redirecting stdout and stderr both to
+    different places!).  You can, of course, run shell scripts in whatever
+    language you like by making them executable with #!/bin/csh or whatever
+    as the first line.  If you don't like the extra processes, just 'exec'
+    them.
+
+    Under the same reasoning, this cron does not allow you to specify
+    environment variables or other stuff better left specified as
+    arguments to a shell script.  Talk about nonsense!
+
+    The programs were written with an eye towards security, hopefully I
+    haven't forgotton anything.  The programs were also written with an
+    eye towards nice, clean, algorithmically sound code.  It's small, and
+    the only fancy code is that which deals with child processes.  I do
+    not try to optimize with vfork() since it causes headaches and is
+    rather pointless considering I'm execing a shell most of the time,
+    and I pay close attention to leaving descriptors open in the crond
+    and close attention to preventing crond from running away.
+
+COMPILATION
+
+    This is an ANSI program, you must use a compiler that understands
+    prototypes, such as GCC.  I will not accept bug reports related
+    to hacking the program to work with a non-ANSI compiler.
+
+    Note that the source code, especially in regard to changing the
+    effective user, is Linux specific (SysVish).  I welcome any changes
+    in regard to making the mechanism work with other platforms.
+
+    (1) Edit the Makefile, adding -D overrides to defines in defs.h as
+	appropriate for your machine.  (Or just edit defs.h, but as
+	people introduce fixes to make the program work on other
+	platforms, I want most overrides to be in the CFLAGS for the
+	Makefile).
+
+    (2) You may need to edit the #include lines in defs.h for your 
+	machine.  The goal is to include everything necessary such that
+	the program can be compiled in the most ansi-strict manner.  Amoung
+	other things, prototypes for system functions must come from 
+	external include files and NOT from defs.h or any source file.   
+	If no prototype exists for a particular function, contact your 
+	vendor to get an update for your includes.
+
+    (3) make
+
+INSTALLATION
+
+    Permissions should be as outlined below.  You will want to create a
+    special 'cron' group in which you put those users that are allowed
+    to use the crontab program. 
+
+    -rwx------   1 root     wheel       24864 Apr 27 09:02 /usr/bin/crond*
+    -rwsr-x---   1 root     cron        24311 Apr 27 09:02 /usr/bin/crontab*
+
+    crond should be run automatically at system startup from /etc/rc.local 
+    (or equivalent).  It automatically detaches.  A log level of 8 is
+    normally specified, and you normally append using /bin/sh's >>, allowing
+    the log file to backed up and cleared with an 'echo >/var/log/cron' in
+    your cron scripts.
+
+    /usr/bin/crond -l8 >>/var/log/cron 2>&1
+
+    The crontab files are normally located in /var/spool/cron/crontabs.  The
+    directories normally have permissions:
+
+    drwxr-x---   3 root  wheel  1024 Feb 24 18:17 /var/spool/cron/
+    drwxr-x---   2 root  wheel  1024 May  1 10:28 /var/spool/cron/crontabs
+
+TESTING
+
+    Use the crontab program to create a personal crontab with the following
+    two lines:
+
+    * * * * *  date >>/tmp/test
+    * * * * *  date
+
+    Check the log output of crond to ensure the cron entries are being
+    run once a minute, check /tmp/test to ensure the date is being
+    appended to it once a minute, and check your mail to ensure that crond
+    is mailing you the date from the other entry once a minute.
+
+    After you are through testing cron, delete the entries with crontab -e
+    or crontab -d
+
+BUG REPORTS, SUBMISSIONS
+
+    Send any bug reports and source code changes to me, Matthew Dillon:
+
+	dillon@apollo.backplane.com
+
+    Note carefully that I will not accept any local ANSI prototypes for 
+    system calls that should properly be in an external include file,
+    that I will probably not accept additional features to the program,
+    and I will not accept any changes to make the source compile under
+    a non-ANSI compiler.  I will not accept any radical code changes...
+    the purpose being that I want this cron to be made bug free rather
+    then feature full.
+
+    Changes to overridable defaults in defs.h should be made in the
+    Makefile, you may submit a Makefile for your platform.  Changes
+    to the #include's in defs.h should be made by a combination of an
+    -D options in the Makefile and #ifdef's for that option in defs.h, 
+    and not rely on pre-definitions made by the C compiler.
+
+    Changes to source code to accomodate one platform or other should
+    be made in the same manner.
+
+
+    Matthew Dillon		dillon@apollo.backplane.com
+    [always include a portion of the original email in any response!]
+

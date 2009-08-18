@@ -1,0 +1,80 @@
+.\" Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+.\" May be distributed under the GNU General Public License
+.TH CROND 8 "1 May 1994"
+.SH NAME
+crond \- cron daemon (Dillon's Cron)
+.SH SYNOPSIS
+.B crond [-l#] [-d[#]] [-f] [-b] [-c directory]
+.SH OPTIONS
+.B crond
+is a background daemon that parses individual crontab files and
+executes commands on behalf of the users in question.
+.TP 0.5i
+.B "-l<loglevel> "
+set logging level, default is 8.
+.TP 0.5i
+.B "-d[<debuglevel>] "
+set debugging level, default is 0, if no level specified with -d
+option default is 1.  This option also sets the logging level to
+0 and causes crond to run in the foreground.
+.TP 0.5i
+.B "-f "
+run crond in the foreground.
+.TP 0.5i
+.B "-b "
+run crond in the background (default unless -d specified).
+.TP 0.5i
+.B "-c directory "
+specify directory containing crontab files.
+.TP 0.5i
+.B "-s directory "
+specify directory containing system-wide crontab files.  By
+default, /etc/cron.d is checked.
+.SH DESCRIPTION
+.B crond 
+is responsible for scanning the crontab files and running
+their commands at the appropriate time.  The
+.B crontab
+program communicates with crond through the "cron.update" file
+which resides in crontabs directory, usually /var/spool/cron/crontabs.
+This is accomplished by appending the filename of the modified or
+deleted crontab file to "cron.update" which crond then picks up to
+resynchronize or remove its internal representation of the file.
+.PP
+.B Crond
+has a number of built in limitations to reduce the chance of it being
+ill-used.  Potentially infinite loops during parsing are dealt with
+via a failsafe counter, and user crontabs are generally limited to
+256 crontab entries.  crontab lines may not be longer than 1024 
+characters, including the newline.  
+.PP
+Whenever crond must run a job, it first creates a daemon-owned temporary 
+file O_EXCL and O_APPEND to store any output, then fork()s and changes 
+its user and group permissions to match that of the user the job is being 
+run for, then exec's /bin/sh -c to run the job.  The temporary file remains
+under the ownership of the daemon to prevent the user from tampering with
+it.  Upon job completion, crond verifies the secureness of the mail file
+and, if it has been appended to, mails to the file to user.  The
+.B sendmail
+program is run under the user's uid to prevent mail related security holes.  
+Unlike
+.B crontab
+, the crond program does not leave an open descriptor to the file for the
+duration of the job's execution as this might cause crond to run out 
+of descriptors.  When
+.B crontab
+program allows a user to edit his crontab, it copies the crontab to a user
+owned file before running the user's prefered editor.  The suid crontab
+programs keeps an open descriptor to the file which it later uses to
+copy the file back, thereby ensuring the user has not tampered with the
+file type.
+.PP
+.B Crond
+always synchronizes to the top of the minute, checking the current time
+against the list of possible jobs.  The list is stored such that the
+scan goes very quickly, and crond can deal with several thousand entries
+without taking any noticable amount of cpu.
+.SH AUTHOR
+Matthew Dillon (dillon@apollo.backplane.com)
+
+
