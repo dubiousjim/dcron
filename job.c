@@ -213,7 +213,7 @@ EndJob(CronFile *file, CronLine *line)
 	/*
 	 * note: 8 is a file descriptor
 	 */
-	logfd(8, "unable to exec %s %s, user %s, output to sink null", 
+	logfd(8, "unable to exec %s %s, user %s, output to sink null\n", 
 	    SENDMAIL,
 	    SENDMAIL_ARGS,
 	    file->cf_UserName
