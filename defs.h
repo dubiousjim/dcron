@@ -28,7 +28,7 @@
 #define arysize(ary)	(sizeof(ary)/sizeof((ary)[0]))
 
 #ifndef CRONTABS
-#define CRONTABS	"/var/spool/cron/crontabs"
+#define CRONTABS	"/var/spool/cron"
 #endif
 #ifndef SCRONTABS
 #define SCRONTABS	"/etc/cron.d"
@@ -44,7 +44,7 @@
 #if defined(__DragonFly__)
 #define SENDMAIL	"/usr/sbin/sendmail"
 #else
-#define SENDMAIL	"/usr/lib/sendmail"
+#define SENDMAIL	"/usr/sbin/sendmail"
 #endif
 #endif
 

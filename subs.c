@@ -79,7 +79,7 @@ slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
 
     buf[0] = 0;
     if (useDate)
-	strftime(buf, 128, "%d-%b-%y %H:%M  ", tp);
+	strftime(buf, 128, "%d-%b-%Y %H:%M  ", tp);
     vsnprintf(buf + strlen(buf), nmax, ctl, va);
     return(strlen(buf));
 }
