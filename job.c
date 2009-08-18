@@ -3,6 +3,7 @@
  * JOB.C
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
+ * Copyright 2009 James Pryor <profjim@jimpryor.net>
  * May be distributed under the GNU General Public License
  */
 
@@ -14,98 +15,108 @@ Prototype void EndJob(CronFile *file, CronLine *line);
 void
 RunJob(CronFile *file, CronLine *line)
 {
-    char mailFile[128];
-    int mailFd;
-     
-    line->cl_Pid = 0;
-    line->cl_MailFlag = 0;
+	char mailFile[128];
+	int mailFd;
 
-    /*
-     * open mail file - owner root so nobody can screw with it.
-     */
-
-    snprintf(mailFile, sizeof(mailFile), TMPDIR "/cron.%s.%d", 
-	file->cf_UserName, (int)getpid());
-    mailFd = open(mailFile, O_CREAT|O_TRUNC|O_WRONLY|O_EXCL|O_APPEND, 0600);
-
-    if (mailFd >= 0) {
-	line->cl_MailFlag = 1;
-	fdprintf(mailFd, "To: %s\nSubject: cron: %s\n\n", 
-	    file->cf_UserName,
-	    line->cl_Shell
-	);
-	line->cl_MailPos = lseek(mailFd, 0, 1);
-    }
-
-    /*
-     * Fork as the user in question and run program
-     */
-
-    if ((line->cl_Pid = fork()) == 0) {
-	/*
-	 * CHILD, FORK OK
-	 */
+	line->cl_Pid = 0;
+	line->cl_MailFlag = 0;
 
 	/*
-	 * Change running state to the user in question
+	 * open mail file - owner root so nobody can screw with it.
 	 */
 
-	if (ChangeUser(file->cf_UserName, 1) < 0) {
-	 log_err("ChangeUser failed (%s): %s\n", file->cf_UserName, line->cl_Shell);
-	    exit(0);
-	}
-
-	if (DebugOpt)
-	    logn(5, "Child Running %s\n", line->cl_Shell);
-
-	/*
-	 * stdin is already /dev/null, setup stdout and stderr
-	 */
+	snprintf(mailFile, sizeof(mailFile), TMPDIR "/cron.%s.%d", 
+			file->cf_UserName, (int)getpid());
+	mailFd = open(mailFile, O_CREAT|O_TRUNC|O_WRONLY|O_EXCL|O_APPEND, 0600);
 
 	if (mailFd >= 0) {
-	    dup2(mailFd, 1);
-	    dup2(mailFd, 2);
-	    close(mailFd);
-	} else {
-	    log_err("unable to create mail file user %s file %s, output to /dev/null\n",
-	        file->cf_UserName,
-	        mailFile
-	    );
+		line->cl_MailFlag = 1;
+
+
+		fdprintf(mailFd, "To: %s\nSubject: cron for user %s %s\n\n",
+				file->cf_UserName,
+				file->cf_UserName,
+				line->cl_Shell
+				);
+		line->cl_MailPos = lseek(mailFd, 0, 1);
 	}
-	execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL, NULL);
-	log_err("unable to exec, user %s cmd /bin/sh -c %s\n", 
-	    file->cf_UserName,
-	    line->cl_Shell
-	);
-	fdprintf(1, "Exec failed: /bin/sh -c %s\n", line->cl_Shell);
-	exit(0);
-    } else if (line->cl_Pid < 0) {
+	/* else we issue warning later */
+
 	/*
-	 * PARENT, FORK FAILED
+	 * Fork as the user in question and run program
 	 */
-     log_err("couldn't fork, user %s\n", file->cf_UserName);
-        line->cl_Pid = 0;
-        remove(mailFile);
-    } else {
+
+	if ((line->cl_Pid = fork()) == 0) {
+		/*
+		 * CHILD, FORK OK
+		 */
+
+		/*
+		 * Change running state to the user in question
+		 */
+
+		if (ChangeUser(file->cf_UserName, 1) < 0) {
+			log_err("ChangeUser failed (user %s %s)\n",
+					file->cf_UserName,
+					line->cl_Shell
+					);
+			exit(0);
+		}
+
+		if (DebugOpt)
+			logn(5, "child running: %s\n", line->cl_Shell);
+
+	/* stdin is already /dev/null, setup stdout and stderr */
+
+		if (mailFd >= 0) {
+			dup2(mailFd, 1);
+			dup2(mailFd, 2);
+			close(mailFd);
+		} else {
+			log_err("unable to create mail file %s: cron output for user %s %s to /dev/null\n",
+					mailFile,
+					file->cf_UserName,
+					line->cl_Shell
+				   );
+		}
+		execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL, NULL);
+		log_err("unable to exec (user %s cmd /bin/sh -c %s)\n",
+				file->cf_UserName,
+				line->cl_Shell
+			   );
+		/* we also write error to the mailed cron output */
+		fdprintf(1, "unable to exec: /bin/sh -c %s\n", line->cl_Shell);
+		exit(0);
+	} else if (line->cl_Pid < 0) {
+		/*
+		 * PARENT, FORK FAILED
+		 */
+		log_err("unable to fork (user %s %s)\n",
+				file->cf_UserName,
+				line->cl_Shell
+				);
+		line->cl_Pid = 0;
+		remove(mailFile);
+	} else {
+		/*
+		 * PARENT, FORK SUCCESS
+		 *
+		 * rename mail-file based on pid of child process
+		 */
+		char mailFile2[128];
+
+		snprintf(mailFile2, sizeof(mailFile2), TMPDIR "/cron.%s.%d", 
+				file->cf_UserName, line->cl_Pid);
+		rename(mailFile, mailFile2);
+	}
+
 	/*
-	 * PARENT, FORK SUCCESS
-	 *
-	 * rename mail-file based on pid of process
+	 * Close the mail file descriptor.. we can't just leave it open in
+	 * a structure, closing it later, because we might run out of descriptors
 	 */
-	char mailFile2[128];
 
-	snprintf(mailFile2, sizeof(mailFile2), TMPDIR "/cron.%s.%d", 
-	    file->cf_UserName, line->cl_Pid);
-	rename(mailFile, mailFile2);
-    }
-
-    /*
-     * Close the mail file descriptor.. we can't just leave it open in
-     * a structure, closing it later, because we might run out of descriptors
-     */
-
-    if (mailFd >= 0)
-        close(mailFd);
+	if (mailFd >= 0)
+		close(mailFd);
 }
 
 /*
@@ -115,96 +126,101 @@ RunJob(CronFile *file, CronLine *line)
 void
 EndJob(CronFile *file, CronLine *line)
 {
-    int mailFd;
-    char mailFile[128];
-    struct stat sbuf;
+	int mailFd;
+	char mailFile[128];
+	struct stat sbuf;
 
-    /*
-     * No job
-     */
-
-    if (line->cl_Pid <= 0) {
-        line->cl_Pid = 0;
-        return;
-    }
-
-    /*
-     * End of job and no mail file
-     * End of sendmail job
-     */
-
-    snprintf(mailFile, sizeof(mailFile), TMPDIR "/cron.%s.%d",
-	file->cf_UserName, line->cl_Pid);
-    line->cl_Pid = 0;
-
-    if (line->cl_MailFlag != 1)
-        return;
-
-    line->cl_MailFlag = 0;
-
-    /*
-     * End of primary job - check for mail file.  If size has increased and
-     * the file is still valid, we sendmail it.
-     */
-
-    mailFd = open(mailFile, O_RDONLY);
-    remove(mailFile);
-    if (mailFd < 0) {
-        return;
-    }
-
-    if (fstat(mailFd, &sbuf) < 0 || 
-        sbuf.st_uid != DaemonUid || 
-        sbuf.st_nlink != 0 ||
-        sbuf.st_size == line->cl_MailPos ||
-        !S_ISREG(sbuf.st_mode)
-    ) {
-        close(mailFd);
-     	return;
-    }
-
-    if ((line->cl_Pid = fork()) == 0) {
-	/*
-	 * CHILD, FORK OK
-	 */
-
-	/*
-	 * change user id - no way in hell security can be compromised
-	 * by the mailing and we already verified the mail file.
-	 */
-
-	if (ChangeUser(file->cf_UserName, 1) < 0) {
-	    log_err("ChangeUser failed (%s), unable to send mail\n", file->cf_UserName);
-	    exit(0);
+	if (line->cl_Pid <= 0) {
+		/*
+		 * No job
+		 */
+		line->cl_Pid = 0;
+		return;
 	}
 
-	/*
-	 * run sendmail with mail file as standard input, only if
-	 * mail file exists!
-	 */
 
-	dup2(mailFd, 0);
-	dup2(1, 2);
-	close(mailFd);
-
-	execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
-	log_err("unable to exec %s %s, user %s, output to sink null\n", 
-	    SENDMAIL,
-	    SENDMAIL_ARGS,
-	    file->cf_UserName
-	);
-	exit(0);
-    } else if (line->cl_Pid < 0) {
-	/*
-	 * PARENT, FORK FAILED
-	 */
-	log_err("unable to fork, user %s", file->cf_UserName);
 	line->cl_Pid = 0;
-    } else {
+
+	if (line->cl_MailFlag != 1)
 	/*
-	 * PARENT, FORK OK
+	 * End of job and no mail file
 	 */
-    }
-    close(mailFd);
+		return;
+
+	line->cl_MailFlag = 0;
+
+	/*
+	 * Check mail file. If size has increased and
+	 * the file is still valid, we sendmail it.
+	 */
+
+	snprintf(mailFile, sizeof(mailFile), TMPDIR "/cron.%s.%d",
+			file->cf_UserName, line->cl_Pid);
+
+	mailFd = open(mailFile, O_RDONLY);
+	remove(mailFile);
+	if (mailFd < 0) {
+		return;
+	}
+
+	if (fstat(mailFd, &sbuf) < 0 ||
+			sbuf.st_uid != DaemonUid ||
+			sbuf.st_nlink != 0 ||
+			sbuf.st_size == line->cl_MailPos ||
+			!S_ISREG(sbuf.st_mode)
+	   ) {
+		close(mailFd);
+		return;
+	}
+
+	if ((line->cl_Pid = fork()) == 0) {
+		/*
+		 * CHILD, FORK OK
+		 */
+
+		/*
+		 * change user id - no way in hell security can be compromised
+		 * by the mailing and we already verified the mail file.
+		 */
+
+		if (ChangeUser(file->cf_UserName, 1) < 0) {
+			log_err("ChangeUser %s failed; unable to send mail\n",
+					file->cf_UserName
+					);
+			exit(0);
+		}
+
+		/*
+		 * run sendmail with mail file as standard input, only if
+		 * mail file exists!
+		 */
+
+		dup2(mailFd, 0);
+		dup2(1, 2);
+		close(mailFd);
+
+		execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
+		log_err("unable to exec %s %s: cron output for user %s %s to /dev/null\n",
+				SENDMAIL,
+				SENDMAIL_ARGS,
+				file->cf_UserName,
+				line->cl_Shell
+			   );
+		exit(0);
+	} else if (line->cl_Pid < 0) {
+		/*
+		 * PARENT, FORK FAILED
+		 */
+		log_err("unable to fork: cron output for user %s %s to /dev/null\n",
+				file->cf_UserName,
+				line->cl_Shell
+			);
+		line->cl_Pid = 0;
+	} else {
+		/*
+		 * PARENT, FORK OK
+		 */
+	}
+	close(mailFd);
 }
 

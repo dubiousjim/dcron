@@ -1,4 +1,4 @@
-# Makefile for dillon's cron and crontab
+# Makefile for yet another cron and crontab
 #
 
 DESTDIR ?= /usr/local
@@ -10,7 +10,7 @@ OBJS = main.o subs.o database.o job.o
 D_SRCS = crontab.c subs.c
 D_OBJS = crontab.o subs.o
 PROTOS= protos.h
-DISTTAR= /home/dillon/htdocs/FreeSrc/dcron32.tgz
+DISTTAR= /home/abs/yacron40beta.tgz
 
 all:	${PROTOS} crond crontab
 
@@ -37,12 +37,9 @@ install:
 	install -o root -g wheel -m 0644 crontab.1 ${DESTDIR}/man/man1/crontab.1
 	install -o root -g wheel -m 0644 crond.8 ${DESTDIR}/man/man8/crond.8
 
-# dillon-specific
-#
-
 tar: clean
-	(cd ..; tar czf ${DISTTAR}.new dcron)
-	chown dillon ${DISTTAR}.new
+	(cd ..; tar czf ${DISTTAR}.new repo)
+	chown jim ${DISTTAR}.new
 	chmod 644 ${DISTTAR}.new
 	mv -f ${DISTTAR}.new ${DISTTAR}
 

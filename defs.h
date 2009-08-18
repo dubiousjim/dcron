@@ -3,6 +3,7 @@
  * DEFS.H
  *
  * Copyright 1994-1998 Matthew Dillon (dillon@backplane.com)
+ * Copyright 2009 James Pryor <profjim@jimpryor.net>
  * May be distributed under the GNU General Public License
  */
 
@@ -40,7 +41,7 @@
 #define TMPDIR		"/var/spool/cron"
 #endif
 #ifndef LOG_FILE
-#define LOG_FILE	"/var/log/cron"
+#define LOG_FILE	"/var/log/crond.log"
 #endif
 #ifndef OPEN_MAX
 #define OPEN_MAX	256
@@ -49,7 +50,6 @@
 #ifndef SENDMAIL
 #define SENDMAIL	"/usr/sbin/sendmail"
 #endif
-
 #ifndef SENDMAIL_ARGS
 #define SENDMAIL_ARGS	"-t", "-oem", "-i"
 #endif
@@ -63,7 +63,7 @@
 #define PATH_VI		"/usr/bin/vi"	/* location of vi	*/
 #endif
 
-#define VERSION	"V3.2"
+#define VERSION	"V4.0b1"
 
 typedef struct CronFile {
     struct CronFile *cf_Next;
@@ -82,16 +82,16 @@ typedef struct CronLine {
     int		cl_Pid;		/* running pid, 0, or armed (-1)	*/
     int		cl_MailFlag;	/* running pid is for mail		*/
     int		cl_MailPos;	/* 'empty file' size			*/
-    char	cl_Mins[60];	/* 0-59 				*/
+    char	cl_Mins[60];	/* 0-59				*/
     char	cl_Hrs[24];	/* 0-23					*/
     char	cl_Days[32];	/* 1-31					*/
-    char	cl_Mons[12];	/* 0-11 				*/
+    char	cl_Mons[12];	/* 0-11				*/
     char	cl_Dow[7];	/* 0-6, beginning sunday		*/
 } CronLine;
 
-#define RUN_RANOUT	1
-#define RUN_RUNNING	2
-#define RUN_FAILED	3
+// #define RUN_RANOUT	1
+// #define RUN_RUNNING	2
+// #define RUN_FAILED	3
 
 #include "protos.h"
 
