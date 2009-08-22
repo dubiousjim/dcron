@@ -16,6 +16,10 @@ Prototype int  ChangeUser(const char *user, short dochdir);
 Prototype void vlog(int level, int fd, const char *ctl, va_list va);
 Prototype void startlogger(void);
 Prototype void initsignals(void);
+Prototype char Hostname[64];
+
+int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate);
+char Hostname[64];
 
 
 void
@@ -55,6 +59,8 @@ vlog(int level, int fd, const char *ctl, va_list va)
 {
 	char buf[2048];
 	int  logfd;
+    short n;
+    static short useDate = 1;
 
 	if (level <= LogLevel) {
 		vsnprintf(buf,sizeof(buf), ctl, va);
@@ -67,16 +73,39 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			if (LoggerOpt == 0) syslog(level, "%s", buf);
 			else {
 				if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0) {
-					write(logfd, buf, strlen(buf));
+					write(logfd, buf, n = slog(buf, ctl, sizeof(buf), va, useDate));
+					useDate = (n && buf[n-1] == '\n');
 					close(logfd);
 				} else {
+					int e = errno;
 					fdprintf(fd, "failed to open logfile '%s' reason: %s\n",
 							LogFile,
-							strerror(errno)
+							strerror(e)
 							);
+					exit(e);
 				}
 			}
 	}
+}
+
+int
+slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
+{
+    time_t t = time(NULL);
+    struct tm *tp = localtime(&t);
+    buf[0] = 0;
+    if (useDate) {
+		char hdr[128];
+		hdr[0] = 0;
+		strftime(hdr, 128, LOG_DATE_FMT, tp);
+		if (!gethostname(Hostname, 63))
+			Hostname[63] = 0;  // if hostname is larger than buffer, gethostname() doesn't promise to null-terminate it
+		else
+			Hostname[0] = 0;   // gethostname() call failed
+		snprintf(buf, 194, hdr, Hostname);
+	}
+    vsnprintf(buf + strlen(buf), nmax, ctl, va);
+    return(strlen(buf));
 }
 
 int
@@ -136,7 +165,7 @@ startlogger (void) {
 		if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0)
 			close(logfd);
 		else
-			printf("failed to open logfile '%s' reason: %s",
+			errx(errno, "failed to open logfile '%s' reason: %s",
 					LogFile,
 					strerror(errno)
 				);

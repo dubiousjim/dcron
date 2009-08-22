@@ -19,7 +19,7 @@ Prototype short ForegroundOpt;
 Prototype short LoggerOpt;
 Prototype const char *CDir;
 Prototype const char *SCDir;
-Prototype char  *LogFile;
+Prototype const char *LogFile;
 Prototype uid_t DaemonUid;
 Prototype int InSyncFileRoot;
 
@@ -29,7 +29,7 @@ short ForegroundOpt = 0;
 short LoggerOpt;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
-char  *LogFile = LOG_FILE; /* opened with mode 0600 */
+const char *LogFile = LOG_FILE; /* opened with mode 0600 */
 uid_t DaemonUid;
 int InSyncFileRoot;
 
@@ -161,18 +161,24 @@ main(int ac, char **av)
 
 	fclose(stdin);
 	fclose(stdout);
-	fclose(stderr);
+
+	for (i = 3; i < OPEN_MAX; ++i) {
+        close(i);
+    }
 
 	i = open("/dev/null", O_RDWR);
 	if (i < 0) {
-		perror("open: /dev/null:");
+		perror("open: /dev/null");
 		exit(1);
 	}
 	dup2(i, 0);
 	dup2(i, 1);
-	dup2(i, 2);
 
 	if (ForegroundOpt == 0) {
+
+		fclose(stderr);
+		dup2(i, 2);
+
 		int fd;
 		int pid;
 		if (setsid() < 0)

@@ -19,7 +19,7 @@ int   UserId;
 short LogLevel = LOG_NOTICE;
 short ForegroundOpt = 0;
 short LoggerOpt = 0;
-char  *LogFile = LOG_FILE;
+const char *LogFile = LOG_FILE;
 
 void EditFile(const char *user, const char *file);
 int GetReplaceStream(const char *user, const char *file);

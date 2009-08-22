@@ -46,6 +46,9 @@
 #ifndef LOG_IDENT
 #define LOG_IDENT	"crond"
 #endif
+#ifndef LOG_DATE_FMT
+#define LOG_DATE_FMT	"%b %e %H:%M:%S %%s " LOG_IDENT ": "
+#endif
 #ifndef OPEN_MAX
 #define OPEN_MAX	256
 #endif
