@@ -630,10 +630,14 @@ CheckJobs(void)
 			for (line = file->cf_LineBase; line; line = line->cl_Next) {
 				if (line->cl_Pid > 0) {
 					int status;
-					int r = wait4(line->cl_Pid, &status, WNOHANG, NULL);
+					int r = waitpid(line->cl_Pid, &status, WNOHANG);
 
 					if (r < 0 || r == line->cl_Pid) {
-						EndJob(file, line);
+						if (r > 0 && WIFEXITED(status))
+							status = WEXITSTATUS(status);
+						else
+							status = 1;
+						EndJob(file, line, status);
 						if (line->cl_Pid)
 							file->cf_Running = 1;
 					} else if (r == 0) {

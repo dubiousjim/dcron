@@ -10,7 +10,7 @@
 #include "defs.h"
 
 Prototype void RunJob(CronFile *file, CronLine *line);
-Prototype void EndJob(CronFile *file, CronLine *line);
+Prototype void EndJob(CronFile *file, CronLine *line, int exit_status);
 Prototype const char *SendMail;
 
 void
@@ -131,7 +131,7 @@ RunJob(CronFile *file, CronLine *line)
  */
 
 void
-EndJob(CronFile *file, CronLine *line)
+EndJob(CronFile *file, CronLine *line, int exit_status)
 {
 	int mailFd;
 	char mailFile[128];
