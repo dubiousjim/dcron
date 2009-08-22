@@ -271,6 +271,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				 */
 				line.cl_Shell = strdup(ptr);
 
+				line.cl_Description = line.cl_Shell;
 				if (DebugOpt) {
 					logn(LOG_DEBUG, "    Command %s\n", line.cl_Shell);
 				}
@@ -485,6 +486,9 @@ DeleteFile(CronFile **pfile)
 		} else {
 			*pline = line->cl_Next;
 			free(line->cl_Shell);
+			/*
+		 	 * if cl_JobName is NULL, Description pointed to ch_Shell, which was already freed
+			 */
 			free(line);
 		}
 	}
@@ -559,13 +563,13 @@ ArmJob(CronFile *file, CronLine *line)
 	if (line->cl_Pid > 0) {
 		logn(LOG_NOTICE, "    process already running (%d): %s\n",
 				line->cl_Pid,
-				line->cl_Shell
+				line->cl_Description
 			);
 	} else if (line->cl_Pid == 0) {
 		line->cl_Pid = -1;
 		file->cf_Ready = 1;
 		if (DebugOpt)
-			logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Shell);
+			logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Description);
 		return 1;
 	}
 	return 0;
@@ -592,7 +596,7 @@ RunJobs(void)
 							file->cf_FileName,
 							file->cf_UserName,
 							line->cl_Pid,
-							line->cl_Shell
+							line->cl_Description
 						);
 					if (line->cl_Pid < 0)
 						/* how could this happen? RunJob will leave cl_Pid set to 0 or the actual pid */

@@ -38,7 +38,7 @@ RunJob(CronFile *file, CronLine *line)
 		fdprintf(mailFd, "To: %s\nSubject: cron for user %s %s\n\n",
 				value,
 				file->cf_UserName,
-				line->cl_Shell
+				line->cl_Description
 				);
 		line->cl_MailPos = lseek(mailFd, 0, 1);
 	}
@@ -60,13 +60,13 @@ RunJob(CronFile *file, CronLine *line)
 		if (ChangeUser(file->cf_UserName, 1) < 0) {
 			logn(LOG_ERR, "ChangeUser failed (user %s %s)\n",
 					file->cf_UserName,
-					line->cl_Shell
+					line->cl_Description
 					);
 			exit(0);
 		}
 
 		if (DebugOpt)
-			logn(LOG_DEBUG, "child running: %s\n", line->cl_Shell);
+			logn(LOG_DEBUG, "child running: %s\n", line->cl_Description);
 
 	/* Setup close-on-exec descriptor in case exec fails */
 	dup2(2, 8);
@@ -83,7 +83,7 @@ RunJob(CronFile *file, CronLine *line)
 			logfd(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
 					mailFile,
 					file->cf_UserName,
-					line->cl_Shell
+					line->cl_Description
 				   );
 		}
 		execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL, NULL);
@@ -100,7 +100,7 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 		logn(LOG_ERR, "unable to fork (user %s %s)\n",
 				file->cf_UserName,
-				line->cl_Shell
+				line->cl_Description
 				);
 		line->cl_Pid = 0;
 		remove(mailFile);
@@ -216,7 +216,7 @@ EndJob(CronFile *file, CronLine *line)
 				SendMail,
 				SENDMAIL_ARGS,
 				file->cf_UserName,
-				line->cl_Shell
+				line->cl_Description
 			   );
 		exit(0);
 	} else if (line->cl_Pid < 0) {
@@ -225,7 +225,7 @@ EndJob(CronFile *file, CronLine *line)
 		 */
 		logn(LOG_ERR, "unable to fork: cron output for user %s %s to /dev/null\n",
 				file->cf_UserName,
-				line->cl_Shell
+				line->cl_Description
 			);
 		line->cl_Pid = 0;
 	} else {

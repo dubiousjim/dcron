@@ -85,6 +85,7 @@ typedef struct CronFile {
 typedef struct CronLine {
     struct CronLine *cl_Next;
     char	*cl_Shell;	/* shell command			*/
+	char	*cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
     int		cl_Pid;		/* running pid, 0, or armed (-1)	*/
     int		cl_MailFlag;	/* running pid is for mail		*/
     int		cl_MailPos;	/* 'empty file' size			*/
