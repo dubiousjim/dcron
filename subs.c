@@ -144,8 +144,8 @@ ChangeUser(const char *user, short dochdir)
 	if (dochdir) {
 		if (chdir(pas->pw_dir) < 0) {
 			logn(LOG_ERR, "chdir failed: %s %s\n", user, pas->pw_dir);
-			if (chdir(TMPDIR) < 0) {
-				logn(LOG_ERR, "chdir failed: %s %s\n" TMPDIR, user);
+			if (chdir(TempDir) < 0) {
+				logn(LOG_ERR, "chdir failed: %s %s\n", user, TempDir);
 				return(-1);
 			}
 		}

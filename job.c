@@ -25,7 +25,7 @@ RunJob(CronFile *file, CronLine *line)
 	 * open mail file - owner root so nobody can screw with it.
 	 */
 
-	snprintf(mailFile, sizeof(mailFile), TMPDIR "/cron.%s.%d", 
+	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, (int)getpid());
 	mailFd = open(mailFile, O_CREAT|O_TRUNC|O_WRONLY|O_EXCL|O_APPEND, 0600);
 
@@ -110,7 +110,7 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 		char mailFile2[128];
 
-		snprintf(mailFile2, sizeof(mailFile2), TMPDIR "/cron.%s.%d", 
+		snprintf(mailFile2, sizeof(mailFile2), TempFileFmt,
 				file->cf_UserName, line->cl_Pid);
 		rename(mailFile, mailFile2);
 	}
@@ -159,7 +159,7 @@ EndJob(CronFile *file, CronLine *line)
 	 * the file is still valid, we sendmail it.
 	 */
 
-	snprintf(mailFile, sizeof(mailFile), TMPDIR "/cron.%s.%d",
+	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, line->cl_Pid);
 
 	mailFd = open(mailFile, O_RDONLY);

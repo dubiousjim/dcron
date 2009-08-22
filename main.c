@@ -22,6 +22,8 @@ Prototype const char *SCDir;
 Prototype const char *LogFile;
 Prototype uid_t DaemonUid;
 Prototype int InSyncFileRoot;
+Prototype char *TempDir;
+Prototype char *TempFileFmt;
 
 short DebugOpt;
 short LogLevel = LOG_NOTICE;
@@ -30,6 +32,9 @@ short LoggerOpt;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
 const char *LogFile = LOG_FILE; /* opened with mode 0600 */
+char *TempDir;
+char *TempFileFmt;
+
 uid_t DaemonUid;
 int InSyncFileRoot;
 
@@ -202,7 +207,19 @@ main(int ac, char **av)
 	(void)startlogger();		/* need if syslog mode selected */
 	(void)initsignals();		/* set some signal handlers */
 
-	/* 
+	/* create tempdir with permissions 755 for cron output */
+	TempDir = strdup(TMPDIR "/cron.XXXXXX"); 
+	if (mkdtemp(TempDir) == NULL) {
+		perror("mkdtemp");
+		exit(1);
+	}
+	if (chmod(TempDir, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)) {
+		perror("chmod");
+		exit(1);
+	}
+	asprintf(&TempFileFmt, "%s/cron.%%s.%%d", TempDir);
+
+	/*
 	 * main loop - synchronize to 1 second after the minute, minimum sleep
 	 *             of 1 second.
 	 */

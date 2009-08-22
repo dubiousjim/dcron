@@ -38,7 +38,7 @@
 #define SCRONTABS	"/etc/cron.d"
 #endif
 #ifndef TMPDIR
-#define TMPDIR		"/var/spool/cron"
+#define TMPDIR		"/tmp"
 #endif
 #ifndef LOG_FILE
 #define LOG_FILE	"/var/log/crond.log"
