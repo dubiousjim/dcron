@@ -281,7 +281,8 @@ main(int ac, char **av)
 				SynchronizeDir(SCDir, "root", 0);
 				ReadTimestamps(0);
 			} else {
-				CheckUpdates(CDir, NULL);
+				if (CheckUpdates(CDir, NULL))
+					ReadTimestamps(0);
 				CheckUpdates(SCDir, "root");
 			}
 			if (DebugOpt)

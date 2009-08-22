@@ -10,7 +10,7 @@
 #include <limits.h>
 #include "defs.h"
 
-Prototype void CheckUpdates(const char *dpath, const char *user_override);
+Prototype int CheckUpdates(const char *dpath, const char *user_override);
 Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
 Prototype void ReadTimestamps(int initial_scan);
 Prototype int TestJobs(time_t t1, time_t t2);
@@ -89,7 +89,7 @@ const char *FreqAry[] = {
  * is NULL then the files in the directory belong to the user whose name is
  * the file, otherwise they belong to the user_override user.
  */
-void
+int
 CheckUpdates(const char *dpath, const char *user_override)
 {
 	FILE *fi;
@@ -121,6 +121,7 @@ CheckUpdates(const char *dpath, const char *user_override)
 		fclose(fi);
 	}
 	free(path);
+	return (fi != NULL);
 }
 
 void
