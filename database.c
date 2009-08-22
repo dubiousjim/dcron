@@ -85,7 +85,7 @@ CheckUpdates(const char *dpath, const char *user_override)
 	char *path;
 
 	if (DebugOpt)
-		logn(1, "CheckUpdates on %s/%s\n", dpath, CRONUPDATE);
+		logn(LOG_DEBUG, "CheckUpdates on %s/%s\n", dpath, CRONUPDATE);
 
 	asprintf(&path, "%s/%s", dpath, CRONUPDATE);
 	if ((fi = fopen(path, "r")) != NULL) {
@@ -103,7 +103,7 @@ CheckUpdates(const char *dpath, const char *user_override)
 			else if (getpwnam(ptr))
 				SynchronizeFile(dpath, ptr, ptr);
 			else
-				logn(7, "ignoring %s/%s (non-existant user)\n", dpath, ptr);
+				logn(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, ptr);
 		}
 		fclose(fi);
 	}
@@ -155,14 +155,14 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 			} else if (getpwnam(den->d_name)) {
 				SynchronizeFile(dpath, den->d_name, den->d_name);
 			} else {
-				logn(7, "ignoring %s/%s (non-existent user)\n",
+				logn(LOG_WARNING, "ignoring %s/%s (non-existent user)\n",
 						dpath, den->d_name);
 			}
 		}
 		closedir(dir);
 	} else {
 		if (initial_scan)
-			log9("unable to scan directory %s\n", dpath);
+			logn(LOG_ERR, "unable to scan directory %s\n", dpath);
 		/* softerror, do not exit the program */
 	}
 }
@@ -235,7 +235,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				bzero(&line, sizeof(line));
 
 				if (DebugOpt)
-					log9("User %s Entry %s\n", userName, buf);
+					logn(LOG_DEBUG, "User %s Entry %s\n", userName, buf);
 
 				/*
 				 * parse date ranges
@@ -271,7 +271,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				line.cl_Shell = strdup(ptr);
 
 				if (DebugOpt) {
-					log9("    Command %s\n", ptr);
+					logn(LOG_DEBUG, "    Command %s\n", line.cl_Shell);
 				}
 
 				*pline = calloc(1, sizeof(CronLine));
@@ -287,7 +287,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 			FileBase = file;
 
 			if (maxLines == 0 || maxEntries == 0)
-				log9("maximum number of lines reached for user %s\n", userName);
+				logn(LOG_WARNING, "maximum number of lines reached for user %s\n", userName);
 		}
 		fclose(fi);
 	}
@@ -345,7 +345,7 @@ ParseField(char *user, char *ary, int modvalue, int off, const char **names, cha
 		 */
 
 		if (skip == 0) {
-			log9("failed parsing crontab for user %s: %s\n", user, base);
+			logn(LOG_WARNING, "failed parsing crontab for user %s: %s\n", user, base);
 			return(NULL);
 		}
 		if (*ptr == '-' && n2 < 0) {
@@ -384,7 +384,7 @@ ParseField(char *user, char *ary, int modvalue, int off, const char **names, cha
 			} while (n1 != n2 && --failsafe);
 
 			if (failsafe == 0) {
-				log9("failed parsing crontab for user %s: %s\n", user, base);
+				logn(LOG_WARNING, "failed parsing crontab for user %s: %s\n", user, base);
 				return(NULL);
 			}
 		}
@@ -396,7 +396,7 @@ ParseField(char *user, char *ary, int modvalue, int off, const char **names, cha
 	}
 
 	if (*ptr != ' ' && *ptr != '\t' && *ptr != '\n') {
-		log9("failed parsing crontab for user %s: %s\n", user, base);
+		logn(LOG_WARNING, "failed parsing crontab for user %s: %s\n", user, base);
 		return(NULL);
 	}
 
@@ -407,8 +407,8 @@ ParseField(char *user, char *ary, int modvalue, int off, const char **names, cha
 		int i;
 
 		for (i = 0; i < modvalue; ++i)
-			logn(5, "%d", ary[i]);
-		logn(5, "\n");
+			logn(LOG_DEBUG, "%d", ary[i]);
+		logn(LOG_DEBUG, "\n");
 	}
 
 	return(ptr);
@@ -503,13 +503,13 @@ TestJobs(time_t t1, time_t t2)
 
 			for (file = FileBase; file; file = file->cf_Next) {
 				if (DebugOpt)
-					logn(5, "FILE %s/%s USER %s:\n",
+					logn(LOG_DEBUG, "FILE %s/%s USER %s:\n",
 							file->cf_DPath, file->cf_FileName, file->cf_UserName);
 				if (file->cf_Deleted)
 					continue;
 				for (line = file->cf_LineBase; line; line = line->cl_Next) {
 					if (DebugOpt)
-						logn(5, "    LINE %s\n", line->cl_Shell);
+						logn(LOG_DEBUG, "    LINE %s\n", line->cl_Shell);
 					if (!(line->cl_Mins[tp->tm_min] &&
 							line->cl_Hrs[tp->tm_hour] &&
 							(line->cl_Days[tp->tm_mday] || line->cl_Dow[tp->tm_wday]) &&
@@ -518,7 +518,7 @@ TestJobs(time_t t1, time_t t2)
 						continue;
 					{
 						if (line->cl_Pid > 0) {
-							logn(8, "    process already running (%d): %s\n",
+							logn(LOG_NOTICE, "    process already running (%d): %s\n",
 									line->cl_Pid,
 									line->cl_Shell
 								);
@@ -526,7 +526,7 @@ TestJobs(time_t t1, time_t t2)
 							line->cl_Pid = -1;
 							file->cf_Ready = 1;
 							if (DebugOpt)
-								logn(5, "    scheduled: %s\n", line->cl_Shell);
+								logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Shell);
 							++nJobs;
 						}
 					}
@@ -552,7 +552,7 @@ RunJobs(void)
 
 					RunJob(file, line);
 
-					logn(8, "FILE %s/%s USER %s PID %3d %s\n",
+					logn(LOG_INFO, "FILE %s/%s USER %s PID %3d %s\n",
 							file->cf_DPath,
 							file->cf_FileName,
 							file->cf_UserName,

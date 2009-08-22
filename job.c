@@ -56,7 +56,7 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 
 		if (ChangeUser(file->cf_UserName, 1) < 0) {
-			log_err("ChangeUser failed (user %s %s)\n",
+			logn(LOG_ERR, "ChangeUser failed (user %s %s)\n",
 					file->cf_UserName,
 					line->cl_Shell
 					);
@@ -64,7 +64,12 @@ RunJob(CronFile *file, CronLine *line)
 		}
 
 		if (DebugOpt)
-			logn(5, "child running: %s\n", line->cl_Shell);
+			logn(LOG_DEBUG, "child running: %s\n", line->cl_Shell);
+
+	/* Setup close-on-exec descriptor in case exec fails */
+	dup2(2, 8);
+	fcntl(8, F_SETFD, 1);
+	fclose(stderr);
 
 	/* stdin is already /dev/null, setup stdout and stderr */
 
@@ -73,14 +78,14 @@ RunJob(CronFile *file, CronLine *line)
 			dup2(mailFd, 2);
 			close(mailFd);
 		} else {
-			log_err("unable to create mail file %s: cron output for user %s %s to /dev/null\n",
+			logfd(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
 					mailFile,
 					file->cf_UserName,
 					line->cl_Shell
 				   );
 		}
 		execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL, NULL);
-		log_err("unable to exec (user %s cmd /bin/sh -c %s)\n",
+		logfd(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
 				file->cf_UserName,
 				line->cl_Shell
 			   );
@@ -91,7 +96,7 @@ RunJob(CronFile *file, CronLine *line)
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		log_err("unable to fork (user %s %s)\n",
+		logn(LOG_ERR, "unable to fork (user %s %s)\n",
 				file->cf_UserName,
 				line->cl_Shell
 				);
@@ -184,11 +189,16 @@ EndJob(CronFile *file, CronLine *line)
 		 */
 
 		if (ChangeUser(file->cf_UserName, 1) < 0) {
-			log_err("ChangeUser %s failed; unable to send mail\n",
+			logn(LOG_ERR, "ChangeUser %s failed; unable to send mail\n",
 					file->cf_UserName
 					);
 			exit(0);
 		}
+
+		/* create close-on-exec log descriptor in case exec fails */
+		dup2(2, 8);
+		fcntl(8, F_SETFD, 1);
+		fclose(stderr);
 
 		/*
 		 * run sendmail with mail file as standard input, only if
@@ -200,7 +210,7 @@ EndJob(CronFile *file, CronLine *line)
 		close(mailFd);
 
 		execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
-		log_err("unable to exec %s %s: cron output for user %s %s to /dev/null\n",
+		logfd(LOG_WARNING, 8, "unable to exec %s %s: cron output for user %s %s to /dev/null\n",
 				SENDMAIL,
 				SENDMAIL_ARGS,
 				file->cf_UserName,
@@ -211,7 +221,7 @@ EndJob(CronFile *file, CronLine *line)
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		log_err("unable to fork: cron output for user %s %s to /dev/null\n",
+		logn(LOG_ERR, "unable to fork: cron output for user %s %s to /dev/null\n",
 				file->cf_UserName,
 				line->cl_Shell
 			);

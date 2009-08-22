@@ -5,14 +5,19 @@
 .SH NAME
 crond \- cron daemon (Yet Another Cron)
 .SH SYNOPSIS
-.B crond [-l#] [-L logfile | -S] [-d[#]|-f|-b] [-c crondir] [-s systemdir]
+.B crond [-l#] [-L logfile | -S] [-d|-f|-b] [-c crondir] [-s systemdir]
 .SH OPTIONS
 .B crond
 is a background daemon that parses individual crontab files and
 executes commands on behalf of the users in question.
 .TP 0.5i
 .B "-l <loglevel> "
-set logging level, default is 8.
+set logging level, default is <= notice = 5.
+.PP
+Valid level names are:
+alert, crit, debug, emerg, err, error (deprecated synonym for err), info,
+notice, panic (deprecated synonym for emerg), warning, warn (deprecated synonym
+for warning).
 .TP 0.5i
 .B "-L logfile "
 log to specified file (default is /var/log/crond.log).
@@ -20,10 +25,10 @@ log to specified file (default is /var/log/crond.log).
 .B "-S "
 use syslogd (default).
 .TP 0.5i
-.B "-d [<debuglevel>] "
-set debugging level, default is 0, if no level specified with -d
-option default is 1.  This option also sets the logging level to
-0 and causes crond to run in the foreground.
+.TP 0.5i
+.B "-d "
+turn on debugging. This option sets the logging level to <= debug and causes crond
+to run in the foreground.
 .TP 0.5i
 .B "-f "
 run crond in the foreground.

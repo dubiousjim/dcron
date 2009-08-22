@@ -43,6 +43,9 @@
 #ifndef LOG_FILE
 #define LOG_FILE	"/var/log/crond.log"
 #endif
+#ifndef LOG_IDENT
+#define LOG_IDENT	"crond"
+#endif
 #ifndef OPEN_MAX
 #define OPEN_MAX	256
 #endif

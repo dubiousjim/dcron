@@ -15,7 +15,7 @@
 
 const char *CDir = CRONTABS;
 int   UserId;
-short LogLevel = 9;
+short LogLevel = LOG_NOTICE;
 short DebugOpt = 0;
 short LoggerOpt = 0;
 /* not used in this program, but subs.c needs */

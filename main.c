@@ -2,7 +2,7 @@
 /*
  * MAIN.C
  *
- * crond [-l#] [-L logfile | -S ] [-d [#]|-f|-b] [-c crondir] [-s systemdir]
+ * crond [-l#] [-L logfile | -S ] [-d|-f|-b] [-c crondir] [-s systemdir]
  *
  * run as root, but NOT setuid root
  *
@@ -24,7 +24,7 @@ Prototype uid_t DaemonUid;
 Prototype int InSyncFileRoot;
 
 short DebugOpt;
-short LogLevel = 8;
+short LogLevel = LOG_NOTICE;
 short ForegroundOpt = 0;
 short LoggerOpt;
 const char  *CDir = CRONTABS;
@@ -36,6 +36,20 @@ int InSyncFileRoot;
 int
 main(int ac, char **av)
 {
+	const char *LevelAry[] = {
+		"emerg",
+		"alert",
+		"crit",
+		"err",
+		"warning",
+		"notice",
+		"info",
+		"debug",
+		"panic",
+		"error",
+		"warn",
+		NULL
+	};
 	int i;
 
 	/*
@@ -46,16 +60,62 @@ main(int ac, char **av)
 
 	opterr = 0;
 
-	while ((i = getopt(ac,av,"d:l:L:fbSc:s:")) != EOF) {
+	while ((i = getopt(ac,av,"dl:L:fbSc:s:")) != EOF) {
 		switch (i) {
 			case 'l':
 				{
-					LogLevel = atoi(optarg);
+					char *ptr;
+					int j;
+					ptr = optarg;
+					for (j = 0; LevelAry[j]; ++j) {
+						if (strncmp(ptr, LevelAry[j], strlen(LevelAry[j])) == 0) {
+							break;
+						}
+					}
+					switch(j) {
+						case 0:
+						case 8:
+							/* #define	LOG_EMERG	0	[* system is unusable *] */
+							LogLevel = LOG_EMERG;
+							break;
+						case 1:
+							/* #define	LOG_ALERT	1	[* action must be taken immediately *] */
+							LogLevel = LOG_ALERT;
+							break;
+						case 2:
+							/* #define	LOG_CRIT	2	[* critical conditions *] */
+							LogLevel = LOG_CRIT;
+							break;
+						case 3:
+						case 9:
+							/* #define	LOG_ERR		3	[* error conditions *] */
+							LogLevel = LOG_ERR;
+							break;
+						case 4:
+						case 10:
+							/* #define	LOG_WARNING	4	[* warning conditions *] */
+							LogLevel = LOG_WARNING;
+							break;
+						case 5:
+							/* #define	LOG_NOTICE	5	[* normal but significant condition *] */
+							LogLevel = LOG_NOTICE;
+							break;
+						case 6:
+							/* #define	LOG_INFO	6	[* informational *] */
+							LogLevel = LOG_INFO;
+							break;
+						case 7:
+							/* #define	LOG_DEBUG	7	[* debug-level messages *] */
+							LogLevel = LOG_DEBUG;
+							break;
+						default:
+							LogLevel = atoi(optarg);
+					}
 				}
 				break;
 			case 'd':
-				DebugOpt = atoi(optarg);
-				LogLevel = 0;
+				DebugOpt = 1;
+				LogLevel = LOG_DEBUG;
 				/* fall through to include f too */
 			case 'f':
 				ForegroundOpt = 1;
@@ -83,10 +143,10 @@ main(int ac, char **av)
 				 * check for parse error
 				 */
 				printf("dcron " VERSION "\n");
-				printf("crond [-l#] [-L logfile | -S ] [-d [#]|-f|-b] [-c crondir] [-s systemdir]\n");
-				printf("-l num\tlogging level (default = 8)\n");
+				printf("crond [-l#] [-L logfile | -S ] [-d|-f|-b] [-c crondir] [-s systemdir]\n");
+				printf("-l num\tlogging level (default <= LOG_NOTICE = 5)\n");
 				printf("-L file\tlog to file (default %s)\n-S\tlog to syslogd (default)\n", LOG_FILE);
-				printf("-d [num]\tdebugging\n-f\trun in foreground\n-b\trun in background (default)\n");
+				printf("-d\tdebugging\n-f\trun in foreground\n-b\trun in background (default)\n");
 				printf("-c crondir\tcrontab spool dir (default %s)\n-s systemdir\tsystem cron.d dir (default %s)\n",
 						CRONTABS, SCRONTABS);
 				exit(2);
@@ -141,7 +201,7 @@ main(int ac, char **av)
 	 *             of 1 second.
 	 */
 
-	logn(9, "%s " VERSION " ya, started with loglevel %d\n", av[0], LogLevel);
+	logn(LOG_INFO,"%s " VERSION " ya, started with loglevel %s\n", av[0], LevelAry[LogLevel]);
 	SynchronizeDir(CDir, NULL, 1);
 	SynchronizeDir(SCDir, "root", 1);
 
@@ -183,10 +243,10 @@ main(int ac, char **av)
 			CheckUpdates(CDir, NULL);
 			CheckUpdates(SCDir, "root");
 			if (DebugOpt)
-				logn(5, "Wakeup dt=%d\n", dt);
+				logn(LOG_DEBUG, "Wakeup dt=%d\n", dt);
 			if (dt < -60*60 || dt > 60*60) {
 				t1 = t2;
-				logn(9, "time disparity of %d minutes detected\n", dt / 60);
+				logn(LOG_NOTICE,"time disparity of %d minutes detected\n", dt / 60);
 			} else if (dt > 0) {
 				TestJobs(t1, t2);
 				RunJobs();

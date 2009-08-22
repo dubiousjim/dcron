@@ -10,23 +10,13 @@
 #include "defs.h"
 
 Prototype void logn(int level, const char *ctl, ...);
-Prototype void log9(const char *ctl, ...);
-Prototype void log_err(const char *ctl, ...);
+Prototype void logfd(int level, int fd, const char *ctl, ...);
 Prototype void fdprintf(int fd, const char *ctl, ...);
 Prototype int  ChangeUser(const char *user, short dochdir);
-Prototype void vlog(int level, int MLOG_LEVEL, const char *ctl, va_list va);
+Prototype void vlog(int level, int fd, const char *ctl, va_list va);
 Prototype void startlogger(void);
 Prototype void initsignals(void);
 
-void
-log9(const char *ctl, ...)
-{
-	va_list va;
-
-	va_start(va, ctl);
-	vlog(9, LOG_WARNING, ctl, va);
-	va_end(va);
-}
 
 void
 logn(int level, const char *ctl, ...)
@@ -34,17 +24,17 @@ logn(int level, const char *ctl, ...)
 	va_list va;
 
 	va_start(va, ctl);
-	vlog(level, LOG_NOTICE, ctl, va);
+	vlog(level, 2, ctl, va);
 	va_end(va);
 }
 
 void
-log_err(const char *ctl, ...)
+logfd(int level, int fd, const char *ctl, ...)
 {
 	va_list va;
 
 	va_start(va, ctl);
-	vlog(20, LOG_ERR, ctl, va);
+	vlog(level, fd, ctl, va);
 	va_end(va);
 }
 
@@ -61,25 +51,26 @@ fdprintf(int fd, const char *ctl, ...)
 }
 
 void
-vlog(int level, int MLOG_LEVEL, const char *ctl, va_list va)
+vlog(int level, int fd, const char *ctl, va_list va)
 {
 	char buf[2048];
 	int  logfd;
 
-	if (level >= LogLevel) {
+	if (level <= LogLevel) {
 		vsnprintf(buf,sizeof(buf), ctl, va);
 		if (DebugOpt)
 			/* when -d, we always (and only) log to stderr
+			 * fd will be 2 except when 2 is bound to a execing subprocess, then it will be 8
 			 */
-			fprintf(stderr,"%s",buf);
+			write(fd, buf, strlen(buf));
 		else
-			if (LoggerOpt == 0) syslog(MLOG_LEVEL, "%s", buf);
+			if (LoggerOpt == 0) syslog(level, "%s", buf);
 			else {
-				if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0){
+				if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0) {
 					write(logfd, buf, strlen(buf));
 					close(logfd);
 				} else {
-					fprintf(stderr, "failed to open log file '%s' reason: %s",
+					fdprintf(fd, "failed to open logfile '%s' reason: %s\n",
 							LogFile,
 							strerror(errno)
 							);
@@ -98,7 +89,7 @@ ChangeUser(const char *user, short dochdir)
 	 */
 
 	if ((pas = getpwnam(user)) == 0) {
-		logn(9, "failed to get uid for %s\n", user);
+		logn(LOG_ERR, "failed to get uid for %s\n", user);
 		return(-1);
 	}
 	setenv("USER", pas->pw_name, 1);
@@ -110,22 +101,22 @@ ChangeUser(const char *user, short dochdir)
 	 */
 
 	if (initgroups(user, pas->pw_gid) < 0) {
-		logn(9, "initgroups failed: %s %s\n", user, strerror(errno));
+		logn(LOG_ERR, "initgroups failed: %s %s\n", user, strerror(errno));
 		return(-1);
 	}
 	if (setregid(pas->pw_gid, pas->pw_gid) < 0) {
-		logn(9, "setregid failed: %s %d\n", user, pas->pw_gid);
+		logn(LOG_ERR, "setregid failed: %s %d\n", user, pas->pw_gid);
 		return(-1);
 	}
 	if (setreuid(pas->pw_uid, pas->pw_uid) < 0) {
-		logn(9, "setreuid failed: %s %d\n", user, pas->pw_uid);
+		logn(LOG_ERR, "setreuid failed: %s %d\n", user, pas->pw_uid);
 		return(-1);
 	}
 	if (dochdir) {
 		if (chdir(pas->pw_dir) < 0) {
-			logn(8, "chdir failed: %s %s\n", user, pas->pw_dir);
+			logn(LOG_ERR, "chdir failed: %s %s\n", user, pas->pw_dir);
 			if (chdir(TMPDIR) < 0) {
-				logn(9, "chdir failed: %s %s\n" TMPDIR, user);
+				logn(LOG_ERR, "chdir failed: %s %s\n" TMPDIR, user);
 				return(-1);
 			}
 		}
@@ -139,7 +130,7 @@ startlogger (void) {
 	int logfd;
 
 	if (LoggerOpt == 0)
-		openlog("crond",LOG_CONS|LOG_PID,LOG_CRON);
+		openlog(LOG_IDENT, LOG_CONS|LOG_PID,LOG_CRON);
 
 	else { /* test logfile */
 		if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0)
