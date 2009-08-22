@@ -84,6 +84,7 @@
 
 #define ID_TAG			"ID="
 #define WAIT_TAG		"AFTER="
+#define FREQ_TAG		"FREQ="
 
 #define VERSION	"V4.0b1"
 
@@ -107,6 +108,7 @@ typedef struct CronLine {
 	struct	CronWaiter *cl_Waiters;
 	struct	CronNotifier *cl_Notifs;
 	int		cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (startup)	*/
+	int		cl_FreqOK;
 	int		cl_Delay;		/* defaults to cl_Freq or hourly	*/
 	time_t	cl_LastRan;
 	time_t	cl_NotUntil;
@@ -123,8 +125,9 @@ typedef struct CronLine {
 typedef struct CronWaiter {
 	struct	CronWaiter *cw_Next;
 	struct	CronNotifier *cw_Notifier;
-	struct	CronLine *cw_ProdNotif;
+	struct	CronLine *cw_NotifLine;
 	short	cw_Flag;
+	int		cw_MaxWait;
 } CronWaiter;
 
 typedef struct CronNotifier {

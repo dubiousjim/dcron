@@ -282,9 +282,9 @@ main(int ac, char **av)
 				SynchronizeDir(SCDir, "root", 0);
 				ReadTimestamps(0);
 			} else {
-				if (CheckUpdates(CDir, NULL))
+				if (CheckUpdates(CDir, NULL, t1, t2))
 					ReadTimestamps(0);
-				CheckUpdates(SCDir, "root");
+				CheckUpdates(SCDir, "root", t1, t2);
 			}
 			if (DebugOpt)
 				logn(LOG_DEBUG, "Wakeup dt=%d\n", dt);
