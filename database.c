@@ -13,6 +13,7 @@
 Prototype void CheckUpdates(const char *dpath, const char *user_override);
 Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
 Prototype int TestJobs(time_t t1, time_t t2);
+Prototype int ArmJob(CronFile *file, CronLine *line);
 Prototype void RunJobs(void);
 Prototype int CheckJobs(void);
 
@@ -537,32 +538,39 @@ TestJobs(time_t t1, time_t t2)
 				for (line = file->cf_LineBase; line; line = line->cl_Next) {
 					if (DebugOpt)
 						logn(LOG_DEBUG, "    LINE %s\n", line->cl_Shell);
+
 					if (!(line->cl_Mins[tp->tm_min] &&
 							line->cl_Hrs[tp->tm_hour] &&
 							(line->cl_Days[tp->tm_mday] || (n_wday && line->cl_Dow[tp->tm_wday]) ) &&
 							line->cl_Mons[tp->tm_mon]
 					   ))
 						continue;
-					{
-						if (line->cl_Pid > 0) {
-							logn(LOG_NOTICE, "    process already running (%d): %s\n",
-									line->cl_Pid,
-									line->cl_Shell
-								);
-						} else if (line->cl_Pid == 0) {
-							line->cl_Pid = -1;
-							file->cf_Ready = 1;
-							if (DebugOpt)
-								logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Shell);
-							++nJobs;
-						}
-					}
+					nJobs += ArmJob(file, line);
 				} /* for line */
 			}
 		}
 	}
 	return(nJobs);
 }
+
+int
+ArmJob(CronFile *file, CronLine *line)
+{
+	if (line->cl_Pid > 0) {
+		logn(LOG_NOTICE, "    process already running (%d): %s\n",
+				line->cl_Pid,
+				line->cl_Shell
+			);
+	} else if (line->cl_Pid == 0) {
+		line->cl_Pid = -1;
+		file->cf_Ready = 1;
+		if (DebugOpt)
+			logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Shell);
+		return 1;
+	}
+	return 0;
+}
+
 
 void
 RunJobs(void)
