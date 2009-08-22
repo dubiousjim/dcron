@@ -244,6 +244,7 @@ main(int ac, char **av)
 	SynchronizeDir(CDir, NULL, 1);
 	SynchronizeDir(SCDir, "root", 1);
 	ReadTimestamps(1);
+	TestStartupJobs(); /* @startup jobs only run when crond is started, not when their crontab is loaded */
 
 	{
 		time_t t1 = time(NULL);

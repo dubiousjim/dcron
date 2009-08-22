@@ -14,6 +14,7 @@ Prototype int CheckUpdates(const char *dpath, const char *user_override);
 Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
 Prototype void ReadTimestamps(int initial_scan);
 Prototype int TestJobs(time_t t1, time_t t2);
+Prototype int TestStartupJobs(void);
 Prototype int ArmJob(CronFile *file, CronLine *line);
 Prototype void RunJobs(void);
 Prototype int CheckJobs(void);
@@ -792,6 +793,42 @@ ArmJob(CronFile *file, CronLine *line)
 	return 0;
 }
 
+int
+TestStartupJobs(void)
+{
+	short nJobs = 0;
+
+
+	CronFile *file;
+	CronLine *line;
+
+	for (file = FileBase; file; file = file->cf_Next) {
+		if (DebugOpt)
+			logn(LOG_DEBUG, "FILE %s/%s USER %s:\n",
+				file->cf_DPath, file->cf_FileName, file->cf_UserName);
+		for (line = file->cf_LineBase; line; line = line->cl_Next) {
+			if (DebugOpt) {
+				if (line->cl_JobName)
+					logn(LOG_DEBUG, "    LINE %s JOB %s\n", line->cl_Shell, line->cl_JobName);
+				else
+					logn(LOG_DEBUG, "    LINE %s\n", line->cl_Shell);
+			}
+
+			if (line->cl_Freq == -1) {
+				/* freq is @startup */
+
+				line->cl_Pid = -1;
+				file->cf_Ready = 1;
+				++nJobs;
+				if (DebugOpt)
+					logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Description);
+
+			}
+
+		} /* for line */
+	}
+	return(nJobs);
+}
 
 void
 RunJobs(void)
