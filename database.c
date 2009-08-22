@@ -94,7 +94,7 @@ CheckUpdates(const char *dpath, const char *user_override)
 {
 	FILE *fi;
 	char buf[256];
-	char *ptr;
+	char *fname, *ptok, *job;
 	char *path;
 
 	if (DebugOpt)
@@ -110,13 +110,44 @@ CheckUpdates(const char *dpath, const char *user_override)
 			 * 		if there's a following sep, overwrite it to 0 and point ptok to next char
 			 * 		else point ptok at buf's terminating 0
 			 */                                                
-			ptr = strtok(buf, " \t\r\n");
+			fname = strtok_r(buf, " \t\r\n", &ptok);
+
 			if (user_override)
-				SynchronizeFile(dpath, ptr, user_override);
-			else if (getpwnam(ptr))
-				SynchronizeFile(dpath, ptr, ptr);
-			else
-				logn(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, ptr);
+				SynchronizeFile(dpath, fname, user_override);
+			else if (!getpwnam(fname))
+				logn(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
+			else if (*ptok == 0 || *ptok == '\r' || *ptok == '\n')
+				SynchronizeFile(dpath, fname, fname);
+			else {
+				/* if fname is followed by whitespace, we prod any following jobs */
+				CronFile *file = FileBase;
+				while (file) {
+					if (strcmp(file->cf_UserName, fname) == 0)
+						break;
+					file = file->cf_Next;
+				}
+				if (!file)
+					logn(LOG_WARNING, "unable to prod for user %s: no crontab\n", fname);
+				else {
+					CronLine *line;
+					/* calling strtok(ptok...) then strtok(NULL) is equiv to calling strtok_r(NULL,..&ptok) */
+					while ((job = strtok(ptok, " \t\r\n")) != NULL) {
+						ptok = NULL;
+						line = file->cf_LineBase;
+						while (line) {
+							if (line->cl_JobName && strcmp(line->cl_JobName, job) == 0)
+								break;
+							line = line->cl_Next;
+						}
+						if (line)
+							ArmJob(file, line);
+						else {
+							logn(LOG_WARNING, "unable to prod for user %s: unknown job %s\n", fname, job);
+							/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
+						}
+					}
+				}
+			}
 		}
 		fclose(fi);
 	}
