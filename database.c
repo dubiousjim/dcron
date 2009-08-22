@@ -18,7 +18,7 @@ Prototype int CheckJobs(void);
 
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
 void DeleteFile(CronFile **pfile);
-char *ParseField(char *userName, char *ary, int modvalue, int off, const char **names, char *ptr);
+char *ParseField(char *userName, char *ary, int modvalue, int off, int onvalue, const char **names, char *ptr);
 void FixDayDow(CronLine *line);
 
 CronFile *FileBase;
@@ -241,15 +241,15 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				 * parse date ranges
 				 */
 
-				ptr = ParseField(file->cf_UserName, line.cl_Mins, 60, 0,
+				ptr = ParseField(file->cf_UserName, line.cl_Mins, 60, 0, 1,
 						NULL, ptr);
-				ptr = ParseField(file->cf_UserName, line.cl_Hrs,  24, 0,
+				ptr = ParseField(file->cf_UserName, line.cl_Hrs,  24, 0, 1,
 						NULL, ptr);
-				ptr = ParseField(file->cf_UserName, line.cl_Days, 32, 0,
+				ptr = ParseField(file->cf_UserName, line.cl_Days, 32, 0, 1,
 						NULL, ptr);
-				ptr = ParseField(file->cf_UserName, line.cl_Mons, 12, -1,
+				ptr = ParseField(file->cf_UserName, line.cl_Mons, 12, -1, 1,
 						MonAry, ptr);
-				ptr = ParseField(file->cf_UserName, line.cl_Dow, 7, 0,
+				ptr = ParseField(file->cf_UserName, line.cl_Dow, 7, 0, 31,
 						DowAry, ptr);
 				/*
 				 * check failure
@@ -295,7 +295,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 }
 
 char *
-ParseField(char *user, char *ary, int modvalue, int off, const char **names, char *ptr)
+ParseField(char *user, char *ary, int modvalue, int off, int onvalue, const char **names, char *ptr)
 {
 	char *base = ptr;
 	int n1 = -1;
@@ -378,7 +378,7 @@ ParseField(char *user, char *ary, int modvalue, int off, const char **names, cha
 				n1 = (n1 + 1) % modvalue;
 
 				if (--s0 == 0) {
-					ary[n1 % modvalue] = 1;
+					ary[n1] = onvalue;
 					s0 = skip;
 				}
 			} while (n1 != n2 && --failsafe);
@@ -407,7 +407,7 @@ ParseField(char *user, char *ary, int modvalue, int off, const char **names, cha
 		int i;
 
 		for (i = 0; i < modvalue; ++i)
-			logn(LOG_DEBUG, "%d", ary[i]);
+			logn(LOG_DEBUG, "%2x ", ary[i]);
 		logn(LOG_DEBUG, "\n");
 	}
 
@@ -417,7 +417,7 @@ ParseField(char *user, char *ary, int modvalue, int off, const char **names, cha
 void
 FixDayDow(CronLine *line)
 {
-	unsigned short i;
+	unsigned short i,j;
 	short weekUsed = 0;
 	short daysUsed = 0;
 
@@ -429,11 +429,30 @@ FixDayDow(CronLine *line)
 	}
 	for (i = 0; i < arysize(line->cl_Days); ++i) {
 		if (line->cl_Days[i] == 0) {
-			daysUsed = 1;
-			break;
+			if (weekUsed) {
+				if (!daysUsed) {
+					daysUsed = 1;
+					/* change from "every Mon" to "ith Mon"
+					 * 6th,7th... Dow are treated as 1st,2nd... */
+					for (j = 0; j < arysize(line->cl_Dow); ++j) {
+						line->cl_Dow[j] &= 1 << (i-1)%5;
+					}
+				} else {
+					/* change from "nth Mon" to "nth or ith Mon" */
+					for (j = 0; j < arysize(line->cl_Dow); ++j) {
+						if (line->cl_Dow[j])
+							line->cl_Dow[j] |= 1 << (i-1)%5;
+					}
+				}
+				/* continue cycling through cl_Days */
+			}
+			else {
+				daysUsed = 1;
+				break;
+			}
 		}
 	}
-	if (weekUsed && !daysUsed) {
+	if (weekUsed) {
 		memset(line->cl_Days, 0, sizeof(line->cl_Days));
 	}
 	if (daysUsed && !weekUsed) {
@@ -501,6 +520,14 @@ TestJobs(time_t t1, time_t t2)
 			CronFile *file;
 			CronLine *line;
 
+			unsigned short n_wday = (tp->tm_mday - 1)%7 + 1;
+			if (n_wday >= 4) {
+				struct tm tnext = *tp;
+				tnext.tm_mday += 7;
+				if (mktime(&tnext) != (time_t)-1 && tnext.tm_mon != tp->tm_mon)
+					n_wday |= 16;	/* last dow in month is always recognized as 5th */
+			}
+
 			for (file = FileBase; file; file = file->cf_Next) {
 				if (DebugOpt)
 					logn(LOG_DEBUG, "FILE %s/%s USER %s:\n",
@@ -512,7 +539,7 @@ TestJobs(time_t t1, time_t t2)
 						logn(LOG_DEBUG, "    LINE %s\n", line->cl_Shell);
 					if (!(line->cl_Mins[tp->tm_min] &&
 							line->cl_Hrs[tp->tm_hour] &&
-							(line->cl_Days[tp->tm_mday] || line->cl_Dow[tp->tm_wday]) &&
+							(line->cl_Days[tp->tm_mday] || (n_wday && line->cl_Dow[tp->tm_wday]) ) &&
 							line->cl_Mons[tp->tm_mon]
 					   ))
 						continue;

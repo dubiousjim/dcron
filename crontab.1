@@ -57,8 +57,7 @@ time range, a time range with a skip factor, a symbolic range for the
 day of week and month in year, and additional subranges delimited with
 commas.  Blank lines in the crontab or lines that begin with a hash (#)
 are ignored.  If you specify both a day in the month and a day of week,
-the result is effectively ORd... the crontab entry will be run on the
-specified day of week and on the specified day in the month.
+it will be interpreted as the nth such day in the month.
 
 .sp 1
 .br
@@ -79,9 +78,11 @@ specified day of week and on the specified day in the month.
 0 23-7/2,8 * * * date
 
 .br
-# at 11:00 a.m. on the 4th and on every mon, tue, wed
+# at 11:00 a.m. on the first and last mon, tue, wed of each month
 .br
-0 11 4 * mon-wed date
+# ("5th" is always interpreted as "last")
+.br
+0 11 1,5 * mon-wed date
 
 .br
 # 4:00 a.m. on january 1st
