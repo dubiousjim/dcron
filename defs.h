@@ -17,6 +17,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
+#define __USE_XOPEN
 #include <time.h>
 #include <dirent.h>
 #include <fcntl.h>
@@ -32,7 +33,13 @@
 #define arysize(ary)	(sizeof(ary)/sizeof((ary)[0]))
 
 #ifndef CRONTABS
-#define CRONTABS	"/var/spool/cron"
+#define CRONTABS	"/var/spool/cron/crontabs"
+#endif
+#ifndef TIMESTAMPS
+#define TIMESTAMPS	"/var/spool/cron/timestamps"
+#endif
+#ifndef TIMESTAMP_FMT
+#define TIMESTAMP_FMT	"%Y-%m-%d %H:%M"
 #endif
 #ifndef SCRONTABS
 #define SCRONTABS	"/etc/cron.d"
@@ -69,6 +76,14 @@
 #define PATH_VI		"/usr/bin/vi"	/* location of vi	*/
 #endif
 
+#define HOURLY_FREQ		60 * 60
+#define DAILY_FREQ		24 * HOURLY_FREQ
+#define	WEEKLY_FREQ		7 * DAILY_FREQ
+#define MONTHLY_FREQ	30 * DAILY_FREQ
+#define YEARLY_FREQ		365 * DAILY_FREQ
+
+#define ID_TAG			"ID="
+
 #define VERSION	"V4.0b1"
 
 typedef struct CronFile {
@@ -86,6 +101,12 @@ typedef struct CronLine {
     struct CronLine *cl_Next;
     char	*cl_Shell;	/* shell command			*/
 	char	*cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
+	char	*cl_JobName;	/* job name, if any			*/
+	char	*cl_Timestamp;	/* path to timestamp file, if cl_Freq defined */
+	int		cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (startup)	*/
+	int		cl_Delay;		/* defaults to cl_Freq or hourly	*/
+	time_t	cl_LastRan;
+	time_t	cl_NotUntil;
     int		cl_Pid;		/* running pid, 0, or armed (-1)	*/
     int		cl_MailFlag;	/* running pid is for mail		*/
     int		cl_MailPos;	/* 'empty file' size			*/

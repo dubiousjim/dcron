@@ -5,7 +5,7 @@
 .SH NAME
 crond \- cron daemon (Yet Another Cron)
 .SH SYNOPSIS
-.B crond [-l#] [-L logfile | -S] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir]
+.B crond [-l#] [-L logfile | -S] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir] [-t timestamps]
 .SH OPTIONS
 .B crond
 is a background daemon that parses individual crontab files and
@@ -46,6 +46,9 @@ specify crontab spool directory (default is /var/spool/cron/crontabs).
 .TP 0.5i
 .B "-s systemdir "
 specify directory containing system-wide crontab files (default is /etc/cron.d).
+.TP 0.5i
+.B "-t timestamps "
+specify directory containing cron timestamps for @freq jobs (default is /var/spool/cron/timestamps).
 .SH DESCRIPTION
 .B crond
 is responsible for scanning the crontab files and running

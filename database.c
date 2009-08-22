@@ -12,6 +12,7 @@
 
 Prototype void CheckUpdates(const char *dpath, const char *user_override);
 Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
+Prototype void ReadTimestamps(int initial_scan);
 Prototype int TestJobs(time_t t1, time_t t2);
 Prototype int ArmJob(CronFile *file, CronLine *line);
 Prototype void RunJobs(void);
@@ -69,6 +70,17 @@ const char *MonAry[] = {
 	"Oct",
 	"Nov",
 	"Dec",
+	NULL
+};
+
+const char *FreqAry[] = {
+	"noauto",
+	"reboot",
+	"hourly",
+	"daily",
+	"weekly",
+	"monthly",
+	"yearly",
 	NULL
 };
 
@@ -168,6 +180,53 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	}
 }
 
+
+void
+ReadTimestamps(int initial_scan)
+{
+	CronFile *file;
+	CronLine *line;
+	FILE *fi;
+	char buf[256];
+	char *ptr;
+	struct tm tm;
+	time_t sec, freq;
+
+	file = FileBase;
+	while (file != NULL) {
+		if (file->cf_Deleted == 0) {
+			line = file->cf_LineBase;
+			while (line != NULL) {
+				if (line->cl_Timestamp) {
+					if ((fi = fopen(line->cl_Timestamp, "r")) != NULL) {
+						if (fgets(buf, sizeof(buf), fi) != NULL) {
+							sec = (time_t)-1;
+							ptr = strptime(buf, TIMESTAMP_FMT, &tm);
+							if (ptr && (*ptr == 0 || *ptr == '\n' || *ptr == '\r'))
+								sec = mktime(&tm);
+							if (sec == (time_t)-1) {
+								logn(LOG_WARNING, "unable to parse timestamp (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
+								/* we continue checking other timestamps in this CronFile */
+							} else {
+								line->cl_LastRan = sec; 
+								freq = (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
+								if (line->cl_NotUntil < line->cl_LastRan + freq)
+									line->cl_NotUntil = line->cl_LastRan + freq;
+							}
+						}
+						fclose(fi);
+					} else if (initial_scan) {
+						logn(LOG_NOTICE, "no timestamp found (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
+						/* softerror, do not exit the program */
+					}
+				}
+				line = line->cl_Next;
+			}
+		}
+		file = file->cf_Next;
+	}
+}
+
 void
 SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 {
@@ -238,42 +297,156 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				if (DebugOpt)
 					logn(LOG_DEBUG, "User %s Entry %s\n", userName, buf);
 
-				/*
-				 * parse date ranges
-				 */
+				if (*ptr == '@') {
+					/*
+					 * parse @freq[/delay]
+					 */
+					int	j;
+					line.cl_Delay = -1;
+					ptr += 1;
+					for (j = 0; FreqAry[j]; ++j) {
+						if (strncmp(ptr, FreqAry[j], strlen(FreqAry[j])) == 0) {
+							break;
+						}
+					}
+					if (FreqAry[j]) {
+						ptr += strlen(FreqAry[j]);
+						switch(j) {
+							case 0:
+								/* noauto */
+								line.cl_Freq = -2;
+								line.cl_Delay = 0;
+								break;
+							case 1:
+								/* reboot */
+								line.cl_Freq = -1;
+								line.cl_Delay = 0;
+								break;
+							case 2:
+								line.cl_Freq = HOURLY_FREQ;
+								line.cl_Delay = HOURLY_FREQ;
+								break;
+							case 3:
+								line.cl_Freq = DAILY_FREQ;
+								line.cl_Delay = HOURLY_FREQ;
+								break;
+							case 4:
+								line.cl_Freq = WEEKLY_FREQ;
+								line.cl_Delay = HOURLY_FREQ;
+								break;
+							case 5:
+								line.cl_Freq = MONTHLY_FREQ;
+								line.cl_Delay = HOURLY_FREQ;
+							case 6:
+								line.cl_Freq = YEARLY_FREQ;
+								line.cl_Delay = HOURLY_FREQ;
+						}
+					} else if (*ptr >= '0' && *ptr <= '9') {
+						if ((line.cl_Freq = strtol(ptr, &ptr, 10)) > 0) {
+							line.cl_Freq *= 60;
+							line.cl_Delay = line.cl_Freq;
+						}
+					}
+					if (line.cl_Delay >= 0 && *ptr == '/')
+						line.cl_Delay = strtol(++ptr, &ptr, 10) * 60;
+					if ((line.cl_Delay < 0) || (*ptr != ' ' && *ptr != '\t' && *ptr != '\n')) {
+						logn(LOG_WARNING, "failed parsing crontab for user %s: %s\n", userName, buf);
+						continue;
+					}
+					while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
+						++ptr;
 
-				ptr = ParseField(file->cf_UserName, line.cl_Mins, 60, 0, 1,
-						NULL, ptr);
-				ptr = ParseField(file->cf_UserName, line.cl_Hrs,  24, 0, 1,
-						NULL, ptr);
-				ptr = ParseField(file->cf_UserName, line.cl_Days, 32, 0, 1,
-						NULL, ptr);
-				ptr = ParseField(file->cf_UserName, line.cl_Mons, 12, -1, 1,
-						MonAry, ptr);
-				ptr = ParseField(file->cf_UserName, line.cl_Dow, 7, 0, 31,
-						DowAry, ptr);
-				/*
-				 * check failure
-				 */
+				} else {
+					/*
+					 * parse date ranges
+					 */
 
-				if (ptr == NULL)
+					ptr = ParseField(file->cf_UserName, line.cl_Mins, 60, 0, 1,
+							NULL, ptr);
+					ptr = ParseField(file->cf_UserName, line.cl_Hrs,  24, 0, 1,
+							NULL, ptr);
+					ptr = ParseField(file->cf_UserName, line.cl_Days, 32, 0, 1,
+							NULL, ptr);
+					ptr = ParseField(file->cf_UserName, line.cl_Mons, 12, -1, 1,
+							MonAry, ptr);
+					ptr = ParseField(file->cf_UserName, line.cl_Dow, 7, 0, 31,
+							DowAry, ptr);
+					/*
+					 * check failure
+					 */
+
+					if (ptr == NULL)
+						continue;
+
+					/*
+					 * fix days and dow - if one is not * and the other
+					 * is *, the other is set to 0, and vise-versa
+					 */
+
+					FixDayDow(&line);
+				}
+
+				/* check for ID=... */
+				do {
+					if (strncmp(ptr, ID_TAG, strlen(ID_TAG)) == 0) {
+						if (line.cl_JobName) {
+							/* only assign ID_TAG once */
+							logn(LOG_WARNING, "failed parsing crontab for user %s: %s%s\n", userName, ID_TAG, ptr);
+							ptr = NULL;
+						} else {
+							ptr += strlen(ID_TAG);
+							/*
+							 * name = strsep(&ptr, seps):
+							 * return name = ptr, and if ptr contains sep chars, overwrite first with 0 and point ptr to next char
+							 *                    else set ptr=NULL
+							 */
+							asprintf(&line.cl_Description, "job %s", strsep(&ptr, " \t\r\n"));
+							line.cl_JobName = line.cl_Description + 4;
+							if (!ptr)
+								logn(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, ID_TAG, line.cl_JobName);
+						}
+					} else
+						break;
+					if (!ptr)
+						break;
+					while (*ptr == ' ' || *ptr == '\t')
+						++ptr;
+				} while (!line.cl_JobName);
+
+				if (line.cl_JobName && (!ptr || *line.cl_JobName == 0)) {
+					/* we're aborting, or ID= was empty */
+					free(line.cl_Description);
+					line.cl_Description = NULL;
+					line.cl_JobName = NULL;
+				}
+				if (ptr && line.cl_Delay > 0 && !line.cl_JobName) {
+					logn(LOG_WARNING, "failed parsing crontab for user %s: writing timestamp requires job %s to be named\n", userName, ptr);
+					ptr = NULL;
+				}
+				if (!ptr) {
+					/* couldn't parse so we abort */
 					continue;
-
-				/*
-				 * fix days and dow - if one is not * and the other
-				 * is *, the other is set to 0, and vise-versa
-				 */
-
-				FixDayDow(&line);
+				}
+				/* now we've added any ID=... */
 
 				/*
 				 * copy command string
 				 */
 				line.cl_Shell = strdup(ptr);
 
-				line.cl_Description = line.cl_Shell;
-				if (DebugOpt) {
-					logn(LOG_DEBUG, "    Command %s\n", line.cl_Shell);
+				if (line.cl_Delay > 0) {
+					asprintf(&line.cl_Timestamp, "%s/%s.%s", TSDir, userName, line.cl_JobName);
+					line.cl_NotUntil = time(NULL) + line.cl_Delay;
+				}
+
+				if (line.cl_JobName) {
+					if (DebugOpt)
+						logn(LOG_DEBUG, "    Command %s Job %s\n", line.cl_Shell, line.cl_JobName);
+				} else {
+					/* when cl_JobName is NULL, we point cl_Description to cl_Shell */
+					line.cl_Description = line.cl_Shell;
+					if (DebugOpt)
+						logn(LOG_DEBUG, "    Command %s\n", line.cl_Shell);
 				}
 
 				*pline = calloc(1, sizeof(CronLine));
@@ -486,9 +659,14 @@ DeleteFile(CronFile **pfile)
 		} else {
 			*pline = line->cl_Next;
 			free(line->cl_Shell);
-			/*
-		 	 * if cl_JobName is NULL, Description pointed to ch_Shell, which was already freed
-			 */
+
+			if (line->cl_JobName)
+				/* this frees both cl_Description and cl_JobName
+				 * if cl_JobName is NULL, Description pointed to ch_Shell, which was already freed
+				 */
+				free(line->cl_Description);
+			if (line->cl_Timestamp)
+				free(line->cl_Timestamp);
 			free(line);
 		}
 	}
@@ -540,10 +718,17 @@ TestJobs(time_t t1, time_t t2)
 				if (file->cf_Deleted)
 					continue;
 				for (line = file->cf_LineBase; line; line = line->cl_Next) {
-					if (DebugOpt)
-						logn(LOG_DEBUG, "    LINE %s\n", line->cl_Shell);
-
-					if (!(line->cl_Mins[tp->tm_min] &&
+					if (DebugOpt) {
+						if (line->cl_JobName)
+							logn(LOG_DEBUG, "    LINE %s JOB %s\n", line->cl_Shell, line->cl_JobName);
+						else
+							logn(LOG_DEBUG, "    LINE %s\n", line->cl_Shell);
+					}
+					if (line->cl_Freq != 0) {
+						if (line->cl_Freq < 0 || t < line->cl_NotUntil)
+							continue;
+						line->cl_NotUntil = t2 - t2% 60; /* save what minute this job was scheduled/started waiting */
+					} else if (!(line->cl_Mins[tp->tm_min] &&
 							line->cl_Hrs[tp->tm_hour] &&
 							(line->cl_Days[tp->tm_mday] || (n_wday && line->cl_Dow[tp->tm_wday]) ) &&
 							line->cl_Mons[tp->tm_mon]

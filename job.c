@@ -146,6 +146,40 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	}
 
 
+	/*
+	 * check return status?
+	 */
+	if (line->cl_Delay > 0) {
+		if (exit_status == 11) {
+			/* returned EAGAIN, wait cl_Delay then retry */
+			/*
+			line->cl_NotUntil = time(NULL) + line->cl_Delay;
+			 */
+			line->cl_NotUntil += line->cl_Delay; // we base off the time the job was scheduled/started waiting, not the time it finished
+		} else {
+			/* process finished without returning EAGAIN (it may have returned some other error)
+			 * mark as having run and update timestamp
+			 */
+			FILE *fi;
+			char buf[64];
+			/*
+			line->cl_LastRan = time(NULL);
+			 */
+			line->cl_LastRan = line->cl_NotUntil; // we base off the time the job was scheduled/started waiting, not the time it finished
+			if ((fi = fopen(line->cl_Timestamp, "w")) != NULL) {
+				if (strftime(buf, sizeof(buf), TIMESTAMP_FMT, localtime(&line->cl_LastRan))) {
+					fputs(buf, fi);
+				} else
+					logn(LOG_NOTICE, "unable to format timestamp (user %s %s)\n", file->cf_UserName, line->cl_Description);
+				fclose(fi);
+			} else {
+				logn(LOG_NOTICE, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
+			}
+			line->cl_NotUntil = line->cl_LastRan;
+			line->cl_NotUntil += (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
+		}
+	}
+
 	line->cl_Pid = 0;
 
 	if (line->cl_MailFlag != 1)

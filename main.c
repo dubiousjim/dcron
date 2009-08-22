@@ -2,7 +2,7 @@
 /*
  * MAIN.C
  *
- * crond [-l#] [-L logfile | -S ] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir]
+ * crond [-l#] [-L logfile | -S ] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir] [-t timestamps]
  *
  * run as root, but NOT setuid root
  *
@@ -19,6 +19,7 @@ Prototype short ForegroundOpt;
 Prototype short LoggerOpt;
 Prototype const char *CDir;
 Prototype const char *SCDir;
+Prototype const char *TSDir;
 Prototype const char *LogFile;
 Prototype uid_t DaemonUid;
 Prototype int InSyncFileRoot;
@@ -33,6 +34,7 @@ short ForegroundOpt = 0;
 short LoggerOpt;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
+const char *TSDir = TIMESTAMPS;
 const char *LogFile = LOG_FILE; /* opened with mode 0600 */
 const char *SendMail = SENDMAIL;
 const char *Mailto = NULL;
@@ -69,7 +71,7 @@ main(int ac, char **av)
 
 	opterr = 0;
 
-	while ((i = getopt(ac,av,"dl:L:fbSc:s:m:M:")) != EOF) {
+	while ((i = getopt(ac,av,"dl:L:fbSc:s:m:M:t:")) != EOF) {
 		switch (i) {
 			case 'l':
 				{
@@ -147,6 +149,9 @@ main(int ac, char **av)
 			case 's':
 				if (*optarg != 0) SCDir = optarg;
 				break;
+			case 't':
+				if (*optarg != 0) TSDir = optarg;
+				break;
 			case 'M':
 				if (*optarg != 0) SendMail = optarg;
 				break;
@@ -158,13 +163,13 @@ main(int ac, char **av)
 				 * check for parse error
 				 */
 				printf("dcron " VERSION "\n");
-				printf("crond [-l#] [-L logfile | -S ] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir]\n");
+				printf("crond [-l#] [-L logfile | -S ] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir] [-t timestamps]\n");
 				printf("-l num\tlogging level (default <= LOG_NOTICE = 5)\n");
 				printf("-L file\tlog to file (default %s)\n-S\tlog to syslogd (default)\n", LOG_FILE);
 				printf("-M mailer\tprogram to mail output (default %s)\n-m mailto\taddress to mail cron output to (default to user)\n", SENDMAIL);
 				printf("-d\tdebugging\n-f\trun in foreground\n-b\trun in background (default)\n");
-				printf("-c crondir\tcrontab spool dir (default %s)\n-s systemdir\tsystem cron.d dir (default %s)\n",
-						CRONTABS, SCRONTABS);
+				printf("-c crondir\tcrontab spool dir (default %s)\n-s systemdir\tsystem cron.d dir (default %s)\n-t timestamps\ttimestamp dir (default %s)\n",
+						CRONTABS, SCRONTABS, TIMESTAMPS);
 				exit(2);
 		}
 	}
@@ -238,6 +243,7 @@ main(int ac, char **av)
 	logn(LOG_INFO,"%s " VERSION " ya, started with loglevel %s\n", av[0], LevelAry[LogLevel]);
 	SynchronizeDir(CDir, NULL, 1);
 	SynchronizeDir(SCDir, "root", 1);
+	ReadTimestamps(1);
 
 	{
 		time_t t1 = time(NULL);
@@ -273,9 +279,11 @@ main(int ac, char **av)
 				rescan = 60;
 				SynchronizeDir(CDir, NULL, 0);
 				SynchronizeDir(SCDir, "root", 0);
+				ReadTimestamps(0);
+			} else {
+				CheckUpdates(CDir, NULL);
+				CheckUpdates(SCDir, "root");
 			}
-			CheckUpdates(CDir, NULL);
-			CheckUpdates(SCDir, "root");
 			if (DebugOpt)
 				logn(LOG_DEBUG, "Wakeup dt=%d\n", dt);
 			if (dt < -60*60 || dt > 60*60) {
