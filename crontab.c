@@ -300,8 +300,9 @@ EditFile(const char *user, const char *file)
 
 		if (ChangeUser(user, 1) < 0)
 			exit(0);
-		if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) > 256)
-			ptr = PATH_VI;
+		if ((ptr = getenv("EDITOR")) == NULL || strlen(ptr) > 256)
+			if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) > 256)
+				ptr = PATH_VI;
 
 		snprintf(visual, sizeof(visual), "%s %s", ptr, file);
 		execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
