@@ -2,7 +2,7 @@
 /*
  * MAIN.C
  *
- * crond [-l#] [-L logfile | -S ] [-d|-f|-b] [-c crondir] [-s systemdir]
+ * crond [-l#] [-L logfile | -S ] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir]
  *
  * run as root, but NOT setuid root
  *
@@ -22,6 +22,8 @@ Prototype const char *SCDir;
 Prototype const char *LogFile;
 Prototype uid_t DaemonUid;
 Prototype int InSyncFileRoot;
+Prototype const char *SendMail;
+Prototype const char *Mailto;
 Prototype char *TempDir;
 Prototype char *TempFileFmt;
 
@@ -32,6 +34,8 @@ short LoggerOpt;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
 const char *LogFile = LOG_FILE; /* opened with mode 0600 */
+const char *SendMail = SENDMAIL;
+const char *Mailto = NULL;
 char *TempDir;
 char *TempFileFmt;
 
@@ -65,7 +69,7 @@ main(int ac, char **av)
 
 	opterr = 0;
 
-	while ((i = getopt(ac,av,"dl:L:fbSc:s:")) != EOF) {
+	while ((i = getopt(ac,av,"dl:L:fbSc:s:m:M:")) != EOF) {
 		switch (i) {
 			case 'l':
 				{
@@ -143,14 +147,21 @@ main(int ac, char **av)
 			case 's':
 				if (*optarg != 0) SCDir = optarg;
 				break;
+			case 'M':
+				if (*optarg != 0) SendMail = optarg;
+				break;
+			case 'm':
+				if (*optarg != 0) Mailto = optarg;
+				break;
 			default:
 				/*
 				 * check for parse error
 				 */
 				printf("dcron " VERSION "\n");
-				printf("crond [-l#] [-L logfile | -S ] [-d|-f|-b] [-c crondir] [-s systemdir]\n");
+				printf("crond [-l#] [-L logfile | -S ] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir]\n");
 				printf("-l num\tlogging level (default <= LOG_NOTICE = 5)\n");
 				printf("-L file\tlog to file (default %s)\n-S\tlog to syslogd (default)\n", LOG_FILE);
+				printf("-M mailer\tprogram to mail output (default %s)\n-m mailto\taddress to mail cron output to (default to user)\n", SENDMAIL);
 				printf("-d\tdebugging\n-f\trun in foreground\n-b\trun in background (default)\n");
 				printf("-c crondir\tcrontab spool dir (default %s)\n-s systemdir\tsystem cron.d dir (default %s)\n",
 						CRONTABS, SCRONTABS);

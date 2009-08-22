@@ -11,12 +11,14 @@
 
 Prototype void RunJob(CronFile *file, CronLine *line);
 Prototype void EndJob(CronFile *file, CronLine *line);
+Prototype const char *SendMail;
 
 void
 RunJob(CronFile *file, CronLine *line)
 {
 	char mailFile[128];
 	int mailFd;
+	const char *value = Mailto;
 
 	line->cl_Pid = 0;
 	line->cl_MailFlag = 0;
@@ -31,10 +33,10 @@ RunJob(CronFile *file, CronLine *line)
 
 	if (mailFd >= 0) {
 		line->cl_MailFlag = 1;
-
-
+		if (!value)
+			value = file->cf_UserName;
 		fdprintf(mailFd, "To: %s\nSubject: cron for user %s %s\n\n",
-				file->cf_UserName,
+				value,
 				file->cf_UserName,
 				line->cl_Shell
 				);
@@ -209,9 +211,9 @@ EndJob(CronFile *file, CronLine *line)
 		dup2(1, 2);
 		close(mailFd);
 
-		execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
+		execl(SendMail, SendMail, SENDMAIL_ARGS, NULL, NULL);
 		logfd(LOG_WARNING, 8, "unable to exec %s %s: cron output for user %s %s to /dev/null\n",
-				SENDMAIL,
+				SendMail,
 				SENDMAIL_ARGS,
 				file->cf_UserName,
 				line->cl_Shell
