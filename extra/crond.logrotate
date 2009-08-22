@@ -1,0 +1,5 @@
+/var/log/crond.log {
+   sharedscripts
+   copytruncate
+   missingok
+}

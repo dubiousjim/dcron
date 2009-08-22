@@ -5,31 +5,31 @@
 .SH NAME
 crond \- cron daemon (Yet Another Cron)
 .SH SYNOPSIS
-.B crond [-l#] [-L logfile | -S] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir] [-t timestamps]
+.B crond [-l loglevel] [-L [logfile]|-S] [-M mailscript] [-m mailto] [-d|-f|-b] [-s systemdir] [-c crondir] [-t timestamps]
 .SH OPTIONS
 .B crond
 is a background daemon that parses individual crontab files and
 executes commands on behalf of the users in question.
 .TP 0.5i
-.B "-l <loglevel> "
+.B "-l loglevel "
 set logging level, default is <= notice = 5.
-.PP
-Valid level names are:
+.PP 0.5i
+Valid level names are as described in logger.1 and syslog.3:
 alert, crit, debug, emerg, err, error (deprecated synonym for err), info,
 notice, panic (deprecated synonym for emerg), warning, warn (deprecated synonym
 for warning).
 .TP 0.5i
-.B "-L logfile "
-log to specified file (default is /var/log/crond.log).
+.B "-L [logfile] "
+log to specified file (if none supplied, uses /var/log/crond.log).
 .TP 0.5i
 .B "-S "
 use syslogd (default).
 .TP 0.5i
-.B "-M mailer "
-use to mail any job output (default is /usr/sbin/sendmail).
+.B "-M mailscript "
+receives any cron job output as stdin (default is /usr/sbin/sendmail).
 .TP 0.5i
 .B "-m mailto "
-address to mail cron output to (default to user).
+address to mail any cron output to (default is local user).
 .TP 0.5i
 .B "-d "
 turn on debugging. This option sets the logging level to <= debug and causes crond
@@ -41,11 +41,11 @@ run crond in the foreground.
 .B "-b "
 run crond in the background (default unless -d or -f is specified).
 .TP 0.5i
-.B "-c crondir "
-specify crontab spool directory (default is /var/spool/cron/crontabs).
-.TP 0.5i
 .B "-s systemdir "
 specify directory containing system-wide crontab files (default is /etc/cron.d).
+.TP 0.5i
+.B "-c crondir "
+specify crontab spool directory (default is /var/spool/cron/crontabs).
 .TP 0.5i
 .B "-t timestamps "
 specify directory containing cron timestamps for @freq jobs (default is /var/spool/cron/timestamps).
@@ -55,16 +55,31 @@ is responsible for scanning the crontab files and running
 their commands at the appropriate time.  The
 .B crontab
 program communicates with crond through the "cron.update" file
-which resides in crontabs directory, usually /var/spool/cron/crontabs.
+which resides in the crontabs directory, usually /var/spool/cron/crontabs.
 This is accomplished by appending the filename of the modified or
 deleted crontab file to "cron.update" which crond then picks up to
 resynchronize or remove its internal representation of the file.
 .PP
-.B Crond
+Whenever the "cron.update" file is seen, crond also re-reads all of
+timestamp files from disk. Normally these will just mirror crond's own
+internal representations, but this mechanism could be used to externally
+update the timestamps.
+.PP
+The "cron.update" file can also be used to instruct crond to schedule
+a named job. Each line in this file should have the format:
+.TP 0.5i
+user	job1	!job2
+.PP
+to request that user's job1 should be scheduled (waiting first for the 
+successful completion of any jobs named in job1's AFTER= argument), and
+job2 should also be scheduled (without waiting for other jobs).
+
+.PP
+.B crond
 has a number of built in limitations to reduce the chance of it being
 ill-used.  Potentially infinite loops during parsing are dealt with
 via a failsafe counter, and user crontabs are generally limited to
-256 crontab entries.  crontab lines may not be longer than 1024
+256 crontab entries.  Crontab lines may not be longer than 1024
 characters, including the newline.
 .PP
 Whenever crond must run a job, it first creates a daemon-owned temporary
@@ -75,18 +90,23 @@ under the ownership of the daemon to prevent the user from tampering with
 it.  Upon job completion, crond verifies the secureness of the mail file
 and, if it has been appended to, mails to the file to user.  The
 .B sendmail
-program is run under the user's uid to prevent mail related security holes.
-Unlike
-.B crontab
-, the crond program does not leave an open descriptor to the file for the
-duration of the job's execution as this might cause crond to run out
-of descriptors.  When
+program (or custom mailscript, if supplied) is run under the user's uid to prevent mail related security holes.
+.PP
+When the
 .B crontab
 program allows a user to edit his crontab, it copies the crontab to a user
-owned file before running the user's prefered editor.  The suid crontab
-programs keeps an open descriptor to the file which it later uses to
+owned file before running the user's prefered editor.  The suid
+.B crontab
+keeps an open descriptor to the file which it later uses to
 copy the file back, thereby ensuring the user has not tampered with the
 file type.
+Unlike
+.B crontab,
+the
+.B crond
+program does not leave an open descriptor to the file for the
+duration of the job's execution as this might cause crond to run out
+of descriptors.
 .PP
 .B Crond
 always synchronizes to the top of the minute, checking the current time

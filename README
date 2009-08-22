@@ -1,4 +1,68 @@
 
+			YACRON - SIMPLE CRON PROGRAM
+		            Jim Pryor
+
+			Originally written: 22 Aug 2009
+
+CREDITS
+
+	This program was forked from the beautifully minimalist dcron v.3.2.
+	(Original REAMDE below.) I just needed it to be a bit less minimalist.
+
+	I had gotten to the point where I was juggling a combination of dcron,
+	a home-patched version of anacron, my own script to log job output
+	instead of mailing it, my own script to test for various conditions
+	(on A/C? have a network?) before running most jobs, and I _still_ couldn't
+	get the ensemble to do what I now needed. It was getting too baroque.
+	I had only ten or fifteen of my own cronjobs, but they were spread between
+	the root crontab, /etc/anacrontab, some /etc/cron.hourly/* scripts,
+	and where was all the beautiful minimalism now?
+
+	Probably I could get fcron <http://fcron.free.fr/> to do what I wanted, but
+	it looked so much more complex and heavier than I needed. I just wanted my
+	tools to be a _bit_ more capable.
+
+	So, since dcron has such a nice small codebase, I just took it and wrapped in
+	all I needed from anacron... plus the extra capabilities I was hankering for.
+	I've tried to retain the ideals of the original.
+
+	This implementation:
+
+		* can log to syslog or a file
+
+		* can email job output to a specified address, instead of the local user
+		  who owns the job
+
+		* can replace sendmail with any other script to which all job output
+		  should be piped
+
+		* allows jobs to be scheduled on the "2nd and last" Mondays of a month
+
+		* accepts @daily, @reboot, etc. options in crontabs; @daily jobs
+		  don't require the machine to be running at any specific time
+
+		* also accepts crontab lines with the format:
+				"* 2-6 * * *  FREQ=2d/1h ID=<job_name> <command>"
+		  this will try to run <command> once every 2 days, but only between the
+		  hours of 2 and 6 am; if <command> exits with status EAGAIN it
+		  will be retried again every 1 hour
+
+		* also accepts AFTER=<target_job>/1d assignments: if the specified
+		  target_job is scheduled to run within the next 1 day, wait until
+		  it has run and exited successfully before running the current command
+
+COMPILATION, INSTALLATION, TESTING
+
+	As below.
+
+BUG REPORTS, SUBMISSIONS
+
+    Jim Pryor										profjim@jimpryor.net
+
+
+
+---------------------- Original README from dcron ----------------------
+
 			DCRON - SIMPLE CRON PROGRAM
 				Matthew Dillon
 
@@ -8,12 +72,12 @@
 CREDITS
 
     I finally got tired of all of these wild cron programs that take the
-    task of running timed jobs to ridiculous extremes in terms of 
-    capabilities and unnecessary features.  So here is my entry:  a 
+    task of running timed jobs to ridiculous extremes in terms of
+    capabilities and unnecessary features.  So here is my entry:  a
     crond/crontab combination that is simple and elegant, and hopefully
     secure to boot.  This cron implements reasonable features in terms
-    of field specification in the crontab and allows individual user 
-    crontabs.  
+    of field specification in the crontab and allows individual user
+    crontabs.
 
     This program is written entirely from scratch by yours Truely (sig
     at bottom).
@@ -57,12 +121,12 @@ COMPILATION
 	platforms, I want most overrides to be in the CFLAGS for the
 	Makefile).
 
-    (2) You may need to edit the #include lines in defs.h for your 
+    (2) You may need to edit the #include lines in defs.h for your
 	machine.  The goal is to include everything necessary such that
 	the program can be compiled in the most ansi-strict manner.  Amoung
-	other things, prototypes for system functions must come from 
-	external include files and NOT from defs.h or any source file.   
-	If no prototype exists for a particular function, contact your 
+	other things, prototypes for system functions must come from
+	external include files and NOT from defs.h or any source file.
+	If no prototype exists for a particular function, contact your
 	vendor to get an update for your includes.
 
     (3) make
@@ -71,12 +135,12 @@ INSTALLATION
 
     Permissions should be as outlined below.  You will want to create a
     special 'cron' group in which you put those users that are allowed
-    to use the crontab program. 
+    to use the crontab program.
 
     -rwx------   1 root     wheel       24864 Apr 27 09:02 /usr/bin/crond*
     -rwsr-x---   1 root     cron        24311 Apr 27 09:02 /usr/bin/crontab*
 
-    crond should be run automatically at system startup from /etc/rc.local 
+    crond should be run automatically at system startup from /etc/rc.local
     (or equivalent).  It automatically detaches.  A log level of 8 is
     normally specified, and you normally append using /bin/sh's >>, allowing
     the log file to backed up and cleared with an 'echo >/var/log/cron' in
@@ -112,7 +176,7 @@ BUG REPORTS, SUBMISSIONS
 
 	dillon@apollo.backplane.com
 
-    Note carefully that I will not accept any local ANSI prototypes for 
+    Note carefully that I will not accept any local ANSI prototypes for
     system calls that should properly be in an external include file,
     that I will probably not accept additional features to the program,
     and I will not accept any changes to make the source compile under
@@ -123,7 +187,7 @@ BUG REPORTS, SUBMISSIONS
     Changes to overridable defaults in defs.h should be made in the
     Makefile, you may submit a Makefile for your platform.  Changes
     to the #include's in defs.h should be made by a combination of an
-    -D options in the Makefile and #ifdef's for that option in defs.h, 
+    -D options in the Makefile and #ifdef's for that option in defs.h,
     and not rely on pre-definitions made by the C compiler.
 
     Changes to source code to accomodate one platform or other should
