@@ -53,54 +53,44 @@ main(int ac, char **av)
 		}
 	}
 
-	for (; i < ac; ++i) {
-		char *ptr = av[i];
+	opterr = 0;
 
-		if (*ptr != '-')
-			break;
-		ptr += 2;
-
-		switch(ptr[-1]) {
+	while ((i=getopt(ac,av,"ledu:c:")) != EOF) {
+		switch(i) {
 			case 'l':
-				if (ptr[-1] == 'l')
 					option = LIST;
-				/* fall through */
+				break;
 			case 'e':
-				if (ptr[-1] == 'e')
 					option = EDIT;
-				/* fall through */
+				break;
 			case 'd':
-				if (ptr[-1] == 'd')
 					option = DELETE;
-				/* fall through */
+				break;
 			case 'u':
-				if (i + 1 < ac && av[i+1][0] != '-') {
-					++i;
-					if (getuid() == geteuid()) {
-						pas = getpwnam(av[i]);
-						if (pas) {
-							UserId = pas->pw_uid;
-						} else {
-							errx(1, "user %s unknown", av[i]);
-						}
+				if (*optarg != 0 && getuid() == geteuid()) {
+					pas = getpwnam(optarg);
+					if (pas) {
+						UserId = pas->pw_uid;
 					} else {
-						errx(1, "only the superuser may specify a user");
+						errx(1, "user %s unknown", optarg);
 					}
+				} else {
+					errx(1, "only the superuser may specify a user");
 				}
 				break;
 			case 'c':
-				if (getuid() == geteuid()) {
-					CDir = (*ptr) ? ptr : av[++i];
+				if (*optarg != 0 && getuid() == geteuid()) {
+					CDir = optarg;
 				} else {
 					errx(1, "-c option: superuser only");
 				}
 				break;
 			default:
-				i = ac;
-				break;
+				option = NONE;
 		}
 	}
-	if (i != ac || option == NONE) {
+
+	if (option == NONE) {
 		/*
 		 * parse error
 		 */
