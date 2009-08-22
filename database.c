@@ -15,7 +15,7 @@ Prototype void SynchronizeDir(const char *dpath, const char *user_override, int 
 Prototype void ReadTimestamps(int initial_scan);
 Prototype int TestJobs(time_t t1, time_t t2);
 Prototype int TestStartupJobs(void);
-Prototype int ArmJob(CronFile *file, CronLine *line);
+Prototype int ArmJob(CronFile *file, CronLine *line, int force);
 Prototype void RunJobs(void);
 Prototype int CheckJobs(void);
 
@@ -133,7 +133,12 @@ CheckUpdates(const char *dpath, const char *user_override)
 					CronLine *line;
 					/* calling strtok(ptok...) then strtok(NULL) is equiv to calling strtok_r(NULL,..&ptok) */
 					while ((job = strtok(ptok, " \t\r\n")) != NULL) {
+						int force = 0;
 						ptok = NULL;
+						if (*job == '!') {
+							force = 1;
+							++job;
+						}
 						line = file->cf_LineBase;
 						while (line) {
 							if (line->cl_JobName && strcmp(line->cl_JobName, job) == 0)
@@ -141,7 +146,7 @@ CheckUpdates(const char *dpath, const char *user_override)
 							line = line->cl_Next;
 						}
 						if (line)
-							ArmJob(file, line);
+							ArmJob(file, line, force);
 						else {
 							logn(LOG_WARNING, "unable to prod for user %s: unknown job %s\n", fname, job);
 							/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
@@ -419,7 +424,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					FixDayDow(&line);
 				}
 
-				/* check for ID=... */
+				/* check for ID=... and WAITFOR=... */
 				do {
 					if (strncmp(ptr, ID_TAG, strlen(ID_TAG)) == 0) {
 						if (line.cl_JobName) {
@@ -438,13 +443,61 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							if (!ptr)
 								logn(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, ID_TAG, line.cl_JobName);
 						}
+					} else if (strncmp(ptr, WAIT_TAG, strlen(WAIT_TAG)) == 0) {
+						if (line.cl_Waiters) {
+							/* only assign WAIT_TAG once */
+							logn(LOG_WARNING, "failed parsing crontab for user %s: %s%s\n", userName, WAIT_TAG, ptr);
+							ptr = NULL;
+						} else {
+							short more = 1;
+							char *name;
+							ptr += strlen(WAIT_TAG);
+							do {
+								CronLine *job, **pjob;
+								if (strcspn(ptr,",") < strcspn(ptr," \t\r\n"))
+									name = strsep(&ptr, ",");
+								else {
+									more = 0;
+									name = strsep(&ptr, " \t\r\n");
+								}
+								if (!ptr || *ptr == 0 || *ptr == '\r' || *ptr == '\n') {
+									/* unexpectedly this was the last token in buf; so abort */
+									logn(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, WAIT_TAG, name);
+									ptr = NULL;
+								} else {
+									/* look for a matching CronLine */
+									pjob = &file->cf_LineBase;
+									while ((job = *pjob) != NULL) {
+										if (job->cl_JobName && strcmp(job->cl_JobName, name) == 0) {
+											CronWaiter *waiter = malloc(sizeof(CronWaiter));
+											CronNotifier *notif = malloc(sizeof(CronNotifier));
+											name = NULL;	/* flag that we found a match */
+											waiter->cw_Flag = 0;
+											waiter->cw_ProdNotif = (job->cl_Freq < 0) ? job : NULL;
+											waiter->cw_Notifier = notif;
+											waiter->cw_Next = line.cl_Waiters;	/* add to head of line.cl_Waiters */
+											line.cl_Waiters = waiter;
+											notif->cn_Waiter = waiter;
+											notif->cn_Next = job->cl_Notifs;	/* add to head of job->cl_Notifs */
+											job->cl_Notifs = notif;
+											break;
+										} else
+											pjob = &job->cl_Next;
+									}
+									if (name) { 
+										logn(LOG_WARNING, "failed parsing crontab for user %s: unknown job %s\n", userName, name);
+										/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
+									}
+								}
+							} while (ptr && more);
+						}
 					} else
 						break;
 					if (!ptr)
 						break;
 					while (*ptr == ' ' || *ptr == '\t')
 						++ptr;
-				} while (!line.cl_JobName);
+				} while (!line.cl_JobName || !line.cl_Waiters);
 
 				if (line.cl_JobName && (!ptr || *line.cl_JobName == 0)) {
 					/* we're aborting, or ID= was empty */
@@ -457,10 +510,20 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					ptr = NULL;
 				}
 				if (!ptr) {
-					/* couldn't parse so we abort */
+					/* couldn't parse so we abort; free any cl_Waiters */
+					if (line.cl_Waiters) {
+						CronWaiter **pwaiters, *waiters;
+						pwaiters = &line.cl_Waiters;
+						while ((waiters = *pwaiters) != NULL) {
+							*pwaiters = waiters->cw_Next;
+							/* leave the Notifier allocated but disabled */
+							waiters->cw_Notifier->cn_Waiter = NULL;
+							free(waiters);
+						}
+					}
 					continue;
 				}
-				/* now we've added any ID=... */
+				/* now we've added any ID=... or WAITFOR=... */
 
 				/*
 				 * copy command string
@@ -681,6 +744,8 @@ DeleteFile(CronFile **pfile)
 	CronFile *file = *pfile;
 	CronLine **pline = &file->cf_LineBase;
 	CronLine *line;
+	CronWaiter **pwaiters, *waiters;
+	CronNotifier **pnotifs, *notifs;
 
 	file->cf_Running = 0;
 	file->cf_Deleted = 1;
@@ -700,6 +765,22 @@ DeleteFile(CronFile **pfile)
 				free(line->cl_Description);
 			if (line->cl_Timestamp)
 				free(line->cl_Timestamp);
+
+			pnotifs = &line->cl_Notifs;
+			while ((notifs = *pnotifs) != NULL) {
+				*pnotifs = notifs->cn_Next;
+				if (notifs->cn_Waiter)
+					notifs->cn_Waiter->cw_Notifier = NULL;
+				free(notifs);
+			}
+			pwaiters = &line->cl_Waiters;
+			while ((waiters = *pwaiters) != NULL) {
+				*pwaiters = waiters->cw_Next;
+				if (waiters->cw_Notifier)
+					waiters->cw_Notifier->cn_Waiter = NULL;
+				free(waiters);
+			}
+
 			free(line);
 		}
 	}
@@ -751,23 +832,51 @@ TestJobs(time_t t1, time_t t2)
 				if (file->cf_Deleted)
 					continue;
 				for (line = file->cf_LineBase; line; line = line->cl_Next) {
+					struct CronWaiter *waiter;
 					if (DebugOpt) {
 						if (line->cl_JobName)
 							logn(LOG_DEBUG, "    LINE %s JOB %s\n", line->cl_Shell, line->cl_JobName);
 						else
 							logn(LOG_DEBUG, "    LINE %s\n", line->cl_Shell);
 					}
-					if (line->cl_Freq != 0) {
-						if (line->cl_Freq < 0 || t < line->cl_NotUntil)
+
+					if (line->cl_Pid == -2) {
+						/* can job stop waiting? */
+						int ready = 1;
+						waiter = line->cl_Waiters;
+						while (waiter != NULL) {
+							if (!waiter->cw_Flag) {
+								ready = 0;
+								break;
+							}
+							waiter = waiter->cw_Next;
+						}
+						if (ready) {
+							if (DebugOpt)
+								logn(LOG_DEBUG, "    finished waiting: %s\n", line->cl_Description);
+							nJobs += ArmJob(file, line, 1);
+							/*	
+							 if (line->cl_NotUntil)
+								 line->cl_NotUntil = t2;
+							*/
+						}
+					} /* Pid == -2 */
+
+					if (line->cl_Pid != -1) {
+						/* (re)schedule job? */
+					   
+						if (line->cl_Freq != 0) {
+							if (line->cl_Freq < 0 || t < line->cl_NotUntil)
+								continue;
+							line->cl_NotUntil = t2 - t2% 60; /* save what minute this job was scheduled/started waiting */
+						} else if (!(line->cl_Mins[tp->tm_min] &&
+								line->cl_Hrs[tp->tm_hour] &&
+								(line->cl_Days[tp->tm_mday] || (n_wday && line->cl_Dow[tp->tm_wday]) ) &&
+								line->cl_Mons[tp->tm_mon]
+						   ))
 							continue;
-						line->cl_NotUntil = t2 - t2% 60; /* save what minute this job was scheduled/started waiting */
-					} else if (!(line->cl_Mins[tp->tm_min] &&
-							line->cl_Hrs[tp->tm_hour] &&
-							(line->cl_Days[tp->tm_mday] || (n_wday && line->cl_Dow[tp->tm_wday]) ) &&
-							line->cl_Mons[tp->tm_mon]
-					   ))
-						continue;
-					nJobs += ArmJob(file, line);
+						nJobs += ArmJob(file, line, 0);
+					} /* reschedule jobs? */
 				} /* for line */
 			}
 		}
@@ -776,19 +885,38 @@ TestJobs(time_t t1, time_t t2)
 }
 
 int
-ArmJob(CronFile *file, CronLine *line)
+ArmJob(CronFile *file, CronLine *line, int force)
 {
+	struct CronWaiter *waiter;
 	if (line->cl_Pid > 0) {
 		logn(LOG_NOTICE, "    process already running (%d): %s\n",
 				line->cl_Pid,
 				line->cl_Description
 			);
-	} else if (line->cl_Pid == 0) {
+	} else if (force && line->cl_Pid != -1) {
 		line->cl_Pid = -1;
 		file->cf_Ready = 1;
-		if (DebugOpt)
-			logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Description);
 		return 1;
+	} else if (line->cl_Pid == 0) {
+		/* prodding a waiting job (cl_Pid == -2) with force=0 has no effect */
+		line->cl_Pid = -1;
+		/* if we have any waiters, zero them and arm cl_Pid=-2 */
+		waiter = line->cl_Waiters;
+		while (waiter != NULL) {
+			waiter->cw_Flag = 0;
+			line->cl_Pid = -2;
+			if (waiter->cw_ProdNotif)
+				ArmJob(file, waiter->cw_ProdNotif, 0);
+			waiter = waiter->cw_Next;
+		}
+		if (line->cl_Pid == -1) {
+			/* job is ready to run */
+			file->cf_Ready = 1;
+			if (DebugOpt)
+				logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Description);
+			return 1;
+		} else if (DebugOpt)
+			logn(LOG_DEBUG, "    waiting: %s\n", line->cl_Description);
 	}
 	return 0;
 }
@@ -807,6 +935,7 @@ TestStartupJobs(void)
 			logn(LOG_DEBUG, "FILE %s/%s USER %s:\n",
 				file->cf_DPath, file->cf_FileName, file->cf_UserName);
 		for (line = file->cf_LineBase; line; line = line->cl_Next) {
+			struct CronWaiter *waiter;
 			if (DebugOpt) {
 				if (line->cl_JobName)
 					logn(LOG_DEBUG, "    LINE %s JOB %s\n", line->cl_Shell, line->cl_JobName);
@@ -818,10 +947,23 @@ TestStartupJobs(void)
 				/* freq is @startup */
 
 				line->cl_Pid = -1;
-				file->cf_Ready = 1;
-				++nJobs;
-				if (DebugOpt)
-					logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Description);
+				/* if we have any waiters, zero them and arm Pid = -2 */
+				waiter = line->cl_Waiters;
+				while (waiter != NULL) {
+					waiter->cw_Flag = 0;
+					line->cl_Pid = -2;
+					if (waiter->cw_ProdNotif)
+						ArmJob(file, waiter->cw_ProdNotif, 0);
+					waiter = waiter->cw_Next;
+				}
+				if (line->cl_Pid == -1) {
+					/* job is ready to run */
+					file->cf_Ready = 1;
+					++nJobs;
+					if (DebugOpt)
+						logn(LOG_DEBUG, "    scheduled: %s\n", line->cl_Description);
+				} else if (DebugOpt)
+					logn(LOG_DEBUG, "    waiting: %s\n", line->cl_Description);
 
 			}
 

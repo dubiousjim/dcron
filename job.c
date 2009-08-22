@@ -136,6 +136,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	int mailFd;
 	char mailFile[128];
 	struct stat sbuf;
+	struct	CronNotifier *notif;
 
 	if (line->cl_Pid <= 0) {
 		/*
@@ -177,6 +178,19 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			}
 			line->cl_NotUntil = line->cl_LastRan;
 			line->cl_NotUntil += (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
+		}
+	}
+
+	if (exit_status == 0) {
+		/*
+		 * notify any waiters
+		 */
+		notif = line->cl_Notifs;
+		while (notif) {
+			if (notif->cn_Waiter) {
+				notif->cn_Waiter->cw_Flag = 1;
+			}
+			notif = notif->cn_Next;
 		}
 	}
 

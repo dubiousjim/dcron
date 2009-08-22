@@ -83,6 +83,7 @@
 #define YEARLY_FREQ		365 * DAILY_FREQ
 
 #define ID_TAG			"ID="
+#define WAIT_TAG		"AFTER="
 
 #define VERSION	"V4.0b1"
 
@@ -103,11 +104,13 @@ typedef struct CronLine {
 	char	*cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
 	char	*cl_JobName;	/* job name, if any			*/
 	char	*cl_Timestamp;	/* path to timestamp file, if cl_Freq defined */
+	struct	CronWaiter *cl_Waiters;
+	struct	CronNotifier *cl_Notifs;
 	int		cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (startup)	*/
 	int		cl_Delay;		/* defaults to cl_Freq or hourly	*/
 	time_t	cl_LastRan;
 	time_t	cl_NotUntil;
-    int		cl_Pid;		/* running pid, 0, or armed (-1)	*/
+	int		cl_Pid;			/* running pid, 0, or armed (-1), or waiting (-2) */
     int		cl_MailFlag;	/* running pid is for mail		*/
     int		cl_MailPos;	/* 'empty file' size			*/
     char	cl_Mins[60];	/* 0-59				*/
@@ -116,6 +119,18 @@ typedef struct CronLine {
     char	cl_Mons[12];	/* 0-11				*/
     char	cl_Dow[7];	/* 0-6, beginning sunday		*/
 } CronLine;
+
+typedef struct CronWaiter {
+	struct	CronWaiter *cw_Next;
+	struct	CronNotifier *cw_Notifier;
+	struct	CronLine *cw_ProdNotif;
+	short	cw_Flag;
+} CronWaiter;
+
+typedef struct CronNotifier {
+	struct	CronNotifier *cn_Next;
+	struct	CronWaiter *cn_Waiter;
+} CronNotifier;
 
 // #define RUN_RANOUT	1
 // #define RUN_RUNNING	2
