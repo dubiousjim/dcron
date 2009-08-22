@@ -28,6 +28,7 @@
 #include <signal.h>
 #include <getopt.h>
 #include <err.h>
+#include <limits.h>
 
 #define Prototype extern
 #define arysize(ary)	(sizeof(ary)/sizeof((ary)[0]))

@@ -7,7 +7,6 @@
  * May be distributed under the GNU General Public License
  */
 
-#include <limits.h>
 #include "defs.h"
 
 Prototype int CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2);
