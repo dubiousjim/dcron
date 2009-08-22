@@ -511,7 +511,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 												CronWaiter *waiter = malloc(sizeof(CronWaiter));
 												CronNotifier *notif = malloc(sizeof(CronNotifier));
 												name = NULL;	/* flag that we found a match */
-												waiter->cw_Flag = 0;
+												waiter->cw_Flag = -1;
 												waiter->cw_MaxWait = waitfor;
 												waiter->cw_NotifLine = job; // (job->cl_Freq < 0) ? job : NULL;
 												waiter->cw_Notifier = notif;
@@ -892,13 +892,20 @@ TestJobs(time_t t1, time_t t2)
 				int ready = 1;
 				waiter = line->cl_Waiters;
 				while (waiter != NULL) {
-					if (!waiter->cw_Flag) {
-						ready = 0;
+					if (waiter->cw_Flag > 0) {
+						/* notifier exited unsuccessfully */
+						ready = 2;
 						break;
-					}
+					} else if (waiter->cw_Flag < 0)
+						/* still waiting, notifier hasn't run to completion */
+						ready = 0;
 					waiter = waiter->cw_Next;
 				}
-				if (ready) {
+				if (ready == 2) {
+					if (DebugOpt)
+						logn(LOG_DEBUG, "cancelled waiting: user %s %s\n", file->cf_UserName, line->cl_Description);
+					line->cl_Pid = 0;
+				} else if (ready) {
 					if (DebugOpt)
 						logn(LOG_DEBUG, "finished waiting: user %s %s\n", file->cf_UserName, line->cl_Description);
 					nJobs += ArmJob(file, line, 0, -1);
@@ -978,20 +985,20 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 			/* check if notifier will run <= t2 + cw_Max_Wait? */
 			if (!waiter->cw_NotifLine)
 				/* notifier deleted */
-				waiter->cw_Flag = 1;
+				waiter->cw_Flag = 0;
 			else if (waiter->cw_NotifLine->cl_Pid != 0) {
 				/* if notifier is armed, or waiting, or running, we wait for it */
-				waiter->cw_Flag = 0;
+				waiter->cw_Flag = -1;
 				line->cl_Pid = -2;
 			} else if (waiter->cw_NotifLine->cl_Freq < 0) {
 				/* arm any @noauto or @reboot jobs we're waiting on */
 				ArmJob(file, waiter->cw_NotifLine, t1, t2);
-				waiter->cw_Flag = 0;
+				waiter->cw_Flag = -1;
 				line->cl_Pid = -2;
 			} else {
 				time_t t;
 				/* default is don't wait */
-				waiter->cw_Flag = 1;
+				waiter->cw_Flag = 0;
 				if (waiter->cw_NotifLine->cl_Freq == 0 || (waiter->cw_NotifLine->cl_Freq > 0 && t2 + waiter->cw_MaxWait <= waiter->cw_NotifLine->cl_NotUntil))
 					for (t = t1 - t1 % 60; t <= t2; t += 60) {
 						if (t > t1) {
@@ -1010,7 +1017,7 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 									line->cl_Mons[tp->tm_mon]
 							   ) {
 								/* notifier will run soon enough, we wait for it */
-								waiter->cw_Flag = 0;
+								waiter->cw_Flag = -1;
 								line->cl_Pid = -2;
 								break;
 							}
@@ -1064,10 +1071,10 @@ TestStartupJobs(void)
 				/* freq is @reboot */
 
 				line->cl_Pid = -1;
-				/* if we have any waiters, zero them and arm Pid = -2 */
+				/* if we have any waiters, reset them and arm Pid = -2 */
 				waiter = line->cl_Waiters;
 				while (waiter != NULL) {
-					waiter->cw_Flag = 0;
+					waiter->cw_Flag = -1;
 					line->cl_Pid = -2;
 					/* we only arm @noauto jobs we're waiting on, not other @reboot jobs */
 					if (waiter->cw_NotifLine && waiter->cw_NotifLine->cl_Freq == -2)

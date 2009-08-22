@@ -151,7 +151,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	 * check return status?
 	 */
 	if (line->cl_Delay > 0) {
-		if (exit_status == 11) {
+		if (exit_status == EAGAIN) {
 			/* returned EAGAIN, wait cl_Delay then retry */
 			/*
 			line->cl_NotUntil = time(NULL) + line->cl_Delay;
@@ -181,17 +181,29 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		}
 	}
 
-	if (exit_status == 0) {
+	if (exit_status != EAGAIN) {
 		/*
 		 * notify any waiters
 		 */
 		notif = line->cl_Notifs;
 		while (notif) {
 			if (notif->cn_Waiter) {
-				notif->cn_Waiter->cw_Flag = 1;
+				notif->cn_Waiter->cw_Flag = exit_status;
 			}
 			notif = notif->cn_Next;
 		}
+
+		if (exit_status) {
+			/*
+			 * log non-zero exit_status
+			 */
+			logn(LOG_INFO, "exit status %d from %s %s\n",
+					exit_status,
+					file->cf_UserName,
+					line->cl_Description
+				);
+
+			}
 	}
 
 	line->cl_Pid = 0;
