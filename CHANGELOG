@@ -1,4 +1,4 @@
-V.4.0b1
+V.4.0pre
     Forked yacron from dcron
 
       * Applied "Daniel's patch" to enable logging to syslog (-S) or to

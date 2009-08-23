@@ -1,16 +1,28 @@
 # Makefile for yet another cron and crontab
 #
 
+# Overriding defines from defs.h
+# DEFS =  -DSCRONTABS='"/etc/cron.d"' \
+#          -DCRONTABS='"/var/spool/cron/crontabs"' \
+#          -DCRONUPDATE='"cron.update"' \
+#          -DTIMESTAMPS='"/var/sool/cron/timestamps"' \
+#          -DTMPDIR='"/tmp"' \
+#          -DLOG_FILE='"/var/log/crond.log"' \
+#          -DLOG_IDENT='"crond"' \
+#          -DSENDMAIL='"/usr/sbin/sendmail"' \
+
 DESTDIR ?= /usr/local
+DISTOWN= jim
+DISTTAR= /home/abs/yacron40beta.tgz
+
 CC  = gcc
-CFLAGS = -O2 -Wall -Wstrict-prototypes
+CFLAGS = -O2 -Wall -Wstrict-prototypes ${DEFS}
 LIB = 
 SRCS = main.c subs.c database.c job.c
 OBJS = main.o subs.o database.o job.o
 D_SRCS = crontab.c subs.c
 D_OBJS = crontab.o subs.o
 PROTOS= protos.h
-DISTTAR= /home/abs/yacron40beta.tgz
 
 all:	${PROTOS} crond crontab
 
@@ -39,7 +51,7 @@ install:
 
 tar: clean
 	(cd ..; tar czf ${DISTTAR}.new repo)
-	chown jim ${DISTTAR}.new
+	chown ${DISTOWN} ${DISTTAR}.new
 	chmod 644 ${DISTTAR}.new
 	mv -f ${DISTTAR}.new ${DISTTAR}
 

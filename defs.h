@@ -87,7 +87,7 @@
 #define WAIT_TAG		"AFTER="
 #define FREQ_TAG		"FREQ="
 
-#define VERSION	"V4.0b1"
+#define VERSION	"V4.0pre"
 
 typedef struct CronFile {
     struct CronFile *cf_Next;
