@@ -271,17 +271,21 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		dup2(1, 2);
 		close(mailFd);
 
-		if (SendMail == SENDMAIL)
-			execl(SendMail, SendMail, SENDMAIL_ARGS, NULL, NULL);
-		else
+		if (!SendMail) {
+			logfd(LOG_INFO, 8, "mailing cron output for user %s %s\n",
+					file->cf_UserName,
+					line->cl_Description
+				 );
+			execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
+		} else
 			execl(SendMail, SendMail, NULL, NULL);
 
-		logfd(LOG_WARNING, 8, "unable to exec %s %s: cron output for user %s %s to /dev/null\n",
-				SendMail,
-				SENDMAIL_ARGS,
-				file->cf_UserName,
-				line->cl_Description
-			   );
+			logfd(LOG_WARNING, 8, "unable to exec %s %s: cron output for user %s %s to /dev/null\n",
+					SendMail,
+					SENDMAIL_ARGS,
+					file->cf_UserName,
+					line->cl_Description
+				   );
 		exit(0);
 	} else if (line->cl_Pid < 0) {
 		/*

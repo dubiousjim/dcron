@@ -36,7 +36,7 @@ const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
 const char *TSDir = TIMESTAMPS;
 const char *LogFile = LOG_FILE; /* opened with mode 0600 */
-const char *SendMail = SENDMAIL;
+const char *SendMail = NULL;
 const char *Mailto = NULL;
 char *TempDir;
 char *TempFileFmt;
