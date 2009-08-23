@@ -15,10 +15,10 @@
 
 const char *CDir = CRONTABS;
 int   UserId;
-short LogLevel = LOG_NOTICE;
-short DebugOpt = 0;
-short LoggerOpt = 0;
 /* not used in this program, but subs.c needs */
+short LogLevel = LOG_NOTICE;
+short ForegroundOpt = 0;
+short LoggerOpt = 0;
 char  *LogFile = LOG_FILE;
 
 void EditFile(const char *user, const char *file);

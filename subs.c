@@ -58,8 +58,8 @@ vlog(int level, int fd, const char *ctl, va_list va)
 
 	if (level <= LogLevel) {
 		vsnprintf(buf,sizeof(buf), ctl, va);
-		if (DebugOpt)
-			/* when -d, we always (and only) log to stderr
+		if (ForegroundOpt == 1)
+			/* when -d or -f, we always (and only) log to stderr
 			 * fd will be 2 except when 2 is bound to a execing subprocess, then it will be 8
 			 */
 			write(fd, buf, strlen(buf));
