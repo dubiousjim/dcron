@@ -384,7 +384,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					}
 
 					if (line.cl_Delay < 0) {
-						line.cl_Delay = line.cl_Freq;
+						line.cl_Delay = line.cl_Freq / 20;
 						/* all minutes are permitted */
 						for (j=0; j<60; ++j)
 							line.cl_Mins[j] = 1;
@@ -1056,7 +1056,7 @@ TestStartupJobs(void)
 
 	for (file = FileBase; file; file = file->cf_Next) {
 		if (DebugOpt)
-			logn(LOG_DEBUG, "FILE %s/%s USER %s:\n",
+			logn(LOG_DEBUG, "TestStartup for FILE %s/%s USER %s:\n",
 				file->cf_DPath, file->cf_FileName, file->cf_UserName);
 		for (line = file->cf_LineBase; line; line = line->cl_Next) {
 			struct CronWaiter *waiter;

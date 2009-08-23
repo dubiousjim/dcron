@@ -206,6 +206,9 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			}
 	}
 
+	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
+			file->cf_UserName, line->cl_Pid);
+
 	line->cl_Pid = 0;
 
 	if (line->cl_MailFlag != 1)
@@ -220,9 +223,6 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	 * Check mail file. If size has increased and
 	 * the file is still valid, we sendmail it.
 	 */
-
-	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
-			file->cf_UserName, line->cl_Pid);
 
 	mailFd = open(mailFile, O_RDONLY);
 	remove(mailFile);
@@ -271,7 +271,11 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		dup2(1, 2);
 		close(mailFd);
 
-		execl(SendMail, SendMail, SENDMAIL_ARGS, NULL, NULL);
+		if (SendMail == SENDMAIL)
+			execl(SendMail, SendMail, SENDMAIL_ARGS, NULL, NULL);
+		else
+			execl(SendMail, SendMail, NULL, NULL);
+
 		logfd(LOG_WARNING, 8, "unable to exec %s %s: cron output for user %s %s to /dev/null\n",
 				SendMail,
 				SENDMAIL_ARGS,
@@ -287,12 +291,12 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				file->cf_UserName,
 				line->cl_Description
 			);
-		line->cl_Pid = 0;
 	} else {
 		/*
 		 * PARENT, FORK OK
 		 */
 	}
+	line->cl_Pid = 0;
 	close(mailFd);
 }
 

@@ -108,7 +108,6 @@ typedef struct CronLine {
 	struct	CronWaiter *cl_Waiters;
 	struct	CronNotifier *cl_Notifs;
 	int		cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (startup)	*/
-	int		cl_FreqOK;
 	int		cl_Delay;		/* defaults to cl_Freq or hourly	*/
 	time_t	cl_LastRan;
 	time_t	cl_NotUntil;
