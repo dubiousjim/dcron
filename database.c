@@ -9,9 +9,9 @@
 
 #include "defs.h"
 
-Prototype int CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2);
+Prototype void CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2);
 Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
-Prototype void ReadTimestamps(int initial_scan);
+Prototype void ReadTimestamps(const char *user);
 Prototype int TestJobs(time_t t1, time_t t2);
 Prototype int TestStartupJobs(void);
 Prototype int ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2);
@@ -90,7 +90,7 @@ const char *FreqAry[] = {
  * is NULL then the files in the directory belong to the user whose name is
  * the file, otherwise they belong to the user_override user.
  */
-int
+void
 CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 {
 	FILE *fi;
@@ -98,12 +98,10 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 	char *fname, *ptok, *job;
 	char *path;
 
-	if (DebugOpt)
-		logn(LOG_DEBUG, "CheckUpdates on %s/%s\n", dpath, CRONUPDATE);
-
 	asprintf(&path, "%s/%s", dpath, CRONUPDATE);
 	if ((fi = fopen(path, "r")) != NULL) {
 		remove(path);
+		logn(LOG_INFO, "reading %s/%s\n", dpath, CRONUPDATE);
 		while (fgets(buf, sizeof(buf), fi) != NULL) {
 			/*
 			 * if buf has only sep chars, return NULL and point ptok at buf's terminating 0
@@ -117,9 +115,10 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 				SynchronizeFile(dpath, fname, user_override);
 			else if (!getpwnam(fname))
 				logn(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
-			else if (*ptok == 0 || *ptok == '\n')
+			else if (*ptok == 0 || *ptok == '\n') {
 				SynchronizeFile(dpath, fname, fname);
-			else {
+				ReadTimestamps(fname);
+			} else {
 				/* if fname is followed by whitespace, we prod any following jobs */
 				CronFile *file = FileBase;
 				while (file) {
@@ -158,7 +157,6 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 		fclose(fi);
 	}
 	free(path);
-	return (fi != NULL);
 }
 
 void
@@ -220,7 +218,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 
 
 void
-ReadTimestamps(int initial_scan)
+ReadTimestamps(const char *user)
 {
 	CronFile *file;
 	CronLine *line;
@@ -232,7 +230,7 @@ ReadTimestamps(int initial_scan)
 
 	file = FileBase;
 	while (file != NULL) {
-		if (file->cf_Deleted == 0) {
+		if (file->cf_Deleted == 0 && (!user || strcmp(user, file->cf_UserName) == 0)) {
 			line = file->cf_LineBase;
 			while (line != NULL) {
 				if (line->cl_Timestamp) {
@@ -253,7 +251,7 @@ ReadTimestamps(int initial_scan)
 							}
 						}
 						fclose(fi);
-					} else if (initial_scan) {
+					} else {
 						logn(LOG_NOTICE, "no timestamp found (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
 						/* softerror, do not exit the program */
 					}

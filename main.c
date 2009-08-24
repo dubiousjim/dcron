@@ -243,7 +243,7 @@ main(int ac, char **av)
 	logn(LOG_INFO,"%s " VERSION " yacron, started with loglevel %s\n", av[0], LevelAry[LogLevel]);
 	SynchronizeDir(CDir, NULL, 1);
 	SynchronizeDir(SCDir, "root", 1);
-	ReadTimestamps(1);
+	ReadTimestamps(NULL);
 	TestStartupJobs(); /* @startup jobs only run when crond is started, not when their crontab is loaded */
 
 	{
@@ -280,10 +280,9 @@ main(int ac, char **av)
 				rescan = 60;
 				SynchronizeDir(CDir, NULL, 0);
 				SynchronizeDir(SCDir, "root", 0);
-				ReadTimestamps(0);
+				ReadTimestamps(NULL);
 			} else {
-				if (CheckUpdates(CDir, NULL, t1, t2))
-					ReadTimestamps(0);
+				CheckUpdates(CDir, NULL, t1, t2);
 				CheckUpdates(SCDir, "root", t1, t2);
 			}
 			if (DebugOpt)
