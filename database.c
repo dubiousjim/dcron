@@ -509,10 +509,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 											if (job->cl_JobName && strcmp(job->cl_JobName, name) == 0) {
 												CronWaiter *waiter = malloc(sizeof(CronWaiter));
 												CronNotifier *notif = malloc(sizeof(CronNotifier));
-												name = NULL;	/* flag that we found a match */
 												waiter->cw_Flag = -1;
 												waiter->cw_MaxWait = waitfor;
-												waiter->cw_NotifLine = job; // (job->cl_Freq < 0) ? job : NULL;
+												waiter->cw_NotifLine = job;
 												waiter->cw_Notifier = notif;
 												waiter->cw_Next = line.cl_Waiters;	/* add to head of line.cl_Waiters */
 												line.cl_Waiters = waiter;
@@ -523,7 +522,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 											} else
 												pjob = &job->cl_Next;
 										}
-										if (name) {
+										if (!job) {
 											logn(LOG_WARNING, "failed parsing crontab for user %s: unknown job %s\n", userName, name);
 											/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
 										}
