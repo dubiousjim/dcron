@@ -998,7 +998,7 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 				if (waiter->cw_MaxWait == 0)
 					/* when no MaxWait interval specified, we always wait */
 					waiter->cw_Flag = -1;
-				else if (waiter->cw_NotifLine->cl_Freq == 0 || (waiter->cw_NotifLine->cl_Freq > 0 && t2 + waiter->cw_MaxWait <= waiter->cw_NotifLine->cl_NotUntil)) {
+				else if (waiter->cw_NotifLine->cl_Freq == 0 || (waiter->cw_NotifLine->cl_Freq > 0 && t2 + waiter->cw_MaxWait >= waiter->cw_NotifLine->cl_NotUntil)) {
 					/* default is don't wait */
 					waiter->cw_Flag = 0;
 					for (t = t1 - t1 % 60; t <= t2; t += 60) {
