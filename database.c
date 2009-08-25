@@ -11,7 +11,7 @@
 
 Prototype void CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2);
 Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
-Prototype void ReadTimestamps(const char *user);
+Prototype void ReadTimestamps(const char *user, int initial_scan);
 Prototype int TestJobs(time_t t1, time_t t2);
 Prototype int TestStartupJobs(void);
 Prototype int ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2);
@@ -117,7 +117,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 				logn(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
 			else if (*ptok == 0 || *ptok == '\n') {
 				SynchronizeFile(dpath, fname, fname);
-				ReadTimestamps(fname);
+				ReadTimestamps(fname, 1);
 			} else {
 				/* if fname is followed by whitespace, we prod any following jobs */
 				CronFile *file = FileBase;
@@ -218,7 +218,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 
 
 void
-ReadTimestamps(const char *user)
+ReadTimestamps(const char *user, int initial_scan)
 {
 	CronFile *file;
 	CronLine *line;
@@ -252,7 +252,8 @@ ReadTimestamps(const char *user)
 						}
 						fclose(fi);
 					} else {
-						logn(LOG_NOTICE, "no timestamp found (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
+						if (initial_scan)
+							logn(LOG_NOTICE, "no timestamp found (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
 						/* softerror, do not exit the program */
 					}
 				}
