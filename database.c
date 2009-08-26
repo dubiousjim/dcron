@@ -1159,6 +1159,8 @@ CheckJobs(void)
 							status = WEXITSTATUS(status);
 						else
 							status = 1;
+						if (DebugOpt)
+							logn(LOG_DEBUG, "user %s %s finished with %d\n", file->cf_UserName, line->cl_Description, status);
 						EndJob(file, line, status);
 						if (line->cl_Pid)
 							file->cf_Running = 1;
