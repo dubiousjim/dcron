@@ -24,7 +24,7 @@ char *ParseInterval(int *interval, char *ptr);
 char *ParseField(char *userName, char *ary, int modvalue, int off, int onvalue, const char **names, char *ptr);
 void FixDayDow(CronLine *line);
 
-CronFile *FileBase;
+CronFile *FileBase = NULL;
 
 const char *DowAry[] = {
 	"sun",
