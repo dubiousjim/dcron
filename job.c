@@ -152,11 +152,13 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	 */
 	if (line->cl_Delay > 0) {
 		if (exit_status == EAGAIN) {
-			/* returned EAGAIN, wait cl_Delay then retry */
-			/*
-			line->cl_NotUntil = time(NULL) + line->cl_Delay;
+			/* returned EAGAIN, wait cl_Delay then retry
+			 * we base off the time the job was scheduled/started waiting, not the time it finished
 			 */
-			line->cl_NotUntil += line->cl_Delay; // we base off the time the job was scheduled/started waiting, not the time it finished
+			/*
+			line->cl_NotUntil = time(NULL) + line->cl_Delay;	// to base off time finished
+			line->cl_NotUntil += line->cl_Delay; 	// already applied
+			 */
 		} else {
 			/* process finished without returning EAGAIN (it may have returned some other error)
 			 * mark as having run and update timestamp
@@ -164,9 +166,12 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			FILE *fi;
 			char buf[64];
 			/*
-			line->cl_LastRan = time(NULL);
+			 * we base off the time the job was scheduled/started waiting, not the time it finished
 			 */
-			line->cl_LastRan = line->cl_NotUntil; // we base off the time the job was scheduled/started waiting, not the time it finished
+			/*
+			line->cl_LastRan = time(NULL);	// to base off time finished
+			*/
+			line->cl_LastRan = line->cl_NotUntil - line->cl_Delay;
 			if ((fi = fopen(line->cl_Timestamp, "w")) != NULL) {
 				if (strftime(buf, sizeof(buf), TIMESTAMP_FMT, localtime(&line->cl_LastRan))) {
 					fputs(buf, fi);

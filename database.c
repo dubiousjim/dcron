@@ -943,7 +943,7 @@ TestJobs(time_t t1, time_t t2)
 								line->cl_Mons[tp->tm_mon]
 						   ) {
 							if (line->cl_NotUntil)
-								line->cl_NotUntil = t2 - t2 % 60; /* save what minute this job was scheduled/started waiting */
+								line->cl_NotUntil = t2 - t2 % 60 + line->cl_Delay; /* save what minute this job was scheduled/started waiting, plus cl_Delay */
 							nJobs += ArmJob(file, line, t1, t2);
 						}
 					}
