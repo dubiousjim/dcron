@@ -383,6 +383,11 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					}
 
 					if (line.cl_Delay < 0) {
+						/*
+						 * delays on @daily, @hourly, etc are 1/20 of the frequency
+						 * so they don't all start at once
+						 * this also affects how they behave when the job returns EAGAIN
+						 */
 						line.cl_Delay = line.cl_Freq / 20;
 						/* all minutes are permitted */
 						for (j=0; j<60; ++j)
