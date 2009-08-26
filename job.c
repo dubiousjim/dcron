@@ -58,7 +58,7 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 
 		if (ChangeUser(file->cf_UserName, 1) < 0) {
-			logn(LOG_ERR, "ChangeUser failed (user %s %s)\n",
+			logn(LOG_ERR, "unable to ChangeUser (user %s %s)\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -202,7 +202,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			/*
 			 * log non-zero exit_status
 			 */
-			logn(LOG_INFO, "exit status %d from %s %s\n",
+			logn(LOG_NOTICE, "exit status %d from user %s %s\n",
 					exit_status,
 					file->cf_UserName,
 					line->cl_Description
@@ -210,6 +210,14 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 
 			}
 	}
+	if (!exit_status || exit_status == EAGAIN)
+		if (DebugOpt)
+			logn(LOG_DEBUG, "exit status %d from user %s %s\n",
+						exit_status,
+						file->cf_UserName,
+						line->cl_Description
+					);
+
 
 	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, line->cl_Pid);
@@ -256,8 +264,9 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 */
 
 		if (ChangeUser(file->cf_UserName, 1) < 0) {
-			logn(LOG_ERR, "ChangeUser %s failed; unable to send mail\n",
-					file->cf_UserName
+			logn(LOG_ERR, "unable to ChangeUser to send mail (user %s %s)\n",
+					file->cf_UserName,
+					line->cl_Description
 					);
 			exit(0);
 		}
@@ -282,21 +291,22 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 					line->cl_Description
 				 );
 			execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
+			/* exec failed, log error */
+			SendMail = SENDMAIL;
 		} else
 			execl(SendMail, SendMail, NULL, NULL);
 
-			logfd(LOG_WARNING, 8, "unable to exec %s %s: cron output for user %s %s to /dev/null\n",
-					SendMail,
-					SENDMAIL_ARGS,
-					file->cf_UserName,
-					line->cl_Description
-				   );
+		logfd(LOG_WARNING, 8, "unable to exec %s: cron output for user %s %s to /dev/null\n",
+				SendMail,
+				file->cf_UserName,
+				line->cl_Description
+			   );
 		exit(0);
 	} else if (line->cl_Pid < 0) {
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		logn(LOG_ERR, "unable to fork: cron output for user %s %s to /dev/null\n",
+		logn(LOG_WARNING, "unable to fork: cron output for user %s %s to /dev/null\n",
 				file->cf_UserName,
 				line->cl_Description
 			);

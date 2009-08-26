@@ -168,6 +168,9 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	DIR *dir;
 	char *path;
 
+	if (DebugOpt)
+		logn(LOG_DEBUG, "Synchronizing %s\n", dpath);
+
 	/*
 	 * Delete all database CronFiles for this directory.  DeleteFile() will
 	 * free *pfile and relink the *pfile pointer, or in the alternative will
@@ -249,7 +252,7 @@ ReadTimestamps(const char *user)
 								tm.tm_sec = 0;
 								sec = mktime(&tm);
 							if (sec == (time_t)-1) {
-								logn(LOG_WARNING, "unable to parse timestamp (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
+								logn(LOG_ERR, "unable to parse timestamp (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
 								/* we continue checking other timestamps in this CronFile */
 							} else {
 								/* sec -= sec % 60; */
@@ -776,7 +779,10 @@ ParseField(char *user, char *ary, int modvalue, int off, int onvalue, const char
 		int i;
 
 		for (i = 0; i < modvalue; ++i)
-			logn(LOG_DEBUG, "%2x ", ary[i]);
+			if (modvalue == 7)
+				logn(LOG_DEBUG, "%2x ", ary[i]);
+			else
+				logn(LOG_DEBUG, "%d", ary[i]);
 		logn(LOG_DEBUG, "\n");
 	}
 
@@ -1191,8 +1197,6 @@ CheckJobs(void)
 							status = WEXITSTATUS(status);
 						else
 							status = 1;
-						if (DebugOpt)
-							logn(LOG_DEBUG, "user %s %s finished with %d\n", file->cf_UserName, line->cl_Description, status);
 						EndJob(file, line, status);
 						if (line->cl_Pid)
 							file->cf_Running = 1;
