@@ -11,7 +11,7 @@
 
 Prototype void CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2);
 Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
-Prototype void ReadTimestamps(const char *user, int initial_scan);
+Prototype void ReadTimestamps(const char *user);
 Prototype int TestJobs(time_t t1, time_t t2);
 Prototype int TestStartupJobs(void);
 Prototype int ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2);
@@ -117,7 +117,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 				logn(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
 			else if (*ptok == 0 || *ptok == '\n') {
 				SynchronizeFile(dpath, fname, fname);
-				ReadTimestamps(fname, 1);
+				ReadTimestamps(fname);
 			} else {
 				/* if fname is followed by whitespace, we prod any following jobs */
 				CronFile *file = FileBase;
@@ -218,7 +218,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 
 
 void
-ReadTimestamps(const char *user, int initial_scan)
+ReadTimestamps(const char *user)
 {
 	CronFile *file;
 	CronLine *line;
@@ -236,13 +236,21 @@ ReadTimestamps(const char *user, int initial_scan)
 				if (line->cl_Timestamp) {
 					if ((fi = fopen(line->cl_Timestamp, "r")) != NULL) {
 						if (fgets(buf, sizeof(buf), fi) != NULL) {
+							int fake = 0;
+							ptr = buf;
+							if (strncmp(buf, "after ", 6) == 0) {
+								fake = 1;
+								ptr += 6;
+							}
 							sec = (time_t)-1;
-							ptr = strptime(buf, TIMESTAMP_FMT, &tm);
+							ptr = strptime(ptr, TIMESTAMP_FMT, &tm);
 							if (ptr && (*ptr == 0 || *ptr == '\n'))
 								sec = mktime(&tm);
 							if (sec == (time_t)-1) {
 								logn(LOG_WARNING, "unable to parse timestamp (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
 								/* we continue checking other timestamps in this CronFile */
+							} else if (fake) {
+								line->cl_NotUntil = sec;
 							} else {
 								line->cl_LastRan = sec;
 								freq = (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
@@ -252,9 +260,18 @@ ReadTimestamps(const char *user, int initial_scan)
 						}
 						fclose(fi);
 					} else {
-						if (initial_scan)
-							logn(LOG_NOTICE, "no timestamp found (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
-						/* softerror, do not exit the program */
+						int succeeded = 0;
+						logn(LOG_NOTICE, "no timestamp found (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
+						/* write a fake timestamp file so our initial NotUntil doesn't keep being reset every hour when crond does a SynchronizeDir */
+						if ((fi = fopen(line->cl_Timestamp, "w")) != NULL) {
+							if (strftime(buf, sizeof(buf), TIMESTAMP_FMT, localtime(&line->cl_NotUntil)))
+								if (fputs("after ", fi) >= 0)
+									if (fputs(buf,fi) >= 0)
+										succeeded = 1;
+							fclose(fi);
+						}
+						if (!succeeded)
+							logn(LOG_WARNING, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
 					}
 				}
 				line = line->cl_Next;

@@ -165,6 +165,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			 */
 			FILE *fi;
 			char buf[64];
+			int succeeded = 0;
 			/*
 			 * we base off the time the job was scheduled/started waiting, not the time it finished
 			 */
@@ -173,14 +174,13 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			*/
 			line->cl_LastRan = line->cl_NotUntil - line->cl_Delay;
 			if ((fi = fopen(line->cl_Timestamp, "w")) != NULL) {
-				if (strftime(buf, sizeof(buf), TIMESTAMP_FMT, localtime(&line->cl_LastRan))) {
-					fputs(buf, fi);
-				} else
-					logn(LOG_NOTICE, "unable to format timestamp (user %s %s)\n", file->cf_UserName, line->cl_Description);
+				if (strftime(buf, sizeof(buf), TIMESTAMP_FMT, localtime(&line->cl_LastRan)))
+					if (fputs(buf, fi) >= 0)
+						succeeded = 1;
 				fclose(fi);
-			} else {
-				logn(LOG_NOTICE, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
 			}
+			if (!succeeded)
+				logn(LOG_WARNING, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
 			line->cl_NotUntil = line->cl_LastRan;
 			line->cl_NotUntil += (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
 		}
