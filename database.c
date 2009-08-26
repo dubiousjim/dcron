@@ -305,6 +305,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 		if (fstat(fileno(fi), &sbuf) == 0 && sbuf.st_uid == DaemonUid) {
 			CronFile *file = calloc(1, sizeof(CronFile));
 			CronLine **pline;
+			time_t tnow = time(NULL);
 
 			file->cf_UserName = strdup(userName);
 			file->cf_FileName = strdup(fileName);
@@ -570,7 +571,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 
 				if (line.cl_Delay > 0) {
 					asprintf(&line.cl_Timestamp, "%s/%s.%s", TSDir, userName, line.cl_JobName);
-					line.cl_NotUntil = time(NULL) + line.cl_Delay;
+					line.cl_NotUntil = tnow + line.cl_Delay;
 				}
 
 				if (line.cl_JobName) {
