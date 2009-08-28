@@ -245,17 +245,22 @@ ReadTimestamps(const char *user)
 							sec = (time_t)-1;
 							ptr = strptime(ptr, TIMESTAMP_FMT, &tm);
 							if (ptr && (*ptr == 0 || *ptr == '\n'))
+								/* strptime uses current seconds when seconds not specified? anyway, we don't get round minutes */
+								tm.tm_sec = 0;
 								sec = mktime(&tm);
 							if (sec == (time_t)-1) {
 								logn(LOG_WARNING, "unable to parse timestamp (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
 								/* we continue checking other timestamps in this CronFile */
-							} else if (fake) {
-								line->cl_NotUntil = sec;
 							} else {
-								line->cl_LastRan = sec;
-								freq = (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
-								if (line->cl_NotUntil < line->cl_LastRan + freq)
+								/* sec -= sec % 60; */
+								if (fake) {
+									line->cl_NotUntil = sec;
+								} else {
+									line->cl_LastRan = sec;
+									freq = (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
+									/* if (line->cl_NotUntil < line->cl_LastRan + freq) */
 									line->cl_NotUntil = line->cl_LastRan + freq;
+								}
 							}
 						}
 						fclose(fi);
@@ -323,6 +328,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 			CronFile *file = calloc(1, sizeof(CronFile));
 			CronLine **pline;
 			time_t tnow = time(NULL);
+			tnow -= tnow % 60;
 
 			file->cf_UserName = strdup(userName);
 			file->cf_FileName = strdup(fileName);
@@ -406,6 +412,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 						 * this also affects how they behave when the job returns EAGAIN
 						 */
 						line.cl_Delay = line.cl_Freq / 20;
+						line.cl_Delay -= line.cl_Delay % 60;
+						if (line.cl_Delay == 0)
+							line.cl_Delay = 60;
 						/* all minutes are permitted */
 						for (j=0; j<60; ++j)
 							line.cl_Mins[j] = 1;
