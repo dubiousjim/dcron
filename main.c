@@ -29,7 +29,7 @@ Prototype char *TempDir;
 Prototype char *TempFileFmt;
 
 short DebugOpt;
-short LogLevel = LOG_NOTICE;
+short LogLevel = LOG_LEVEL;
 short ForegroundOpt = 0;
 short LoggerOpt;
 const char  *CDir = CRONTABS;
@@ -171,7 +171,7 @@ main(int ac, char **av)
 				printf("-M sendmail program  (defaults to %s)\n", SENDMAIL);
 				printf("-S            log to syslog (default, uses identity '%s')\n", LOG_IDENT);
 				printf("-L file       log to file (uses %s, if no file specified)\n", LOG_FILE);
-				printf("-l loglevel   log events <= this log level (defaults to LOG_NOTICE = 5)\n");
+				printf("-l loglevel   log events <= this log level (defaults to %s = %d)\n", LevelAry[LOG_LEVEL], LOG_LEVEL);
 				printf("-b            run in background (default)\n");
 				printf("-f            run in foreground\n");
 				printf("-d            run in debugging mode\n");

@@ -45,6 +45,9 @@
 #ifndef LOG_IDENT
 #define LOG_IDENT	"crond"
 #endif
+#ifndef LOG_LEVEL
+#define LOG_LEVEL LOG_NOTICE
+#endif
 #ifndef LOG_FILE
 #define LOG_FILE	"/var/log/crond.log"
 #endif
