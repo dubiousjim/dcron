@@ -163,15 +163,15 @@ main(int ac, char **av)
 				 * check for parse error
 				 */
 				printf("dillon's cron daemon " VERSION "\n");
-				printf("crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-S|-L file] [-l level] [-b|-f|-d]\n");
+				printf("crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-S|-L [file]] [-l level] [-b|-f|-d]\n");
 				printf("-s            directory of system crontabs (defaults to %s)\n", SCRONTABS);
 				printf("-c            directory of per-user crontabs (defaults to %s)\n", CRONTABS);
 				printf("-t            directory of timestamps (defaults to %s)\n", TIMESTAMPS);
 				printf("-m user@host  where should cron output be directed? (defaults to local user)\n");
-				printf("-M sendmail program  (defaults to %s)\n", SENDMAIL);
-				printf("-S            log to syslog (default, uses identity '%s')\n", LOG_IDENT);
-				printf("-L file       log to file (uses %s, if no file specified)\n", LOG_FILE);
-				printf("-l loglevel   log events <= this log level (defaults to %s = %d)\n", LevelAry[LOG_LEVEL], LOG_LEVEL);
+				printf("-M mailer     (defaults to %s)\n", SENDMAIL);
+				printf("-S            log to syslog using identity '%s' (default)\n", LOG_IDENT);
+				printf("-L [file]     log to file instead of syslog (if no file specified, uses %s)\n", LOG_FILE);
+				printf("-l loglevel   log events <= this level (defaults to %s (level %d))\n", LevelAry[LOG_LEVEL], LOG_LEVEL);
 				printf("-b            run in background (default)\n");
 				printf("-f            run in foreground\n");
 				printf("-d            run in debugging mode\n");

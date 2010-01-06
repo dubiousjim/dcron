@@ -4,7 +4,7 @@
 
 NAME
 ====
-crontab - manipulate per-user crontabs (Yet Another Cron)
+crontab - manipulate per-user crontabs (dillon's lightweight cron daemon)
 
 SYNOPSIS
 ========
@@ -22,133 +22,153 @@ SYNOPSIS
 
 DESCRIPTION
 ===========
-**crontab** manipulates the crontab for a particular user. Only the superuser
-may specify a different user and/or crontab directory. Generally the -e option
-is used to edit your crontab. **crontab** will use /usr/bin/vi or the editor
-specified by your EDITOR or VISUAL environment variable to edit the crontab.
 
-Unlike other crond/crontabs, this **crontab** does not try to do everything under
-the sun. Frankly, a shell script is much more able to manipulate the
-environment then cron and I see no particular reason to use the user's shell
-(from his password entry) to run cron commands when this requires special
-casing of non-user crontabs, such as those for UUCP. When a crontab command is
-run, this **crontab** runs it with /bin/sh and sets up only three environment
-variables: USER, HOME, and SHELL.
+**crontab** manipulates the per-user crontabs.
 
-**crond** automatically detects changes in the time. Reverse-indexed time changes
-less then an hour old will NOT re-run crontab commands already issued in the
-recovered period. Forward-indexed changes less then an hour into the future
-will issue missed commands exactly once. Changes greater then an hour into the
-past or future cause **crond** to resynchronize and not issue missed commands.
-Commands are not reissued if the previously issued command is still running.
-For example, if you have a crontab command `sleep 70` that you wish to run once
-a minute, cron will only be able to issue the command once every two minutes.
-If you do not like this feature, you can run your commands in the background
-with an `&`.
+Generally the -e option is used to edit your crontab. **crontab** will use
+the editor specified by your EDITOR or VISUAL environment
+variable (or /usr/bin/vi) to edit the crontab.
 
-The crontab format is roughly similar to that used by vixiecron. Individual
+Only the superuser may use the -u or -c switches to specify a different user
+and/or crontab directory. The superuser also has a per-user crontab, saved as
+/var/spool/cron/root.
+
+
+Unlike other cron daemons, this crond/crontab package doesn't try to do
+everything under the sun. It doesn't try to keep track of user's preferred
+shells; that would require special-casing users with no login shell. Instead,
+it just runs all commands using `/bin/sh`. (Commands can of course be script
+files written in any shell you like.)
+
+Nor does it do any special environment handling. A shell script is
+better-suited to doing that than a cron daemon. This cron daemon sets up only
+three environment variables: USER, HOME, and SHELL. 
+
+
+Our crontab format is roughly similar to that used by vixiecron. Individual
 fields may contain a time, a time range, a time range with a skip factor, a
 symbolic range for the day of week and month in year, and additional subranges
 delimited with commas. Blank lines in the crontab or lines that begin with a
 hash (#) are ignored. If you specify both a day in the month and a day of week,
-it will be interpreted as the nth such day in the month.
+it will be interpreted as the Nth such day in the month.
+
+Some examples:
 
 	# MIN HOUR DAY MONTH DAYOFWEEK	COMMAND
-	# at 6:10 a.m. every day
+	# run `date` at 6:10 am every day
 	10 6 * * * date
 
-	# every two hours at the top of the hour
+	# run every two hours at the top of the hour
 	0 */2 * * * date
 
-	# every two hours from 11p.m. to 7a.m., and at 8a.m.
+	# run every two hours between 11 pm and 7 am, and again at 8 am
 	0 23-7/2,8 * * * date
 
-	# at 11:00 a.m. on the first and last Mon, Tue, Wed of each month
-	# if the fourth Monday in a month is the last, it will
-	# match against both "4th" and "5th"
-	0 11 1,5 * mon-wed date
-
-	# 4:00 a.m. on january 1st
+	# run at 4:00 am on January 1st
 	0 4 1 jan * date
 
-	# once an hour, all output appended to log file
-	0 4 1 jan * date >>/var/log/messages 2>&1
+	# run every day at 11 am, appending all output to a file
+	0 11 * * * date >> /var/log/date-output 2>&1
+
+To request the last Monday, etc. in a month, ask for the "5th" one. This will always match the last Monday, etc., even if there are only four Mondays in the month:
+
+	# run at 11 am on the first and last Mon, Tue, Wed of each month
+	0 11 1,5 * mon-wed date
+
+When the fourth Monday in a month is the last, it will match against both the "4th" and the "5th" (it will only run once if both are specified).
 
 The following formats are also recognized:
 
-	# schedule only once, when crond starts up
+	# schedule this job only once, when crond starts up
 	@reboot date
 
-	# never schedule regularly, but only when triggered by other
-	# jobs, or through the "cron.update" file
-	@noauto date
-
-	# schedule whenever at least one hour has elapsed since
-	# it last ran successfully
+	# schedule this job whenever crond is running, and sees that at least one
+	# hour has elapsed since it last ran successfully
 	@hourly ID=job1 date
 
-The options @hourly, @daily, @weekly, @monthly, and @yearly update timestamp
-files when their job completes successfully (exits with code zero). The
-timestamp files are saved as /var/spool/cron/timestamps/user.jobname. (So for
-all of these options, the command must be prefixed with an ID=<jobname>.)
+The formats @hourly, @daily, @weekly, @monthly, and @yearly need to update timestamp
+files when their jobs complete successfully (that is, exit with code zero). The
+timestamp files are saved as /var/spool/cronstamps/user.jobname. So for all of these
+formats, the cron command needs a jobname, given by prefixing the command
+with `ID=jobname`. (This syntax was chosen to maximize the chance that our crontab
+files will be readable by other cron daemons as well. They might just interpret the ID=jobname
+as a command-line environment variable assignment.)
 
-Frequencies can also be specified as follows:
+There's also this esoteric option, whose usefulness will be explained later:
 
-	# run whenever it's between 2-4 am, and at least one day
-	# has elapsed since it last ran successfully
+	# don't ever schedule this job on its own; only run it when its triggered
+	# as a "dependency" of another job (see below), or when the user explicitly
+	# requests it through the "cron.update" file (see crond(8))
+	@noauto ID=namedjob date
+
+There's also a format available for finer-grained control of frequencies:
+
+	# run whenever it's between 2-4 am, and at least one day (1d)
+	# has elapsed since this job ran successfully
 	* 2-4 * * * ID=job2 FREQ=1d date
 
-	# as before, but re-try every 10 minutes if my_command
-	# exits with status EAGAIN (code 11)
+	# as before, but re-try every 10 minutes (10m) if my_command
+	# exits with code 11 (EAGAIN)
 	* 2-4 * * * ID=job3 FREQ=1d/10m my_command
 
-These options also update timestamp files, and require the jobs to be assigned
-an ID.
+These formats also update timestamp files, and so also require their jobs to be assigned
+IDs.
 
-Jobs can be told to wait for the successful completion of other jobs. With the
-following crontab:
+Notice the technique used in the second example: jobs can exit with code 11 to
+indicate they lacked the resources to run (for example, no network was
+available), and so should be tried again after a brief delay. This works for
+jobs using either @freq or FREQ=... formats; but the FREQ=.../10m syntax is the
+only way to customize the length of the delay before re-trying.
 
-	* * * * * ID=job5 FREQ=1d first_command
-	* * * * * ID=job6 FREQ=1h AFTER=job5/1h second_command
+Jobs can be made to "depend" on, or wait until AFTER other jobs have
+successfully completed. Consider the following crontab:
 
-whenever job6 is about to be scheduled, if job5 would be scheduled within the
-next hour, job6 will first wait for it to successfully complete. If job5
-returns with exit code EAGAIN, job6 will continue waiting (even if job5 will
-not be retried again within an hour). If job5 returns with any other non-zero
-exit code, job6 will be removed from the queue without running.
+	* * * * * ID=job4 FREQ=1d first_command
+	* * * * * ID=job5 FREQ=1h AFTER=job4/30m second_command
+
+Here, whenever job5 is up to be run, if job4 is scheduled to run within the
+next 30 minutes (30m), job5 will first wait for it to successfully complete.
+
+(What if job4 doesn't successfully complete? If job4 returns with exit code
+EAGAIN, job5 will continue to wait until job4 is retried---even if that won't
+be within the hour. If job4 returns with any other non-zero exit code, job5
+will be removed from the queue without running.)
 
 Jobs can be told to wait for multiple other jobs, as follows:
 
-	10 * * * * ID=job7 AFTER=job5/1h,job4 third_command
+	10 * * * * ID=job6 AFTER=job4/1h,job7 third_command
 
-The waiting job doesn't care what order job4 and job5 complete in. If job7 is
-re-scheduled (an hour later) while an earlier instance is still waiting, only a
-single instance of the job will remain in the queue. It will have all of its
-"waiting flags" reset: so each of job4 and job5 (if job5 would run within the
-next hour) will again have to complete before job7 will run.
+The waiting job6 doesn't care what order job4 and job7 complete in. If job6 comes
+up to be re-scheduled (an hour later) while an earlier instance is still waiting, only a
+single instance of job6 will remain in the queue. It will have all of its
+"waiting flags" reset: so each of job7 and job4 (supposing again that job4 would run within the
+next 1h) will again have to complete before job6 will run.
 
 If a job waits on a @reboot or @noauto job, the target job being waited on will
-also be scheduled to run.
+also be scheduled to run. This technique can be used to have a common job scheduled as @noauto
+that several other jobs depend on (and so call as a subroutine).
 
-The command portion of the line is run with `/bin/sh -c <command>` and may
-therefore contain any valid bourne shell command. A common practice is to run
-your command with **exec** to keep the process table uncluttered. It is also common
-to redirect output to a log file. If you do not, and the command generates
-output on stdout or stderr, the result will be mailed to the user in question.
-If you use this mechanism for special users, such as UUCP, you may want to
-create an alias for the user to direct the mail to someone else, such as root
-or postmaster.
+The command portion of a cron job is run with `/bin/sh -c ...` and may
+therefore contain any valid Bourne shell command. A common practice is to
+prefix your command with **exec** to keep the process table uncluttered. It is
+also common to redirect job output to a file or to /dev/null. If you do not,
+and the command generates output on stdout or stderr, that output will be
+mailed to the local user whose crontab the job comes from. If you have crontabs
+for special users, such as uucp, who can't receive local mail, you may want to
+create mail aliases for them or adjust this behavior. (See crond(8) for details
+how to adjust it.)
 
-Internally, this cron uses a quick indexing system to reduce CPU overhead when
-looking for commands to execute. Several hundred crontabs with several thousand
-entries can be handled without using noticable CPU resources.
+Whenever jobs return an exit code that's neither 0 nor 11 (EAGAIN), that event
+will be logged, regardless of whether any stdout or stderr is generated. Any
+jobs waiting on the failed job will also be canceled.
 
-BUGS
+
+TODO
 ====
 Ought to be able to have several crontab files for any given user, as
 an organizational tool.
 
 AUTHORS
 =======
-Matthew Dillon (dillon@apollo.backplane.com)  
-Jim Pryor (profjim@jimpryor.net)
+Matthew Dillon (dillon@apollo.backplane.com): original developer  
+Jim Pryor (profjim@jimpryor.net): current developer

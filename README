@@ -1,199 +1,143 @@
 
-			YACRON - SIMPLE CRON PROGRAM
-		            Jim Pryor
+DCRON - DILLON'S LIGHTWEIGHT CRON DAEMON
+========================================
 
-			Originally written: 22 Aug 2009
+This lightweight cron daemon aims to be simple and secure, with just enough
+features to stay useful. It was written from scratch by Matt Dillon in 1994.
+It's now developed and maintained by Jim Pryor.
 
-CREDITS
+In the author's opinion, having to combine a cron daemon with another daemon
+like anacron makes for too much complexity. So the goal is a simple cron daemon
+that can also take over the central functions of anacron.
 
-	This program was forked from the beautifully minimalist dcron v.3.2.
-	(Original REAMDE below.) I just needed it to be a bit less minimalist.
+Unlike other fatter cron daemons, though, this cron doesn't even try to manage
+environment variables or act as a shell. All jobs are run with `/bin/sh` for
+conformity and portability. We don't try to use the user's preferred shell:
+that breaks down for special users and even makes some of us normal users
+unhappy (for example, /bin/csh does not use a true O_APPEND mode and has
+difficulty redirecting stdout and stderr both to different places!).  You can,
+of course, run shell scripts in whatever language you like by making them
+executable with #!/bin/csh or whatever as the first line.  If you don't like
+the extra processes, just `exec` them.
 
-	I had gotten to the point where I was juggling a combination of dcron,
-	a home-patched version of anacron, my own script to log job output
-	instead of mailing it, my own script to test for various conditions
-	(on A/C? have a network?) before running most jobs, and I _still_ couldn't
-	get the ensemble to do what I now needed. It was getting too baroque.
-	I had only ten or fifteen of my own cronjobs, but they were spread between
-	the root crontab, /etc/anacrontab, some /etc/cron.hourly/* scripts,
-	and where was all the beautiful minimalism now?
+If you need to set special environment variables, pass them as arguments to a
+script.
 
-	Probably I could get fcron <http://fcron.free.fr/> to do what I wanted, but
-	it looked so much more complex and heavier than I needed. I just wanted my
-	tools to be a _bit_ more capable.
-
-	So, since dcron has such a nice small codebase, I just took it and wrapped in
-	all I needed from anacron... plus the extra capabilities I was hankering for.
-	I've tried to retain the ideals of the original.
-
-	This implementation:
-
-		* can log to syslog or a file
-
-		* can email job output to a specified address, instead of the local user
-		  who owns the job
-
-		* can replace sendmail with any other script to which all job output
-		  should be piped
-
-		* allows jobs to be scheduled on the "2nd and last" Mondays of a month
-
-		* accepts @daily, @reboot, etc. options in crontabs; @daily jobs
-		  don't require the machine to be running at any specific time
-
-		* also accepts crontab lines with the format:
-				"* 2-6 * * *  FREQ=2d/1h ID=<job_name> <command>"
-		  this will try to run <command> once every 2 days, but only between the
-		  hours of 2 and 6 am; if <command> exits with status EAGAIN it
-		  will be retried again every 1 hour
-
-		* also accepts AFTER=<target_job>/1d assignments: if the specified
-		  target_job is scheduled to run within the next 1 day, wait until
-		  it has run and exited successfully before running the current command
-
-COMPILATION, INSTALLATION, TESTING
-
-	As below.
-
-BUG REPORTS, SUBMISSIONS
-
-    Jim Pryor										profjim@jimpryor.net
+The programs were written with an eye towards security, hopefully we haven't
+forgotton anything.  The programs were also written with an eye towards nice,
+clean, algorithmically sound code.  It's small, and the only fancy code is that
+which deals with child processes.  We do not try to optimize with vfork() since
+it causes headaches and is rather pointless considering we're execing a shell
+most of the time, and we pay close attention to leaving descriptors open in the
+crond and close attention to preventing crond from running away.
 
 
+DOWNLOADING
+-----------
 
----------------------- Original README from dcron ----------------------
+The project is hosted at: <http://www.jimpryor.net/linux/dcron.html>.
 
-			DCRON - SIMPLE CRON PROGRAM
-				Matthew Dillon
+The latest version is 4.0, which can be downloaded here:
+<http://www.jimpryor.net/linux/releases/dcron-4.0.tar.gz>.
 
-			Originally written: 1 May 1994
+A public git repo is available at: <http://repo.or.cz/w/dcron.git>.
 
 
-CREDITS
+COMPILING
+---------
 
-    I finally got tired of all of these wild cron programs that take the
-    task of running timed jobs to ridiculous extremes in terms of
-    capabilities and unnecessary features.  So here is my entry:  a
-    crond/crontab combination that is simple and elegant, and hopefully
-    secure to boot.  This cron implements reasonable features in terms
-    of field specification in the crontab and allows individual user
-    crontabs.
+This is an ANSI program, you must use a compiler that understands
+prototypes, such as GCC.
 
-    This program is written entirely from scratch by yours Truely (sig
-    at bottom).
+Note that the source code, especially in regard to changing the
+effective user, is Linux specific (SysVish).  I welcome any changes
+in regard to making the mechanism work with other platforms.
 
-    All jobs are run with /bin/sh for conformity and portability, thereby
-    avoiding the mess that occurs with other cron's that try to use the
-    user's perfered shell, which breaks down for special users and even makes
-    some of us normal users unhappy (for example, /bin/csh does not use a true
-    O_APPEND mode and has difficulty redirecting stdout and stderr both to
-    different places!).  You can, of course, run shell scripts in whatever
-    language you like by making them executable with #!/bin/csh or whatever
-    as the first line.  If you don't like the extra processes, just 'exec'
-    them.
+(1) Edit the Makefile, adding -D overrides to defines in defs.h as
+appropriate for your machine. Our goal is to including everything that
+you might need to override in the Makefile. Let us know if you find
+yourself needing to edit defs.h directly.
 
-    Under the same reasoning, this cron does not allow you to specify
-    environment variables or other stuff better left specified as
-    arguments to a shell script.  Talk about nonsense!
+(2) You may need to edit the #include lines in defs.h for your
+machine. We'd like these to work for as many systems as possible;
+let us know if you need to make changes.
 
-    The programs were written with an eye towards security, hopefully I
-    haven't forgotton anything.  The programs were also written with an
-    eye towards nice, clean, algorithmically sound code.  It's small, and
-    the only fancy code is that which deals with child processes.  I do
-    not try to optimize with vfork() since it causes headaches and is
-    rather pointless considering I'm execing a shell most of the time,
-    and I pay close attention to leaving descriptors open in the crond
-    and close attention to preventing crond from running away.
+(3) `make`
 
-COMPILATION
+(4) If you're using the git version, you might also want to `make man`,
+to be sure the manpages are updated. This requires 
+[pandoc](http://johnmacfarlane.net/pandoc/).
 
-    This is an ANSI program, you must use a compiler that understands
-    prototypes, such as GCC.  I will not accept bug reports related
-    to hacking the program to work with a non-ANSI compiler.
 
-    Note that the source code, especially in regard to changing the
-    effective user, is Linux specific (SysVish).  I welcome any changes
-    in regard to making the mechanism work with other platforms.
+INSTALLING
+----------
 
-    (1) Edit the Makefile, adding -D overrides to defines in defs.h as
-	appropriate for your machine.  (Or just edit defs.h, but as
-	people introduce fixes to make the program work on other
-	platforms, I want most overrides to be in the CFLAGS for the
-	Makefile).
+(5) `make install` installs the files underneath /usr/local. `make PREFIX=/usr
+install` installs them underneath /usr instead.
 
-    (2) You may need to edit the #include lines in defs.h for your
-	machine.  The goal is to include everything necessary such that
-	the program can be compiled in the most ansi-strict manner.  Amoung
-	other things, prototypes for system functions must come from
-	external include files and NOT from defs.h or any source file.
-	If no prototype exists for a particular function, contact your
-	vendor to get an update for your includes.
+Permissions will be as follows:
+	-rwxr-xr-x  0 root   wheel   32232 Jan  6 18:58 /usr/sbin/crond
+	-rwsr-xr-x  0 root   wheel   15288 Jan  6 18:58 /usr/bin/crontab
 
-    (3) make
+Only users belonging to crontab's group (here "wheel") will be able to use it.
+You may want to create a special "cron" group and `chgrp cron /usr/bin/crontab`.
 
-INSTALLATION
+You should schedule crond to run automatically from system startup, using
+/etc/rc.local or a similar mechanism. crond automatically detaches. By default
+it logs all events <= loglevel NOTICE to syslog.
 
-    Permissions should be as outlined below.  You will want to create a
-    special 'cron' group in which you put those users that are allowed
-    to use the crontab program.
+The crontab files are normally located in /var/spool/cron/, and timestamps
+are normally in /var/spool/cronstamps. These directories normally have permissions:
 
-    -rwx------   1 root     wheel       24864 Apr 27 09:02 /usr/bin/crond*
-    -rwsr-x---   1 root     cron        24311 Apr 27 09:02 /usr/bin/crontab*
+	drwxr-xr-x  0 root   wheel       0 Jan  6 18:58 var/spool/cron/
+	drwxr-xr-x  0 root   wheel       0 Jan  6 18:58 var/spool/cronstamps/
 
-    crond should be run automatically at system startup from /etc/rc.local
-    (or equivalent).  It automatically detaches.  A log level of 8 is
-    normally specified, and you normally append using /bin/sh's >>, allowing
-    the log file to backed up and cleared with an 'echo >/var/log/cron' in
-    your cron scripts.
+Here is the superuser's crontab, created using `sudo crontab -e`:
 
-    /usr/bin/crond -l8 >>/var/log/cron 2>&1
+	-rw-------  0 root   root      513 Jan  6 18:58 var/spool/cron/root
 
-    The crontab files are normally located in /var/spool/cron/crontabs.  The
-    directories normally have permissions:
-
-    drwxr-x---   3 root  wheel  1024 Feb 24 18:17 /var/spool/cron/
-    drwxr-x---   2 root  wheel  1024 May  1 10:28 /var/spool/cron/crontabs
 
 TESTING
+-------
 
-    Use the crontab program to create a personal crontab with the following
-    two lines:
+Use the crontab program to create a personal crontab with the following
+two lines:
 
-    * * * * *  date >>/tmp/test
-    * * * * *  date
+	* * * * *  date >> /tmp/test
+	* * * * *  date
 
-    Check the log output of crond to ensure the cron entries are being
-    run once a minute, check /tmp/test to ensure the date is being
-    appended to it once a minute, and check your mail to ensure that crond
-    is mailing you the date from the other entry once a minute.
+Check the log output of crond to ensure the cron entries are being
+run once a minute, check /tmp/test to ensure the date is being
+appended to it once a minute, and check your mail to ensure that crond
+is mailing you the date from the other entry once a minute.
 
-    After you are through testing cron, delete the entries with crontab -e
-    or crontab -d
+After you are through testing cron, delete the entries with `crontab -e`
+or `crontab -d`.
+
 
 BUG REPORTS, SUBMISSIONS
+------------------------
 
-    Send any bug reports and source code changes to me, Matthew Dillon:
+Send any bug reports and source code changes to Jim Pryor:
+<profjim@jimpryor.net>.
 
-	dillon@apollo.backplane.com
+Our goal is to make this program compilable in as ansi-strict a manner as
+possible. Prototypes for system functions should come from external include
+files and NOT from defs.h or any source file. If no prototype exists for a
+particular function, contact your vendor to get an update for your includes.
 
-    Note carefully that I will not accept any local ANSI prototypes for
-    system calls that should properly be in an external include file,
-    that I will probably not accept additional features to the program,
-    and I will not accept any changes to make the source compile under
-    a non-ANSI compiler.  I will not accept any radical code changes...
-    the purpose being that I want this cron to be made bug free rather
-    then feature full.
+Changes to overridable defaults in defs.h should be made in the Makefile; you
+may submit a Makefile for your platform.  Changes to the #include's in defs.h
+should be made by a combination of an -D options in the Makefile and #ifdef's
+for that option in defs.h, and not rely on pre-definitions made by the C
+compiler.
 
-    Changes to overridable defaults in defs.h should be made in the
-    Makefile, you may submit a Makefile for your platform.  Changes
-    to the #include's in defs.h should be made by a combination of an
-    -D options in the Makefile and #ifdef's for that option in defs.h,
-    and not rely on pre-definitions made by the C compiler.
+Changes to source code to accomodate one platform or other should be made in
+the same manner.
 
-    Changes to source code to accomodate one platform or other should
-    be made in the same manner.
+Our goal is also to keep this program simple, secure, and bug-free rather than
+feature-full. We have recently added some advanced features (@noauto, FREQ= and
+AFTER= tags, advanced cron.update parsing), but we did so only when they fit
+naturally into the rest of the codebase.
 
-
-    Matthew Dillon		dillon@apollo.backplane.com
-    [always include a portion of the original email in any response!]
 
