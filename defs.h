@@ -33,32 +33,39 @@
 #define Prototype extern
 #define arysize(ary)	(sizeof(ary)/sizeof((ary)[0]))
 
-#ifndef CRONTABS
-#define CRONTABS	"/var/spool/cron/crontabs"
-#endif
-#ifndef TIMESTAMPS
-#define TIMESTAMPS	"/var/spool/cron/timestamps"
-#endif
-#ifndef TIMESTAMP_FMT
-#define TIMESTAMP_FMT	"%Y-%m-%d %H:%M"
-#endif
 #ifndef SCRONTABS
 #define SCRONTABS	"/etc/cron.d"
 #endif
-#ifndef TMPDIR
-#define TMPDIR		"/tmp"
+#ifndef CRONTABS
+#define CRONTABS	"/var/spool/cron"
 #endif
-#ifndef LOG_FILE
-#define LOG_FILE	"/var/log/crond.log"
+#ifndef TIMESTAMPS
+#define TIMESTAMPS	"/var/spool/cronstamps"
 #endif
 #ifndef LOG_IDENT
 #define LOG_IDENT	"crond"
 #endif
+#ifndef LOG_FILE
+#define LOG_FILE	"/var/log/crond.log"
+#endif
+
+#ifndef CRONUPDATE
+#define CRONUPDATE	"cron.update"
+#endif
+#ifndef TIMESTAMP_FMT
+#define TIMESTAMP_FMT	"%Y-%m-%d %H:%M"
+#endif
 #ifndef LOG_DATE_FMT
 #define LOG_DATE_FMT	"%b %e %H:%M:%S %%s " LOG_IDENT ": "
 #endif
+#ifndef TMPDIR
+#define TMPDIR		"/tmp"
+#endif
 #ifndef OPEN_MAX
 #define OPEN_MAX	256
+#endif
+#ifndef MAXLINES
+#define MAXLINES	256		/* max lines in non-root crontabs */
 #endif
 
 #ifndef SENDMAIL
@@ -66,12 +73,6 @@
 #endif
 #ifndef SENDMAIL_ARGS
 #define SENDMAIL_ARGS	"-t", "-oem", "-i"
-#endif
-#ifndef CRONUPDATE
-#define CRONUPDATE	"cron.update"
-#endif
-#ifndef MAXLINES
-#define MAXLINES	256		/* max lines in non-root crontabs */
 #endif
 #ifndef PATH_VI
 #define PATH_VI		"/usr/bin/vi"	/* location of vi	*/
@@ -86,8 +87,6 @@
 #define ID_TAG			"ID="
 #define WAIT_TAG		"AFTER="
 #define FREQ_TAG		"FREQ="
-
-#define VERSION	"V4.0pre"
 
 typedef struct CronFile {
     struct CronFile *cf_Next;
@@ -134,10 +133,6 @@ typedef struct CronNotifier {
 	struct	CronNotifier *cn_Next;
 	struct	CronWaiter *cn_Waiter;
 } CronNotifier;
-
-// #define RUN_RANOUT	1
-// #define RUN_RUNNING	2
-// #define RUN_FAILED	3
 
 #include "protos.h"
 

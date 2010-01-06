@@ -1,57 +1,73 @@
-# Makefile for yet another cron and crontab
-#
+# Makefile for Dillon's crond and crontab
+VERSION = 4.0
+PREFIX = /usr/local
+TARNAME = /home/abs/_dcron/dcron-$(VERSION).tar.gz
+SCRONTABS = "/etc/cron.d"
+CRONTABS = "/var/spool/cron"
+TIMESTAMPS = "/var/spool/cronstamps"
+LOG_IDENT = "crond"
+# LOG_FILE is only used when syslog isn't
+LOG_FILE = "/var/log/crond.log"
 
-# Overriding defines from defs.h
-# DEFS =  -DSCRONTABS='"/etc/cron.d"' \
-#          -DCRONTABS='"/var/spool/cron/crontabs"' \
-#          -DCRONUPDATE='"cron.update"' \
-#          -DTIMESTAMPS='"/var/sool/cron/timestamps"' \
-#          -DTMPDIR='"/tmp"' \
-#          -DLOG_FILE='"/var/log/crond.log"' \
-#          -DLOG_IDENT='"crond"' \
-#          -DSENDMAIL='"/usr/sbin/sendmail"' \
 
-DESTDIR ?= /usr/local
-DISTOWN= jim
-DISTTAR= /home/abs/yacron40beta.tgz
-
-CC  = gcc
-CFLAGS = -O2 -Wall -Wstrict-prototypes ${DEFS}
-LIB = 
+SHELL = /bin/sh
+INSTALL = install -o root -g wheel
+INSTALL_PROGRAM = $(INSTALL) -D
+INSTALL_DATA = $(INSTALL) -D -m0644
+INSTALL_DIR = $(INSTALL) -d -m0755
+# CC = gcc
+CFLAGS = -O2 -Wall -Wstrict-prototypes
 SRCS = main.c subs.c database.c job.c
 OBJS = main.o subs.o database.o job.o
-D_SRCS = crontab.c subs.c
-D_OBJS = crontab.o subs.o
-PROTOS= protos.h
+TABSRCS = crontab.c subs.c
+TABOBJS = crontab.o subs.o
+PROTOS = protos.h
+LIBS =
+DEFS = -DSCRONTABS='$(SCRONTABS)' -DCRONTABS='$(CRONTABS)' \
+	-DTIMESTAMPS='$(TIMESTAMPS)' -DLOG_IDENT='$(LOG_IDENT)' \
+	-DLOG_FILE='$(LOG_FILE)' -DVERSION='"$(VERSION)"'
 
-all:	${PROTOS} crond crontab
 
-crond:	${OBJS}
-	${CC} ${CFLAGS} -o crond ${OBJS} ${LIB}
-	strip crond
+all: $(PROTOS) crond crontab ;
 
-crontab:  ${D_OBJS}
-	${CC} ${CFLAGS} -o crontab ${D_OBJS}
-	strip crontab
+protos.h: $(SRCS) $(TABSRCS)
+	fgrep -h Prototype $(SRCS) $(TABSRCS) > protos.h
 
-protos.h: ${SRCS} ${D_SRCS}
-	fgrep -h Prototype ${SRCS} ${D_SRCS} >protos.h
+crond: $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o crond
 
-clean:  cleano
-	rm -f crond crontab
+crontab: $(TABOBJS)
+	$(CC) $(CFLAGS) $(TABOBJS) -o crontab
 
-cleano:
-	rm -f *.o dcron.tgz ${PROTOS}
+%.o: %.c defs.h $(PROTOS)
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) $(DEFS) $< -o $@
 
 install:
-	install -o root -g wheel -m 0755 crond ${DESTDIR}/sbin/crond
-	install -o root -g wheel -m 4755 crontab ${DESTDIR}/bin/crontab
-	install -o root -g wheel -m 0644 crontab.1 ${DESTDIR}/man/man1/crontab.1
-	install -o root -g wheel -m 0644 crond.8 ${DESTDIR}/man/man8/crond.8
+	$(INSTALL_PROGRAM) -m0755 crond $(DESTDIR)$(PREFIX)/sbin/crond
+	$(INSTALL_PROGRAM) -m4755 crontab $(DESTDIR)$(PREFIX)/bin/crontab
+	$(INSTALL_DATA) crontab.1 $(DESTDIR)$(PREFIX)/share/man/man1/crontab.1
+	$(INSTALL_DATA) crond.8 $(DESTDIR)$(PREFIX)/share/man/man8/crond.8
+	$(INSTALL_DIR) $(DESTDIR)$(SCRONTABS)
+	$(INSTALL_DIR) $(DESTDIR)$(CRONTABS)
+	$(INSTALL_DIR) $(DESTDIR)$(TIMESTAMPS)
 
-tar: clean
-	(cd ..; tar czf ${DISTTAR}.new repo)
-	chown ${DISTOWN} ${DISTTAR}.new
-	chmod 644 ${DISTTAR}.new
-	mv -f ${DISTTAR}.new ${DISTTAR}
+clean: force
+	rm -f *.o $(PROTOS)
+	rm -f crond crontab
+
+force: ;
+
+man: crontab.1 crond.8 ;
+
+crontab.1: crontab.markdown
+	pandoc -t man -f markdown -s crontab.markdown -o crontab.1
+
+crond.8: crond.markdown
+	pandoc -t man -f markdown -s crond.markdown -o crond.8
+
+tar: clean man
+	tar czf $(TARNAME).new -C .. repo
+	chown jim $(TARNAME).new
+	chmod 644 $(TARNAME).new
+	mv -f $(TARNAME).new $(TARNAME)
 
