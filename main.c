@@ -162,14 +162,19 @@ main(int ac, char **av)
 				/*
 				 * check for parse error
 				 */
-				printf("dcron " VERSION "\n");
-				printf("crond [-l#] [-L logfile | -S ] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir] [-t timestamps]\n");
-				printf("-l num\tlogging level (default <= LOG_NOTICE = 5)\n");
-				printf("-L file\tlog to file (default %s)\n-S\tlog to syslogd (default)\n", LOG_FILE);
-				printf("-M mailer\tprogram to mail output (default %s)\n-m mailto\taddress to mail cron output to (default to user)\n", SENDMAIL);
-				printf("-d\tdebugging\n-f\trun in foreground\n-b\trun in background (default)\n");
-				printf("-c crondir\tcrontab spool dir (default %s)\n-s systemdir\tsystem cron.d dir (default %s)\n-t timestamps\ttimestamp dir (default %s)\n",
-						CRONTABS, SCRONTABS, TIMESTAMPS);
+				printf("dillon's cron daemon " VERSION "\n");
+				printf("crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-S|-L file] [-l level] [-b|-f|-d]\n");
+				printf("-s            directory of system crontabs (defaults to %s)\n", SCRONTABS);
+				printf("-c            directory of per-user crontabs (defaults to %s)\n", CRONTABS);
+				printf("-t            directory of timestamps (defaults to %s)\n", TIMESTAMPS);
+				printf("-m user@host  where should cron output be directed? (defaults to local user)\n");
+				printf("-M sendmail program  (defaults to %s)\n", SENDMAIL);
+				printf("-S            log to syslog (default, uses identity '%s')\n", LOG_IDENT);
+				printf("-L file       log to file (uses %s, if no file specified)\n", LOG_FILE);
+				printf("-l loglevel   log events <= this log level (defaults to LOG_NOTICE = 5)\n");
+				printf("-b            run in background (default)\n");
+				printf("-f            run in foreground\n");
+				printf("-d            run in debugging mode\n");
 				exit(2);
 		}
 	}
