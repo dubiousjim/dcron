@@ -57,13 +57,9 @@ clean: force
 
 force: ;
 
-man: crontab.1 crond.8 ;
-
-crontab.1: crontab.markdown
-	pandoc -t man -f markdown -s crontab.markdown -o crontab.1
-
-crond.8: crond.markdown
-	pandoc -t man -f markdown -s crond.markdown -o crond.8
+man: force
+	-pandoc -t man -f markdown -s crontab.markdown -o crontab.1
+	-pandoc -t man -f markdown -s crond.markdown -o crond.8
 
 tar: clean man
 	tar czf $(TARNAME).new -C .. repo
