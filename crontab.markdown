@@ -96,7 +96,7 @@ as a command-line environment variable assignment.)
 
 There's also this esoteric option, whose usefulness will be explained later:
 
-	# don't ever schedule this job on its own; only run it when its triggered
+	# don't ever schedule this job on its own; only run it when it's triggered
 	# as a "dependency" of another job (see below), or when the user explicitly
 	# requests it through the "cron.update" file (see crond(8))
 	@noauto ID=namedjob date
