@@ -62,8 +62,8 @@ man: force
 	-pandoc -t man -f markdown -s crond.markdown -o crond.8
 
 tar: clean man
-	tar czf $(TARNAME).new -C .. repo
-	chown jim $(TARNAME).new
-	chmod 644 $(TARNAME).new
+	pax -w ../repo  -s'=^\.\./repo/.git.*==' -s'=^\.\./repo=dcron-$(VERSION)=' -f $(TARNAME).new
+	# chown jim $(TARNAME).new
+	# chmod 644 $(TARNAME).new
 	mv -f $(TARNAME).new $(TARNAME)
 
