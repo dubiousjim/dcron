@@ -64,6 +64,9 @@
 #ifndef LOGHEADER
 #define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ":"
 #endif
+#ifndef LOCALE_LOGHEADER
+#define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ":"
+#endif
 #ifndef TMPDIR
 #define TMPDIR		"/tmp"
 #endif

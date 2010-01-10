@@ -9,6 +9,7 @@ LOG_IDENT = "crond"
 # LOG_FILE is only used when syslog isn't
 LOG_FILE = "/var/log/crond.log"
 # this is only used for logging to file; syslog manages its own timestamps
+# if LC_TIME is set, it will override the compiled-in timestamp format
 TIMESTAMP_FMT = "%b %e %H:%M:%S"
 
 

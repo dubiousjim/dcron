@@ -17,6 +17,7 @@ Prototype void vlog(int level, int fd, const char *ctl, va_list va);
 Prototype void startlogger(void);
 Prototype void initsignals(void);
 Prototype char Hostname[64];
+Prototype const char *LogHeader;
 
 int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate);
 char Hostname[64];
@@ -97,7 +98,7 @@ slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
     if (useDate) {
 		char hdr[128];
 		hdr[0] = 0;
-		strftime(hdr, 128, LOGHEADER, tp);
+		strftime(hdr, 128, LogHeader, tp);
 		if (!gethostname(Hostname, 63))
 			Hostname[63] = 0;  // if hostname is larger than buffer, gethostname() doesn't promise to null-terminate it
 		else

@@ -21,6 +21,7 @@ Prototype const char *CDir;
 Prototype const char *SCDir;
 Prototype const char *TSDir;
 Prototype const char *LogFile;
+Prototype const char *LogHeader;
 Prototype uid_t DaemonUid;
 Prototype int InSyncFileRoot;
 Prototype const char *SendMail;
@@ -36,6 +37,7 @@ const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
 const char *TSDir = TIMESTAMPS;
 const char *LogFile = LOG_FILE; /* opened with mode 0600 */
+const char *LogHeader = LOGHEADER;
 const char *SendMail = NULL;
 const char *Mailto = NULL;
 char *TempDir;
@@ -178,6 +180,10 @@ main(int ac, char **av)
 				exit(2);
 		}
 	}
+
+	/* if LC_TIME is defined, we use it for logging to file instead of compiled-in TIMESTAMP_FMT */
+	if (getenv("LC_TIME") != NULL)
+		LogHeader = LOCALE_LOGHEADER;
 
 	/*
 	 * close stdin and stdout.
