@@ -16,7 +16,7 @@ Prototype const char *SendMail;
 void
 RunJob(CronFile *file, CronLine *line)
 {
-	char mailFile[128];
+	char mailFile[SMALL_BUFFER];
 	int mailFd;
 	const char *value = Mailto;
 
@@ -110,7 +110,7 @@ RunJob(CronFile *file, CronLine *line)
 		 *
 		 * rename mail-file based on pid of child process
 		 */
-		char mailFile2[128];
+		char mailFile2[SMALL_BUFFER];
 
 		snprintf(mailFile2, sizeof(mailFile2), TempFileFmt,
 				file->cf_UserName, line->cl_Pid);
@@ -134,7 +134,7 @@ void
 EndJob(CronFile *file, CronLine *line, int exit_status)
 {
 	int mailFd;
-	char mailFile[128];
+	char mailFile[SMALL_BUFFER];
 	struct stat sbuf;
 	struct	CronNotifier *notif;
 
@@ -164,7 +164,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			 * mark as having run and update timestamp
 			 */
 			FILE *fi;
-			char buf[64];
+			char buf[SMALL_BUFFER];
 			int succeeded = 0;
 			/*
 			 * we base off the time the job was scheduled/started waiting, not the time it finished

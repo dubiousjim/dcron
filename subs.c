@@ -16,10 +16,10 @@ Prototype int  ChangeUser(const char *user, short dochdir);
 Prototype void vlog(int level, int fd, const char *ctl, va_list va);
 Prototype void startlogger(void);
 Prototype void initsignals(void);
-Prototype char Hostname[64];
+Prototype char Hostname[SMALL_BUFFER];
 
 int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate);
-char Hostname[64];
+char Hostname[SMALL_BUFFER];
 
 
 void
@@ -46,7 +46,7 @@ void
 fdprintf(int fd, const char *ctl, ...)
 {
 	va_list va;
-	char buf[2048];
+	char buf[LOG_BUFFER];
 
 	va_start(va, ctl);
 	vsnprintf(buf, sizeof(buf), ctl, va);
@@ -57,7 +57,7 @@ fdprintf(int fd, const char *ctl, ...)
 void
 vlog(int level, int fd, const char *ctl, va_list va)
 {
-	char buf[2048];
+	char buf[LOG_BUFFER];
 	int  logfd;
     short n;
     static short useDate = 1;
@@ -99,17 +99,17 @@ slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
     buf[0] = 0;
 	int n = 0;
     if (useDate) {
-		char hdr[128];
+		char hdr[SMALL_BUFFER];
 		hdr[0] = 0;
-		strftime(hdr, 128, LogHeader, tp);
-		if (!gethostname(Hostname, 63))
-			Hostname[63] = 0;  // if hostname is larger than buffer, gethostname() doesn't promise to null-terminate it
+		strftime(hdr, SMALL_BUFFER, LogHeader, tp);
+		if (!gethostname(Hostname, SMALL_BUFFER-1))
+			Hostname[SMALL_BUFFER-1] = 0;  // if hostname is larger than buffer, gethostname() doesn't promise to null-terminate it
 		else
 			Hostname[0] = 0;   // gethostname() call failed
-		snprintf(buf, 194, hdr, Hostname);
+		snprintf(buf, 2*SMALL_BUFFER, hdr, Hostname);
 	}
 	n = vsnprintf(buf + strlen(buf), nmax, ctl, va);
-    return(strlen(buf));
+	return (n<nmax) ? n : nmax;
 }
 
 int

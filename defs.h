@@ -61,20 +61,8 @@
 #ifndef CRONUPDATE
 #define CRONUPDATE	"cron.update"
 #endif
-#ifndef LOGHEADER
-#define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ":"
-#endif
-#ifndef LOCALE_LOGHEADER
-#define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ":"
-#endif
 #ifndef TMPDIR
 #define TMPDIR		"/tmp"
-#endif
-#ifndef OPEN_MAX
-#define OPEN_MAX	256
-#endif
-#ifndef MAXLINES
-#define MAXLINES	256		/* max lines in non-root crontabs */
 #endif
 
 #ifndef SENDMAIL
@@ -87,15 +75,34 @@
 #define PATH_VI		"/usr/bin/vi"	/* location of vi	*/
 #endif
 
+#ifndef ID_TAG
+#define ID_TAG			"ID="
+#endif
+#ifndef WAIT_TAG
+#define WAIT_TAG		"AFTER="
+#endif
+#ifndef FREQ_TAG
+#define FREQ_TAG		"FREQ="
+#endif
+
 #define HOURLY_FREQ		60 * 60
 #define DAILY_FREQ		24 * HOURLY_FREQ
 #define	WEEKLY_FREQ		7 * DAILY_FREQ
 #define MONTHLY_FREQ	30 * DAILY_FREQ
 #define YEARLY_FREQ		365 * DAILY_FREQ
 
-#define ID_TAG			"ID="
-#define WAIT_TAG		"AFTER="
-#define FREQ_TAG		"FREQ="
+#define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ":"
+#define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ":"
+
+/* Limits */
+#define MAXOPEN			256		/* close fds < this limit */ 
+#define MAXLINES		256		/* max lines in non-root crontabs */
+#define SMALL_BUFFER	256
+#define RW_BUFFER		1024
+#define LOG_BUFFER		2048 	/* max size of log line, must be >= 2*SMALL_BUFFER */
+
+
+
 
 typedef struct CronFile {
     struct CronFile *cf_Next;

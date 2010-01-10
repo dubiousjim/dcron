@@ -94,7 +94,7 @@ void
 CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 {
 	FILE *fi;
-	char buf[256];
+	char buf[SMALL_BUFFER];
 	char *fname, *ptok, *job;
 	char *path;
 
@@ -226,7 +226,7 @@ ReadTimestamps(const char *user)
 	CronFile *file;
 	CronLine *line;
 	FILE *fi;
-	char buf[256];
+	char buf[SMALL_BUFFER];
 	char *ptr;
 	struct tm tm;
 	time_t sec, freq;
@@ -296,7 +296,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 	CronFile *file;
 	int maxEntries;
 	int maxLines;
-	char buf[1024];
+	char buf[RW_BUFFER];
 	char *path;
 	FILE *fi;
 

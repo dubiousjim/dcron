@@ -35,7 +35,7 @@ main(int ac, char **av)
 	char *repFile = NULL;
 	int repFd = 0;
 	int i;
-	char caller[256];		/* user that ran program */
+	char caller[SMALL_BUFFER];		/* user that ran program */
 
 	UserId = getuid();
 	if ((pas = getpwuid(UserId)) == NULL) {
@@ -144,7 +144,7 @@ main(int ac, char **av)
 		case LIST:
 			{
 				FILE *fi;
-				char buf[1024];
+				char buf[RW_BUFFER];
 
 				if ((fi = fopen(pas->pw_name, "r"))) {
 					while (fgets(buf, sizeof(buf), fi) != NULL)
@@ -161,7 +161,7 @@ main(int ac, char **av)
 				int fd;
 				int n;
 				char tmp[] = TMPDIR "/crontab.XXXXXX";
-				char buf[1024];
+				char buf[RW_BUFFER];
 
 				if ((fd = mkstemp(tmp)) >= 0) {
 					chown(tmp, getuid(), getgid());
@@ -182,8 +182,8 @@ main(int ac, char **av)
 			/* fall through */
 		case REPLACE:
 			{
-				char buf[1024];
-				char path[1024];
+				char buf[RW_BUFFER];
+				char path[SMALL_BUFFER];
 				int fd;
 				int n;
 
@@ -246,7 +246,7 @@ GetReplaceStream(const char *user, const char *file)
 	int pid;
 	int fd;
 	int n;
-	char buf[1024];
+	char buf[RW_BUFFER];
 
 	if (pipe(filedes) < 0) {
 		perror("pipe");
@@ -299,12 +299,12 @@ EditFile(const char *user, const char *file)
 		 * CHILD - change user and run editor
 		 */
 		const char *ptr;
-		char visual[1024];
+		char visual[SMALL_BUFFER];
 
 		if (ChangeUser(user, 1) < 0)
 			exit(0);
-		if ((ptr = getenv("EDITOR")) == NULL || strlen(ptr) > 256)
-			if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) > 256)
+		if ((ptr = getenv("EDITOR")) == NULL || strlen(ptr) > SMALL_BUFFER)
+			if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) > SMALL_BUFFER)
 				ptr = PATH_VI;
 
 		snprintf(visual, sizeof(visual), "%s %s", ptr, file);

@@ -194,7 +194,7 @@ main(int ac, char **av)
 	fclose(stdin);
 	fclose(stdout);
 
-	for (i = 3; i < OPEN_MAX; ++i) {
+	for (i = 3; i < MAXOPEN; ++i) {
         close(i);
     }
 
@@ -234,7 +234,7 @@ main(int ac, char **av)
 	(void)startlogger();		/* need if syslog mode selected */
 	(void)initsignals();		/* set some signal handlers */
 
-	/* create tempdir with permissions 755 for cron output */
+	/* create tempdir with permissions 0755 for cron output */
 	TempDir = strdup(TMPDIR "/cron.XXXXXX"); 
 	if (mkdtemp(TempDir) == NULL) {
 		perror("mkdtemp");
