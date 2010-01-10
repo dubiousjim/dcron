@@ -174,7 +174,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			*/
 			line->cl_LastRan = line->cl_NotUntil - line->cl_Delay;
 			if ((fi = fopen(line->cl_Timestamp, "w")) != NULL) {
-				if (strftime(buf, sizeof(buf), TIMESTAMP_FMT, localtime(&line->cl_LastRan)))
+				if (strftime(buf, sizeof(buf), CRONSTAMP_FMT, localtime(&line->cl_LastRan)))
 					if (fputs(buf, fi) >= 0)
 						succeeded = 1;
 				fclose(fi);

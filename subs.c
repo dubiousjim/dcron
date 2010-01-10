@@ -97,7 +97,7 @@ slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
     if (useDate) {
 		char hdr[128];
 		hdr[0] = 0;
-		strftime(hdr, 128, LOG_DATE_FMT, tp);
+		strftime(hdr, 128, LOGHEADER, tp);
 		if (!gethostname(Hostname, 63))
 			Hostname[63] = 0;  // if hostname is larger than buffer, gethostname() doesn't promise to null-terminate it
 		else

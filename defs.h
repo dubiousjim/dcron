@@ -45,21 +45,24 @@
 #ifndef LOG_IDENT
 #define LOG_IDENT	"crond"
 #endif
-#ifndef LOG_LEVEL
-#define LOG_LEVEL LOG_NOTICE
-#endif
 #ifndef LOG_FILE
 #define LOG_FILE	"/var/log/crond.log"
 #endif
+#ifndef TIMESTAMP_FMT
+#define TIMESTAMP_FMT	"%b %e %H:%M:%S"
+#endif
 
+#ifndef LOG_LEVEL
+#define LOG_LEVEL LOG_NOTICE
+#endif
+#ifndef CRONSTAMP_FMT
+#define CRONSTAMP_FMT	"%Y-%m-%d %H:%M"
+#endif
 #ifndef CRONUPDATE
 #define CRONUPDATE	"cron.update"
 #endif
-#ifndef TIMESTAMP_FMT
-#define TIMESTAMP_FMT	"%Y-%m-%d %H:%M"
-#endif
-#ifndef LOG_DATE_FMT
-#define LOG_DATE_FMT	"%b %e %H:%M:%S %%s " LOG_IDENT ": "
+#ifndef LOGHEADER
+#define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ":"
 #endif
 #ifndef TMPDIR
 #define TMPDIR		"/tmp"

@@ -1,17 +1,23 @@
 # Makefile for Dillon's crond and crontab
 VERSION = 4.0
-PREFIX = /usr/local
-TARNAME = /home/abs/_dcron/dcron-$(VERSION).tar.gz
+
+# these variables can be configured by e.g. `make SCRONTABS=/different/path`
 SCRONTABS = "/etc/cron.d"
 CRONTABS = "/var/spool/cron"
 TIMESTAMPS = "/var/spool/cronstamps"
 LOG_IDENT = "crond"
 # LOG_FILE is only used when syslog isn't
 LOG_FILE = "/var/log/crond.log"
+# this is only used for logging to file; syslog manages its own timestamps
+TIMESTAMP_FMT = "%b %e %H:%M:%S"
+
+
+# PREFIX and DESTDIR are only used when doing `make install`
+PREFIX = /usr/local
 
 
 SHELL = /bin/sh
-INSTALL = install -o root -g wheel
+INSTALL = install -o root -g root
 INSTALL_PROGRAM = $(INSTALL) -D
 INSTALL_DATA = $(INSTALL) -D -m0644
 INSTALL_DIR = $(INSTALL) -d -m0755
@@ -23,9 +29,10 @@ TABSRCS = crontab.c subs.c
 TABOBJS = crontab.o subs.o
 PROTOS = protos.h
 LIBS =
-DEFS = -DSCRONTABS='$(SCRONTABS)' -DCRONTABS='$(CRONTABS)' \
-	-DTIMESTAMPS='$(TIMESTAMPS)' -DLOG_IDENT='$(LOG_IDENT)' \
-	-DLOG_FILE='$(LOG_FILE)' -DVERSION='"$(VERSION)"'
+DEFS =  -DVERSION='"$(VERSION)"' \
+		-DSCRONTABS='$(SCRONTABS)' -DCRONTABS='$(CRONTABS)' \
+		-DTIMESTAMPS='$(TIMESTAMPS)' -DLOG_IDENT='$(LOG_IDENT)' \
+		-DLOG_FILE='$(LOG_FILE)' -DTIMESTAMP_FMT='$(TIMESTAMP_FMT)'
 
 
 all: $(PROTOS) crond crontab ;
@@ -61,6 +68,9 @@ man: force
 	-pandoc -t man -f markdown -s crontab.markdown -o crontab.1
 	-pandoc -t man -f markdown -s crond.markdown -o crond.8
 
+
+# for maintainer's use only
+TARNAME = /home/abs/_dcron/dcron-$(VERSION).tar.gz
 tar: clean man
 	pax -w ../repo  -s'=^\.\./repo/.git.*==' -s'=^\.\./repo=dcron-$(VERSION)=' -f $(TARNAME).new
 	# chown jim $(TARNAME).new

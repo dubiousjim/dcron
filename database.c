@@ -246,7 +246,7 @@ ReadTimestamps(const char *user)
 								ptr += 6;
 							}
 							sec = (time_t)-1;
-							ptr = strptime(ptr, TIMESTAMP_FMT, &tm);
+							ptr = strptime(ptr, CRONSTAMP_FMT, &tm);
 							if (ptr && (*ptr == 0 || *ptr == '\n'))
 								/* strptime uses current seconds when seconds not specified? anyway, we don't get round minutes */
 								tm.tm_sec = 0;
@@ -272,7 +272,7 @@ ReadTimestamps(const char *user)
 						logn(LOG_NOTICE, "no timestamp found (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
 						/* write a fake timestamp file so our initial NotUntil doesn't keep being reset every hour when crond does a SynchronizeDir */
 						if ((fi = fopen(line->cl_Timestamp, "w")) != NULL) {
-							if (strftime(buf, sizeof(buf), TIMESTAMP_FMT, localtime(&line->cl_NotUntil)))
+							if (strftime(buf, sizeof(buf), CRONSTAMP_FMT, localtime(&line->cl_NotUntil)))
 								if (fputs("after ", fi) >= 0)
 									if (fputs(buf,fi) >= 0)
 										succeeded = 1;
