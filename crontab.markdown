@@ -29,9 +29,12 @@ Generally the -e option is used to edit your crontab. **crontab** will use
 the editor specified by your EDITOR or VISUAL environment
 variable (or /usr/bin/vi) to edit the crontab.
 
+Only users who belong to the same group as the **crontab** binary will be able
+to install crontabs. However it's possible for the superuser to install
+crontabs for users who don't have the privileges to install them themselves.
 Only the superuser may use the -u or -c switches to specify a different user
-and/or crontab directory. The superuser also has a per-user crontab, saved as
-/var/spool/cron/root.
+and/or crontab directory. The superuser also has his or her own per-user
+crontab, saved as /var/spool/cron/root.
 
 
 Unlike other cron daemons, this crond/crontab package doesn't try to do
