@@ -733,6 +733,8 @@ ParseField(char *user, char *ary, int modvalue, int off, int onvalue, const char
 		if (n2 < 0)
 			n2 = n1;
 
+		n2 = n2 % modvalue;
+
 		if (*ptr == '/')
 			skip = strtol(ptr + 1, &ptr, 10);
 
