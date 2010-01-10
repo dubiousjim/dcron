@@ -76,12 +76,14 @@ INSTALLING
 install` installs them underneath /usr instead.
 
 Permissions will be as follows:
-	-rwxr-xr-x  0 root   wheel   32232 Jan  6 18:58 /usr/sbin/crond
-	-rwsr-xr-x  0 root   wheel   15288 Jan  6 18:58 /usr/bin/crontab
+	-rwx------  0 root   wheel   32232 Jan  6 18:58 /usr/sbin/crond
+	-rwsr-x---  0 root   wheel   15288 Jan  6 18:58 /usr/bin/crontab
 
 Only users belonging to crontab's group (here "wheel") will be able to use it.
 You may want to create a special "cron" group and `chgrp cron /usr/bin/crontab`.
-Then only users who belong to that group will be able to install crontabs.
+Then add users to group "cron" when you want them to be able to install
+or modify their crontabs. The superuser can install crontabs for users
+who don't have the privileges to do it themselves.
 
 You should schedule crond to run automatically from system startup, using
 /etc/rc.local or a similar mechanism. crond automatically detaches. By default

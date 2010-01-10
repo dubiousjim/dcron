@@ -50,8 +50,8 @@ crontab: $(TABOBJS)
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $(DEFS) $< -o $@
 
 install:
-	$(INSTALL_PROGRAM) -m0755 crond $(DESTDIR)$(PREFIX)/sbin/crond
-	$(INSTALL_PROGRAM) -m4755 crontab $(DESTDIR)$(PREFIX)/bin/crontab
+	$(INSTALL_PROGRAM) -m0700 crond $(DESTDIR)$(PREFIX)/sbin/crond
+	$(INSTALL_PROGRAM) -m4750 crontab $(DESTDIR)$(PREFIX)/bin/crontab
 	$(INSTALL_DATA) crontab.1 $(DESTDIR)$(PREFIX)/share/man/man1/crontab.1
 	$(INSTALL_DATA) crond.8 $(DESTDIR)$(PREFIX)/share/man/man8/crond.8
 	$(INSTALL_DIR) $(DESTDIR)$(SCRONTABS)
