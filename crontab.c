@@ -15,12 +15,14 @@
 
 const char *CDir = CRONTABS;
 int   UserId;
-/* not used in this program, but subs.c needs */
-short LogLevel = LOG_NOTICE;
 short ForegroundOpt = 0;
 short LoggerOpt = 0;
 const char *LogFile = LOG_FILE;
 char *TempDir = TMPDIR;
+
+/* not used in this program, but subs.c needs them */
+short LogLevel = LOG_NOTICE;
+const char *LogHeader = NULL;
 
 void EditFile(const char *user, const char *file);
 int GetReplaceStream(const char *user, const char *file);
