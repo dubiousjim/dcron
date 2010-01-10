@@ -1,4 +1,4 @@
-.TH CRONTAB 1 "6 Jan 2010" 
+.TH CRONTAB 1 "10 Jan 2010" 
 .SH NAME
 .PP
 crontab - manipulate per-user crontabs (dillon's lightweight cron
@@ -24,9 +24,13 @@ Generally the -e option is used to edit your crontab.
 \f[B]crontab\f[] will use the editor specified by your EDITOR or
 VISUAL environment variable (or /usr/bin/vi) to edit the crontab.
 .PP
+Only users who belong to the same group as the \f[B]crontab\f[]
+binary will be able to install crontabs.
+However it's possible for the superuser to install crontabs for
+users who don't have the privileges to install them themselves.
 Only the superuser may use the -u or -c switches to specify a
 different user and/or crontab directory.
-The superuser also has a per-user crontab, saved as
+The superuser also has his or her own per-user crontab, saved as
 /var/spool/cron/root.
 .PP
 Unlike other cron daemons, this crond/crontab package doesn't try

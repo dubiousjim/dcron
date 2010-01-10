@@ -1,22 +1,33 @@
-v4.0
-	* Jim Pryor took over development; folded in changes from his fork "yacron"
+v4.1  10-Jan-2010
+  * Fixed bug in parsing some numeric fields in crontabs. (Terminus of range
+    wasn't being modded.)
 
-	* Applied "Daniel's patch" from dcron 3.x tarballs to enable logging to syslog or
-	  files. Added further logging improvements.
+  * Updated Makefile to make it easier to customize timestamps at configure
+    time. Also, if LC_TIME is defined when crond runs, we use that instead of
+    compiled-in default (for logging to files, to customize syslog output use
+    syslog-ng's 'template' command).
 
-	* Added -m user@host and -M mailer options
+  * Fixed Makefile permissions on crond and crontab binaries.
 
-	* Various crontab syntax extensions, including "2nd Monday of every month",
-	  @reboot, @daily, and finer-grained frequency specifiers.
+v4.0  6-Jan-2010
+  * Jim Pryor took over development; folded in changes from his fork "yacron"
 
-	* Jobs can wait until AFTER other jobs have finished.
+  * Applied "Daniel's patch" from dcron 3.x tarballs to enable logging to syslog or
+    files. Added further logging improvements.
 
-	* Enhanced parsing of cron.update file, to make it possible for scripts to
-	  interact with a running crond in limited ways.
+  * Added -m user@host and -M mailer options
 
-	* Various internal changes
+  * Various crontab syntax extensions, including "2nd Monday of every month",
+    @reboot, @daily, and finer-grained frequency specifiers.
 
-	* Updated Makefile, manpage buildchain, and docs
+  * Jobs can wait until AFTER other jobs have finished.
+
+  * Enhanced parsing of cron.update file, to make it possible for scripts to
+    interact with a running crond in limited ways.
+
+  * Various internal changes
+
+  * Updated Makefile, manpage buildchain, and docs
 
 v3.2
     Fixed a minor bug, remove the newline terminating a line only if there
@@ -48,12 +59,12 @@ v2.7
 
 v2.4-2.6
 
-	( changes lost )
+    ( changes lost )
 
 v2.3
-    dillon:	Fixed bug in job.c -- if ChangeUser() fails, would return from child fork rather
-		then exit!  Oops.
+    dillon: Fixed bug in job.c -- if ChangeUser() fails, would return from child fork rather
+        then exit!  Oops.
 
 v2.2
-    dillon:	Initial release
+    dillon: Initial release
 
