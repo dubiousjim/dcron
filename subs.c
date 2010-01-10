@@ -17,7 +17,6 @@ Prototype void vlog(int level, int fd, const char *ctl, va_list va);
 Prototype void startlogger(void);
 Prototype void initsignals(void);
 Prototype char Hostname[64];
-Prototype const char *LogHeader;
 
 int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate);
 char Hostname[64];
@@ -64,6 +63,8 @@ vlog(int level, int fd, const char *ctl, va_list va)
     static short useDate = 1;
 
 	if (level <= LogLevel) {
+		va_list vb;
+		va_copy(vb, va);
 		vsnprintf(buf,sizeof(buf), ctl, va);
 		if (ForegroundOpt == 1)
 			/* when -d or -f, we always (and only) log to stderr
@@ -74,7 +75,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			if (LoggerOpt == 0) syslog(level, "%s", buf);
 			else {
 				if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0) {
-					write(logfd, buf, n = slog(buf, ctl, sizeof(buf), va, useDate));
+					write(logfd, buf, n = slog(buf, ctl, sizeof(buf), vb, useDate));
 					useDate = (n && buf[n-1] == '\n');
 					close(logfd);
 				} else {
@@ -86,6 +87,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 					exit(e);
 				}
 			}
+		va_end(vb);
 	}
 }
 
@@ -95,6 +97,7 @@ slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
     time_t t = time(NULL);
     struct tm *tp = localtime(&t);
     buf[0] = 0;
+	int n = 0;
     if (useDate) {
 		char hdr[128];
 		hdr[0] = 0;
@@ -105,7 +108,7 @@ slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
 			Hostname[0] = 0;   // gethostname() call failed
 		snprintf(buf, 194, hdr, Hostname);
 	}
-    vsnprintf(buf + strlen(buf), nmax, ctl, va);
+	n = vsnprintf(buf + strlen(buf), nmax, ctl, va);
     return(strlen(buf));
 }
 

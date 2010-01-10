@@ -144,6 +144,10 @@ main(int ac, char **av)
 				if (*optarg != 0) {
 					LogFile = optarg;
 				}
+				/* if LC_TIME is defined, we use it for logging to file instead of compiled-in TIMESTAMP_FMT */
+				if (getenv("LC_TIME") != NULL) {
+					LogHeader = LOCALE_LOGHEADER;
+				}
 				break;
 			case 'c':
 				if (*optarg != 0) CDir = optarg;
@@ -180,10 +184,6 @@ main(int ac, char **av)
 				exit(2);
 		}
 	}
-
-	/* if LC_TIME is defined, we use it for logging to file instead of compiled-in TIMESTAMP_FMT */
-	if (getenv("LC_TIME") != NULL)
-		LogHeader = LOCALE_LOGHEADER;
 
 	/*
 	 * close stdin and stdout.
