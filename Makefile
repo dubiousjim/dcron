@@ -1,5 +1,5 @@
 # Makefile for Dillon's crond and crontab
-VERSION = 4.2
+VERSION = 4.3
 
 # these variables can be configured by e.g. `make SCRONTABS=/different/path`
 SCRONTABS = /etc/cron.d

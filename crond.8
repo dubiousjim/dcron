@@ -4,7 +4,7 @@
 crond - dillon's lightweight cron daemon
 .SH SYNOPSIS
 .PP
-\f[B]crond [-s dir] [-c dir] [-t dir] [-m user\@host] [-M mailer] [-S|-L [file]] [-l loglevel] [-b|-f|-d]\f[]
+\f[B]crond [-s dir] [-c dir] [-t dir] [-m user\@host] [-M mailer] [-S|-L file] [-l loglevel] [-b|-f|-d]\f[]
 .SH OPTIONS
 .PP
 \f[B]crond\f[] is a background daemon that parses individual
@@ -64,9 +64,8 @@ log events to syslog, using syslog facility LOG_CRON and identity
 .RS
 .RE
 .TP
-.B -L [file]
-log to file instead of syslog.
-If no file is specified, uses /var/log/crond.log.
+.B -L file
+log to specified file instead of syslog.
 .RS
 .RE
 .TP
@@ -145,8 +144,8 @@ crontab(1) for details.
 \f[B]crond\f[] has a number of built in limitations to reduce the
 chance of it being ill-used.
 Potentially infinite loops during parsing are dealt with via a
-failsafe counter, and user crontabs are generally limited to 256
-crontab entries.
+failsafe counter, and non-root crontabs are limited to 256 crontab
+entries.
 Crontab lines may not be longer than 1024 characters, including the
 newline.
 .PP
