@@ -73,7 +73,7 @@ main(int ac, char **av)
 
 	opterr = 0;
 
-	while ((i = getopt(ac,av,"dl:L:fbSc:s:m:M:t:")) != EOF) {
+	while ((i = getopt(ac,av,"dl:L::fbSc:s:m:M:t:")) != EOF) {
 		switch (i) {
 			case 'l':
 				{
