@@ -106,8 +106,10 @@ slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
 			Hostname[SMALL_BUFFER-1] = 0;  // if hostname is larger than buffer, gethostname() doesn't promise to null-terminate it
 		else
 			Hostname[0] = 0;   // gethostname() call failed
+		/* [v]snprintf will null-terminate, even if they truncate */
 		snprintf(buf, 2*SMALL_BUFFER, hdr, Hostname);
 	}
+	/* [v]snprintf will null-terminate, even if they truncate */
 	n = vsnprintf(buf + strlen(buf), nmax, ctl, va);
 	return (n<nmax) ? n : nmax;
 }
