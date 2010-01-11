@@ -2,6 +2,7 @@
 VERSION = 4.3
 
 # these variables can be configured by e.g. `make SCRONTABS=/different/path`
+# the directory variables should also be supplied when doing `make install`
 SCRONTABS = /etc/cron.d
 CRONTABS = /var/spool/cron/crontabs
 CRONSTAMPS = /var/spool/cron/cronstamps
@@ -72,7 +73,6 @@ man: force
 
 # for maintainer's use only
 TARNAME = /home/abs/_dcron/dcron-$(VERSION).tar.gz
-tar: clean man
+dist: clean man
 	pax -wz ../repo  -s'=^\.\./repo/.git.*==' -s'=^\.\./repo=dcron-$(VERSION)=' -f $(TARNAME).new
 	mv -f $(TARNAME).new $(TARNAME)
-
