@@ -12,6 +12,8 @@
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
+/* needed for asprintf in main.c and database.c, get rid of this */
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
