@@ -134,7 +134,7 @@ files and NOT from defs.h or any source file. If no prototype exists for a
 particular function, contact your vendor to get an update for your includes.
 
 At the moment, less-portable features we're aware of in the source are the
-use of strsep, strptime, and asprintf.
+use of getopt, strsep, strptime, and asprintf.
 
 Changes to overridable defaults in defs.h should be made in the Makefile; you
 may submit a Makefile for your platform.  Changes to the #include's in defs.h

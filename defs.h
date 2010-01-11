@@ -8,9 +8,10 @@
  */
 
 /* portability issues */
-/* 1. need _XOPEN_SOURCE for strptime */
-/* 2. need _BSD_SOURCE for strsep */
-/* 3. need _GNU_SOURCE (which includes others) for asprintf, or provide our own */
+/* 1. need _POSIX_SOURCE or _XOPEN_SOURCE for getopt */
+/* 2. need _XOPEN_SOURCE for strptime */
+/* 3. need _BSD_SOURCE for strsep */
+/* 4. need _GNU_SOURCE (which includes others) for asprintf, or provide our own */
 
 #define _XOPEN_SOURCE 1
 #define _BSD_SOURCE 1
