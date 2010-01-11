@@ -17,6 +17,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
+/* glibc2 needs the following for strptime */
 #define __USE_XOPEN
 #include <time.h>
 #include <dirent.h>

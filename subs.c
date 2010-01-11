@@ -75,7 +75,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			if (LoggerOpt == 0) syslog(level, "%s", buf);
 			else {
 				if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0) {
-					if (n = slog(buf, ctl, sizeof(buf), vb, suppressHeader)) {
+					if ((n = slog(buf, ctl, sizeof(buf), vb, suppressHeader))) {
 						write(logfd, buf, n);
 						/* if previous write wasn't \n-terminated, we suppress header on next write */
 						suppressHeader = (buf[n-1] != '\n');
