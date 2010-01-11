@@ -49,8 +49,8 @@
 #ifndef CRONTABS
 #define CRONTABS	"/var/spool/cron"
 #endif
-#ifndef TIMESTAMPS
-#define TIMESTAMPS	"/var/spool/cronstamps"
+#ifndef CRONSTAMPS
+#define CRONSTAMPS	"/var/spool/cronstamps"
 #endif
 #ifndef LOG_IDENT
 #define LOG_IDENT	"crond"

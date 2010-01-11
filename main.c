@@ -35,7 +35,7 @@ short ForegroundOpt = 0;
 short LoggerOpt;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
-const char *TSDir = TIMESTAMPS;
+const char *TSDir = CRONSTAMPS;
 const char *LogFile = NULL; 	/* opened with mode 0600 */
 const char *LogHeader = LOGHEADER;
 const char *SendMail = NULL;
@@ -170,7 +170,7 @@ main(int ac, char **av)
 				printf("crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-S|-L [file]] [-l level] [-b|-f|-d]\n");
 				printf("-s            directory of system crontabs (defaults to %s)\n", SCRONTABS);
 				printf("-c            directory of per-user crontabs (defaults to %s)\n", CRONTABS);
-				printf("-t            directory of timestamps (defaults to %s)\n", TIMESTAMPS);
+				printf("-t            directory of timestamps (defaults to %s)\n", CRONSTAMPS);
 				printf("-m user@host  where should cron output be directed? (defaults to local user)\n");
 				printf("-M mailer     (defaults to %s)\n", SENDMAIL);
 				printf("-S            log to syslog using identity '%s' (default)\n", LOG_IDENT);

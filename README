@@ -75,11 +75,12 @@ INSTALLING
 install` installs them underneath /usr instead.
 
 Permissions will be as follows:
-	-rwx------  0 root   wheel   32232 Jan  6 18:58 /usr/sbin/crond
+
+	-rwx------  0 root   root    32232 Jan  6 18:58 /usr/sbin/crond
 	-rwsr-x---  0 root   wheel   15288 Jan  6 18:58 /usr/bin/crontab
 
 Only users belonging to crontab's group (here "wheel") will be able to use it.
-You may want to create a special "cron" group and assign crontab to it:
+You may want to create a special "cron" group and assign `crontab` to it:
 
 	groupadd cron
 	chgrp cron /usr/bin/crontab

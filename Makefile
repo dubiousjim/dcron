@@ -2,25 +2,26 @@
 VERSION = 4.2
 
 # these variables can be configured by e.g. `make SCRONTABS=/different/path`
-SCRONTABS = "/etc/cron.d"
-CRONTABS = "/var/spool/cron"
-TIMESTAMPS = "/var/spool/cronstamps"
+SCRONTABS = /etc/cron.d
+CRONTABS = /var/spool/cron/crontabs
+CRONSTAMPS = /var/spool/cron/cronstamps
 # used for syslog
-LOG_IDENT = "crond"
+LOG_IDENT = crond
 # used for logging to file (syslog manages its own timestamps)
 # if LC_TIME is set, it will override any compiled-in timestamp format
-TIMESTAMP_FMT = "%b %e %H:%M:%S"
+TIMESTAMP_FMT = %b %e %H:%M:%S
 
-
-# PREFIX and DESTDIR are only used when doing `make install`
+# PREFIX and DESTDIR and CRONTAB_GROUP are only used when doing `make install`
 PREFIX = /usr/local
+CRONTAB_GROUP = wheel
+
 
 
 SHELL = /bin/sh
-INSTALL = install -o root -g root
+INSTALL = install -o root
 INSTALL_PROGRAM = $(INSTALL) -D
-INSTALL_DATA = $(INSTALL) -D -m0644
-INSTALL_DIR = $(INSTALL) -d -m0755
+INSTALL_DATA = $(INSTALL) -D -m0644 -g root
+INSTALL_DIR = $(INSTALL) -d -m0755 -g root
 # CC = gcc
 CFLAGS = -O2 -Wall -Wstrict-prototypes
 SRCS = main.c subs.c database.c job.c
@@ -30,9 +31,9 @@ TABOBJS = crontab.o subs.o
 PROTOS = protos.h
 LIBS =
 DEFS =  -DVERSION='"$(VERSION)"' \
-		-DSCRONTABS='$(SCRONTABS)' -DCRONTABS='$(CRONTABS)' \
-		-DTIMESTAMPS='$(TIMESTAMPS)' -DLOG_IDENT='$(LOG_IDENT)' \
-		-DTIMESTAMP_FMT='$(TIMESTAMP_FMT)'
+		-DSCRONTABS='"$(SCRONTABS)"' -DCRONTABS='"$(CRONTABS)"' \
+		-DCRONSTAMPS='"$(CRONSTAMPS)"' -DLOG_IDENT='"$(LOG_IDENT)"' \
+		-DTIMESTAMP_FMT='"$(TIMESTAMP_FMT)"'
 
 
 all: $(PROTOS) crond crontab ;
@@ -50,13 +51,13 @@ crontab: $(TABOBJS)
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $(DEFS) $< -o $@
 
 install:
-	$(INSTALL_PROGRAM) -m0700 crond $(DESTDIR)$(PREFIX)/sbin/crond
-	$(INSTALL_PROGRAM) -m4750 crontab $(DESTDIR)$(PREFIX)/bin/crontab
+	$(INSTALL_PROGRAM) -m0700 -g root crond $(DESTDIR)$(PREFIX)/sbin/crond
+	$(INSTALL_PROGRAM) -m4750 -g $(CRONTAB_GROUP) crontab $(DESTDIR)$(PREFIX)/bin/crontab
 	$(INSTALL_DATA) crontab.1 $(DESTDIR)$(PREFIX)/share/man/man1/crontab.1
 	$(INSTALL_DATA) crond.8 $(DESTDIR)$(PREFIX)/share/man/man8/crond.8
 	$(INSTALL_DIR) $(DESTDIR)$(SCRONTABS)
 	$(INSTALL_DIR) $(DESTDIR)$(CRONTABS)
-	$(INSTALL_DIR) $(DESTDIR)$(TIMESTAMPS)
+	$(INSTALL_DIR) $(DESTDIR)$(CRONSTAMPS)
 
 clean: force
 	rm -f *.o $(PROTOS)
