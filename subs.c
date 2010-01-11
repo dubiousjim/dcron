@@ -18,7 +18,7 @@ Prototype void startlogger(void);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
 
-int slog(char *buf, const char *ctl, int nmax, va_list va, short useDate);
+int slog(char *buf, const char *ctl, int nmax, va_list va, short suppressHeader);
 char Hostname[SMALL_BUFFER];
 
 
@@ -59,8 +59,8 @@ vlog(int level, int fd, const char *ctl, va_list va)
 {
 	char buf[LOG_BUFFER];
 	int  logfd;
-    short n;
-    static short useDate = 1;
+	int n;
+	static short suppressHeader = 0;
 
 	if (level <= LogLevel) {
 		va_list vb;
@@ -75,8 +75,12 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			if (LoggerOpt == 0) syslog(level, "%s", buf);
 			else {
 				if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0) {
-					write(logfd, buf, n = slog(buf, ctl, sizeof(buf), vb, useDate));
-					useDate = (n && buf[n-1] == '\n');
+					if (n = slog(buf, ctl, sizeof(buf), vb, suppressHeader)) {
+						write(logfd, buf, n);
+						/* if previous write wasn't \n-terminated, we suppress header on next write */
+						suppressHeader = (buf[n-1] != '\n');
+					}
+					/* if slog returned empty buf, we just silently continue */
 					close(logfd);
 				} else {
 					int e = errno;
@@ -92,26 +96,35 @@ vlog(int level, int fd, const char *ctl, va_list va)
 }
 
 int
-slog(char *buf, const char *ctl, int nmax, va_list va, short useDate)
+slog(char *buf, const char *ctl, int nmax, va_list va, short suppressHeader)
 {
     time_t t = time(NULL);
     struct tm *tp = localtime(&t);
-    buf[0] = 0;
-	int n = 0;
-    if (useDate) {
+	buf[0] = 0; /* in case suppressHeader or strftime fails */
+	int m, n;
+	if (!suppressHeader) {
 		char hdr[SMALL_BUFFER];
-		hdr[0] = 0;
-		strftime(hdr, SMALL_BUFFER, LogHeader, tp);
-		if (!gethostname(Hostname, SMALL_BUFFER-1))
-			Hostname[SMALL_BUFFER-1] = 0;  // if hostname is larger than buffer, gethostname() doesn't promise to null-terminate it
-		else
-			Hostname[0] = 0;   // gethostname() call failed
-		/* [v]snprintf will null-terminate, even if they truncate */
-		snprintf(buf, 2*SMALL_BUFFER, hdr, Hostname);
+		hdr[0] = 0; /* in case strftime fails */
+		/* strftime returns strlen of result, provided that result plus a \0 fit into buf of size */
+		if (strftime(hdr, sizeof(hdr), LogHeader, tp)) {
+			if (gethostname(Hostname, sizeof(Hostname))==0)
+				/* gethostname successful */
+				/* result will be \0-terminated except gethostname doesn't promise to do so if it has to truncate */
+				Hostname[sizeof(Hostname)-1] = 0;
+			else
+				Hostname[0] = 0;   /* gethostname() call failed */
+			/* we know sizeof(buf) > sizeof(Hostname), but we use snprintf for explicitness */
+			m = snprintf(buf, nmax, hdr, Hostname);
+		}
 	}
-	/* [v]snprintf will null-terminate, even if they truncate */
-	n = vsnprintf(buf + strlen(buf), nmax, ctl, va);
-	return (n<nmax) ? n : nmax;
+	m = strlen(buf);
+	nmax -= m;
+	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
+	/* return value >= size means result was truncated */
+	if ((n = vsnprintf(buf + m, nmax, ctl, va)) < nmax)
+		return m + n;
+	else
+		return m + nmax;
 }
 
 int

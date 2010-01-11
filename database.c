@@ -296,7 +296,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 	CronFile *file;
 	int maxEntries;
 	int maxLines;
-	char buf[RW_BUFFER];
+	char buf[RW_BUFFER]; /* max length for crontab lines */
 	char *path;
 	FILE *fi;
 
@@ -338,6 +338,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 			file->cf_DPath = strdup(dpath);
 			pline = &file->cf_LineBase;
 
+			/* fgets reads at most size-1 chars until \n or EOF, then adds a\0; \n if present is stored in buf */
 			while (fgets(buf, sizeof(buf), fi) != NULL && --maxLines) {
 				CronLine line;
 				char *ptr = buf;

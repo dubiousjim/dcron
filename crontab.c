@@ -303,12 +303,14 @@ EditFile(const char *user, const char *file)
 
 		if (ChangeUser(user, 1) < 0)
 			exit(0);
-		if ((ptr = getenv("EDITOR")) == NULL || strlen(ptr) > SMALL_BUFFER)
-			if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) > SMALL_BUFFER)
+		if ((ptr = getenv("EDITOR")) == NULL || strlen(ptr) >= sizeof(visual))
+			if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) >= sizeof(visual))
 				ptr = PATH_VI;
 
-		snprintf(visual, sizeof(visual), "%s %s", ptr, file);
-		execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
+		/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
+		/* return value >= size means result was truncated */
+		if (snprintf(visual, sizeof(visual), "%s %s", ptr, file) < sizeof(visual))
+			execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
 		perror("exec");
 		exit(0);
 	}
