@@ -91,8 +91,8 @@
 #define MONTHLY_FREQ	30 * DAILY_FREQ
 #define YEARLY_FREQ		365 * DAILY_FREQ
 
-#define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ":"
-#define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ":"
+#define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ": "
+#define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ": "
 
 /* Limits */
 #define MAXOPEN			256		/* close fds < this limit */ 
