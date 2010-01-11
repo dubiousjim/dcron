@@ -17,10 +17,10 @@ const char *CDir = CRONTABS;
 int   UserId;
 short ForegroundOpt = 0;
 short LoggerOpt = 0;
-const char *LogFile = LOG_FILE;
 char *TempDir = TMPDIR;
 
 /* not used in this program, but subs.c needs them */
+const char *LogFile = NULL;
 short LogLevel = LOG_NOTICE;
 const char *LogHeader = NULL;
 

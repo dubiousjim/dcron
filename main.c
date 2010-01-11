@@ -2,7 +2,7 @@
 /*
  * MAIN.C
  *
- * crond [-l#] [-L logfile | -S ] [-M mailer] [-m mailto] [-d|-f|-b] [-c crondir] [-s systemdir] [-t timestamps]
+ * crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-S|-L [file]] [-l level] [-b|-f|-d]
  *
  * run as root, but NOT setuid root
  *
@@ -36,7 +36,7 @@ short LoggerOpt;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
 const char *TSDir = TIMESTAMPS;
-const char *LogFile = LOG_FILE; /* opened with mode 0600 */
+const char *LogFile = NULL; 	/* opened with mode 0600 */
 const char *LogHeader = LOGHEADER;
 const char *SendMail = NULL;
 const char *Mailto = NULL;
@@ -141,9 +141,7 @@ main(int ac, char **av)
 				break;
 			case 'L':			/* use internal log formatter */
 				LoggerOpt = 1;
-				if (*optarg != 0) {
-					LogFile = optarg;
-				}
+				LogFile = optarg;
 				/* if LC_TIME is defined, we use it for logging to file instead of compiled-in TIMESTAMP_FMT */
 				if (getenv("LC_TIME") != NULL) {
 					LogHeader = LOCALE_LOGHEADER;
@@ -176,7 +174,7 @@ main(int ac, char **av)
 				printf("-m user@host  where should cron output be directed? (defaults to local user)\n");
 				printf("-M mailer     (defaults to %s)\n", SENDMAIL);
 				printf("-S            log to syslog using identity '%s' (default)\n", LOG_IDENT);
-				printf("-L [file]     log to file instead of syslog (if no file specified, uses %s)\n", LOG_FILE);
+				printf("-L file       log to specified file instead of syslog\n");
 				printf("-l loglevel   log events <= this level (defaults to %s (level %d))\n", LevelAry[LOG_LEVEL], LOG_LEVEL);
 				printf("-b            run in background (default)\n");
 				printf("-f            run in foreground\n");

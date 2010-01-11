@@ -5,11 +5,10 @@ VERSION = 4.2
 SCRONTABS = "/etc/cron.d"
 CRONTABS = "/var/spool/cron"
 TIMESTAMPS = "/var/spool/cronstamps"
+# used for syslog
 LOG_IDENT = "crond"
-# LOG_FILE is only used when syslog isn't
-LOG_FILE = "/var/log/crond.log"
-# this is only used for logging to file; syslog manages its own timestamps
-# if LC_TIME is set, it will override the compiled-in timestamp format
+# used for logging to file (syslog manages its own timestamps)
+# if LC_TIME is set, it will override any compiled-in timestamp format
 TIMESTAMP_FMT = "%b %e %H:%M:%S"
 
 
@@ -33,7 +32,7 @@ LIBS =
 DEFS =  -DVERSION='"$(VERSION)"' \
 		-DSCRONTABS='$(SCRONTABS)' -DCRONTABS='$(CRONTABS)' \
 		-DTIMESTAMPS='$(TIMESTAMPS)' -DLOG_IDENT='$(LOG_IDENT)' \
-		-DLOG_FILE='$(LOG_FILE)' -DTIMESTAMP_FMT='$(TIMESTAMP_FMT)'
+		-DTIMESTAMP_FMT='$(TIMESTAMP_FMT)'
 
 
 all: $(PROTOS) crond crontab ;

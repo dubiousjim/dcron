@@ -55,9 +55,6 @@
 #ifndef LOG_IDENT
 #define LOG_IDENT	"crond"
 #endif
-#ifndef LOG_FILE
-#define LOG_FILE	"/var/log/crond.log"
-#endif
 #ifndef TIMESTAMP_FMT
 #define TIMESTAMP_FMT	"%b %e %H:%M:%S"
 #endif

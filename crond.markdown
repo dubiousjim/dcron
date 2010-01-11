@@ -9,7 +9,7 @@ crond - dillon's lightweight cron daemon
 SYNOPSIS
 ========
 **crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] 
-[-S|-L [file]] [-l loglevel] [-b|-f|-d]**
+[-S|-L file] [-l loglevel] [-b|-f|-d]**
 
 OPTIONS
 =======
@@ -49,8 +49,8 @@ executes commands on behalf of the users in question.
 -S
 :	log events to syslog, using syslog facility LOG_CRON and identity 'crond'. (This is the default behavior.)
 
--L [file]
-:	log to file instead of syslog. If no file is specified, uses /var/log/crond.log.
+-L file
+:	log to specified file instead of syslog.
 
 -l loglevel
 :	log events <= this level. The default is 'notice' (level 5).
