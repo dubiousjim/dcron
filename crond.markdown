@@ -109,7 +109,7 @@ the 10:30 am job will be skipped until the next day. Jobs scheduled using
 
 **crond** has a number of built in limitations to reduce the chance of it being
 ill-used. Potentially infinite loops during parsing are dealt with via a
-failsafe counter, and user crontabs are generally limited to 256 crontab
+failsafe counter, and non-root crontabs are limited to 256 crontab
 entries. Crontab lines may not be longer than 1024 characters, including the
 newline.
 

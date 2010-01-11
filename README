@@ -80,7 +80,12 @@ Permissions will be as follows:
 	-rwsr-x---  0 root   wheel   15288 Jan  6 18:58 /usr/bin/crontab
 
 Only users belonging to crontab's group (here "wheel") will be able to use it.
-You may want to create a special "cron" group and `chgrp cron /usr/bin/crontab`.
+You may want to create a special "cron" group and assign crontab to it:
+
+	groupadd cron
+	chgrp cron /usr/bin/crontab
+	chmod 4750 /usr/bin/crontab
+
 Then add users to group "cron" when you want them to be able to install
 or modify their crontabs. The superuser can install crontabs for users
 who don't have the privileges to do it themselves.
