@@ -73,8 +73,6 @@ man: force
 # for maintainer's use only
 TARNAME = /home/abs/_dcron/dcron-$(VERSION).tar.gz
 tar: clean man
-	pax -w ../repo  -s'=^\.\./repo/.git.*==' -s'=^\.\./repo=dcron-$(VERSION)=' -f $(TARNAME).new
-	# chown jim $(TARNAME).new
-	# chmod 644 $(TARNAME).new
+	pax -wz ../repo  -s'=^\.\./repo/.git.*==' -s'=^\.\./repo=dcron-$(VERSION)=' -f $(TARNAME).new
 	mv -f $(TARNAME).new $(TARNAME)
 
