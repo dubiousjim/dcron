@@ -46,8 +46,7 @@ A public git repo is available at: <http://repo.or.cz/w/dcron.git>.
 COMPILING
 ---------
 
-This is an ANSI program, you must use a compiler that understands
-prototypes, such as GCC.
+You must use a compiler that understands prototypes, such as GCC.
 
 Note that the source code, especially in regard to changing the
 effective user, is Linux specific (SysVish).  I welcome any changes
@@ -129,10 +128,13 @@ BUG REPORTS, SUBMISSIONS
 Send any bug reports and source code changes to Jim Pryor:
 <profjim@jimpryor.net>.
 
-Our goal is to make this program compilable in as ansi-strict a manner as
+Our goal is to make this program compilable in as C89-strict a manner as
 possible. Prototypes for system functions should come from external include
 files and NOT from defs.h or any source file. If no prototype exists for a
 particular function, contact your vendor to get an update for your includes.
+
+At the moment, less-portable features we're aware of in the source are the
+use of strsep, strptime, and asprintf.
 
 Changes to overridable defaults in defs.h should be made in the Makefile; you
 may submit a Makefile for your platform.  Changes to the #include's in defs.h

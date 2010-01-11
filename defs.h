@@ -7,21 +7,23 @@
  * May be distributed under the GNU General Public License
  */
 
+/* portability issues */
+/* 1. need _XOPEN_SOURCE for strptime */
+/* 2. need _BSD_SOURCE for strsep */
+/* 3. need _GNU_SOURCE (which includes others) for asprintf, or provide our own */
+
+#define _XOPEN_SOURCE 1
+#define _BSD_SOURCE 1
+#define _GNU_SOURCE 1
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <sys/resource.h>
-/* needed for asprintf in main.c and database.c, get rid of this */
-#define _GNU_SOURCE
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <string.h>
 #include <errno.h>
-/* glibc2 needs the following for strptime */
-#define __USE_XOPEN
-#include <time.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -32,6 +34,10 @@
 #include <getopt.h>
 #include <err.h>
 #include <limits.h>
+
+#include <time.h>
+#include <string.h>
+#include <stdio.h>
 
 #define Prototype extern
 #define arysize(ary)	(sizeof(ary)/sizeof((ary)[0]))
