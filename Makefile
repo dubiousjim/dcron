@@ -14,6 +14,9 @@ LOG_IDENT = crond
 # used for logging to file (syslog manages its own timestamps)
 # if LC_TIME is set, it will override any compiled-in timestamp format
 TIMESTAMP_FMT = %b %e %H:%M:%S
+SBINDIR ?= $(PREFIX)/sbin
+BINDIR ?= $(PREFIX)/bin
+MANDIR ?= $(PREFIX)/share/man
 
 
 SHELL = /bin/sh
@@ -21,8 +24,8 @@ INSTALL = install -o root
 INSTALL_PROGRAM = $(INSTALL) -D
 INSTALL_DATA = $(INSTALL) -D -m0644 -g root
 INSTALL_DIR = $(INSTALL) -d -m0755 -g root
-# CC = gcc
-CFLAGS = -O2 -Wall -Wstrict-prototypes
+CFLAGS ?= -O2
+CFLAGS += -Wall -Wstrict-prototypes
 SRCS = main.c subs.c database.c job.c
 OBJS = main.o subs.o database.o job.o
 TABSRCS = crontab.c subs.c
@@ -38,6 +41,9 @@ DEFS =  -DVERSION='"$(VERSION)"' \
 all: $(PROTOS) crond crontab ;
 	rm -f config
 	echo "PREFIX = $(PREFIX)" >> config
+	echo "SBINDIR = $(SBINDIR)" >> config
+	echo "BINDIR = $(BINDIR)" >> config
+	echo "MANDIR = $(MANDIR)" >> config
 	echo "CRONTAB_GROUP = $(CRONTAB_GROUP)" >> config
 	echo "SCRONTABS = $(SCRONTABS)" >> config
 	echo "CRONTABS = $(CRONTABS)" >> config
@@ -56,10 +62,10 @@ crontab: $(TABOBJS)
 	$(CC) -c $(CPPFLAGS) $(CFLAGS) $(DEFS) $< -o $@
 
 install:
-	$(INSTALL_PROGRAM) -m0700 -g root crond $(DESTDIR)$(PREFIX)/sbin/crond
-	$(INSTALL_PROGRAM) -m4750 -g $(CRONTAB_GROUP) crontab $(DESTDIR)$(PREFIX)/bin/crontab
-	$(INSTALL_DATA) crontab.1 $(DESTDIR)$(PREFIX)/share/man/man1/crontab.1
-	$(INSTALL_DATA) crond.8 $(DESTDIR)$(PREFIX)/share/man/man8/crond.8
+	$(INSTALL_PROGRAM) -m0700 -g root crond $(DESTDIR)$(SBINDIR)/crond
+	$(INSTALL_PROGRAM) -m4750 -g $(CRONTAB_GROUP) crontab $(DESTDIR)$(BINDIR)/crontab
+	$(INSTALL_DATA) crontab.1 $(DESTDIR)$(MANDIR)/man1/crontab.1
+	$(INSTALL_DATA) crond.8 $(DESTDIR)$(MANDIR)/man8/crond.8
 	$(INSTALL_DIR) $(DESTDIR)$(SCRONTABS)
 	$(INSTALL_DIR) $(DESTDIR)$(CRONTABS)
 	$(INSTALL_DIR) $(DESTDIR)$(CRONSTAMPS)
@@ -73,7 +79,6 @@ force: ;
 man: force
 	-pandoc -t man -f markdown -s crontab.markdown -o crontab.1
 	-pandoc -t man -f markdown -s crond.markdown -o crond.8
-
 
 # for maintainer's use only
 TARNAME = /home/abs/_dcron/dcron-$(VERSION).tar.gz
