@@ -206,11 +206,12 @@ main(int ac, char **av)
 
 	if (ForegroundOpt == 0) {
 
+		int fd;
+		int pid;
+
 		fclose(stderr);
 		dup2(i, 2);
 
-		int fd;
-		int pid;
 		if (setsid() < 0)
 			perror("setsid");
 

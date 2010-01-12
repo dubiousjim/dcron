@@ -100,8 +100,9 @@ slog(char *buf, const char *ctl, int nmax, va_list va, short suppressHeader)
 {
     time_t t = time(NULL);
     struct tm *tp = localtime(&t);
-	buf[0] = 0; /* in case suppressHeader or strftime fails */
 	int m, n;
+
+	buf[0] = 0; /* in case suppressHeader or strftime fails */
 	if (!suppressHeader) {
 		char hdr[SMALL_BUFFER];
 		hdr[0] = 0; /* in case strftime fails */
