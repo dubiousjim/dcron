@@ -78,5 +78,5 @@ man: force
 # for maintainer's use only
 TARNAME = /home/abs/_dcron/dcron-$(VERSION).tar.gz
 dist: clean man
-	pax -wz ../repo  -s'=^\.\./repo/.git.*==' -s'=^\.\./repo=dcron-$(VERSION)=' -f $(TARNAME).new
+	bsdtar -cz --exclude repo/.git -f $(TARNAME).new -s'=^repo=dcron-$(VERSION)=' -C .. repo
 	mv -f $(TARNAME).new $(TARNAME)
