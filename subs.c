@@ -13,7 +13,7 @@ Prototype void logn(int level, const char *ctl, ...);
 Prototype void logfd(int level, int fd, const char *ctl, ...);
 Prototype void fdprintf(int fd, const char *ctl, ...);
 Prototype int  ChangeUser(const char *user, short dochdir);
-Prototype void vlog(int level, int fd, const char *ctl, va_list va);
+Prototype void vlog(int level, int fd, const char *ctl, va_list va, va_list vb);
 Prototype void startlogger(void);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
@@ -28,7 +28,14 @@ logn(int level, const char *ctl, ...)
 	va_list va;
 
 	va_start(va, ctl);
-	vlog(level, 2, ctl, va);
+	if ((ForegroundOpt != 1) && (LoggerOpt != 0)) {
+		/* create second va_list exlicitly to avoid va_copy, which is C99 */
+		va_list vb;
+		va_start(vb, ctl);
+		vlog(level, 2, ctl, va, vb);
+		va_end(vb);
+	} else
+		vlog(level, 2, ctl, va, NULL);
 	va_end(va);
 }
 
@@ -38,7 +45,14 @@ logfd(int level, int fd, const char *ctl, ...)
 	va_list va;
 
 	va_start(va, ctl);
-	vlog(level, fd, ctl, va);
+	if ((ForegroundOpt != 1) && (LoggerOpt != 0)) {
+		/* create second va_list exlicitly to avoid va_copy, which is C99 */
+		va_list vb;
+		va_start(vb, ctl);
+		vlog(level, fd, ctl, va, vb);
+		va_end(vb);
+	} else
+		vlog(level, fd, ctl, va, NULL);
 	va_end(va);
 }
 
@@ -55,7 +69,7 @@ fdprintf(int fd, const char *ctl, ...)
 }
 
 void
-vlog(int level, int fd, const char *ctl, va_list va)
+vlog(int level, int fd, const char *ctl, va_list va, va_list vb)
 {
 	char buf[LOG_BUFFER];
 	int  logfd;
@@ -63,8 +77,6 @@ vlog(int level, int fd, const char *ctl, va_list va)
 	static short suppressHeader = 0;
 
 	if (level <= LogLevel) {
-		va_list vb;
-		va_copy(vb, va);
 		vsnprintf(buf,sizeof(buf), ctl, va);
 		if (ForegroundOpt == 1)
 			/* when -d or -f, we always (and only) log to stderr
@@ -91,7 +103,6 @@ vlog(int level, int fd, const char *ctl, va_list va)
 					exit(e);
 				}
 			}
-		va_end(vb);
 	}
 }
 
