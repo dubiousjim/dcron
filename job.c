@@ -80,14 +80,14 @@ RunJob(CronFile *file, CronLine *line)
 			dup2(mailFd, 2);
 			close(mailFd);
 		} else {
-			logfd(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
+			fdlogf(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
 					mailFile,
 					file->cf_UserName,
 					line->cl_Description
 				   );
 		}
 		execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL, NULL);
-		logfd(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
+		fdlogf(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
 				file->cf_UserName,
 				line->cl_Shell
 			   );
@@ -286,7 +286,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		close(mailFd);
 
 		if (!SendMail) {
-			logfd(LOG_INFO, 8, "mailing cron output for user %s %s\n",
+			fdlogf(LOG_INFO, 8, "mailing cron output for user %s %s\n",
 					file->cf_UserName,
 					line->cl_Description
 				 );
@@ -296,7 +296,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		} else
 			execl(SendMail, SendMail, NULL, NULL);
 
-		logfd(LOG_WARNING, 8, "unable to exec %s: cron output for user %s %s to /dev/null\n",
+		fdlogf(LOG_WARNING, 8, "unable to exec %s: cron output for user %s %s to /dev/null\n",
 				SendMail,
 				file->cf_UserName,
 				line->cl_Description

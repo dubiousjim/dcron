@@ -10,7 +10,7 @@
 #include "defs.h"
 
 Prototype void logf(int level, const char *ctl, ...);
-Prototype void logfd(int level, int fd, const char *ctl, ...);
+Prototype void fdlogf(int level, int fd, const char *ctl, ...);
 Prototype void fdprintf(int fd, const char *ctl, ...);
 Prototype int  ChangeUser(const char *user, short dochdir);
 Prototype void startlogger(void);
@@ -41,7 +41,7 @@ logf(int level, const char *ctl, ...)
 }
 
 void
-logfd(int level, int fd, const char *ctl, ...)
+fdlogf(int level, int fd, const char *ctl, ...)
 {
 	va_list va;
 
