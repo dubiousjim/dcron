@@ -59,6 +59,7 @@ main(int ac, char **av)
 	}
 
 	opterr = 0;
+	optind = i;
 
 	while ((i=getopt(ac,av,"ledu:c:")) != EOF) {
 		switch(i) {
