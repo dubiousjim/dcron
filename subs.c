@@ -17,8 +17,7 @@ Prototype void startlogger(void);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
 
-void vlog(int level, int fd, const char *ctl, va_list va, va_list vb);
-int slog(char *buf, const char *ctl, int nmax, va_list va, short suppressHeader);
+void vlog(int level, int fd, const char *ctl, va_list va);
 
 char Hostname[SMALL_BUFFER];
 
@@ -29,14 +28,7 @@ logf(int level, const char *ctl, ...)
 	va_list va;
 
 	va_start(va, ctl);
-	if ((ForegroundOpt != 1) && (LoggerOpt != 0)) {
-		/* create second va_list explicitly to avoid va_copy, which is C99 */
-		va_list vb;
-		va_start(vb, ctl);
-		vlog(level, 2, ctl, va, vb);
-		va_end(vb);
-	} else
-		vlog(level, 2, ctl, va, NULL);
+	vlog(level, 2, ctl, va);
 	va_end(va);
 }
 
@@ -46,14 +38,7 @@ fdlogf(int level, int fd, const char *ctl, ...)
 	va_list va;
 
 	va_start(va, ctl);
-	if ((ForegroundOpt != 1) && (LoggerOpt != 0)) {
-		/* create second va_list explicitly to avoid va_copy, which is C99 */
-		va_list vb;
-		va_start(vb, ctl);
-		vlog(level, fd, ctl, va, vb);
-		va_end(vb);
-	} else
-		vlog(level, fd, ctl, va, NULL);
+	vlog(level, fd, ctl, va);
 	va_end(va);
 }
 
@@ -70,74 +55,68 @@ fdprintf(int fd, const char *ctl, ...)
 }
 
 void
-vlog(int level, int fd, const char *ctl, va_list va, va_list vb)
+vlog(int level, int fd, const char *ctl, va_list va)
 {
 	char buf[LOG_BUFFER];
 	int  logfd;
-	int n;
 	static short suppressHeader = 0;
 
 	if (level <= LogLevel) {
-		vsnprintf(buf, sizeof(buf), ctl, va);
-		if (ForegroundOpt == 1)
-			/* when -d or -f, we always (and only) log to stderr
+		if (ForegroundOpt == 1) {
+			/*
+			 * when -d or -f, we always (and only) log to stderr
 			 * fd will be 2 except when 2 is bound to a execing subprocess, then it will be 8
 			 */
+			vsnprintf(buf, sizeof(buf), ctl, va);
 			write(fd, buf, strlen(buf));
-		else
-			if (LoggerOpt == 0) syslog(level, "%s", buf);
-			else {
-				if ((logfd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
-					if ((n = slog(buf, ctl, sizeof(buf), vb, suppressHeader))) {
-						write(logfd, buf, n);
-						/* if previous write wasn't \n-terminated, we suppress header on next write */
-						suppressHeader = (buf[n-1] != '\n');
-					}
-					/* if slog returned empty buf, we just silently continue */
-					close(logfd);
-				} else {
-					int e = errno;
-					fdprintf(fd, "failed to open logfile '%s' reason: %s\n",
-							LogFile,
-							strerror(e)
-							);
-					exit(e);
+		} else if (LoggerOpt == 0) {
+			/* log to syslog */
+			vsnprintf(buf, sizeof(buf), ctl, va);
+			syslog(level, "%s", buf);
+
+		} else if ((logfd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
+			/* log to file */
+
+			time_t t = time(NULL);
+			struct tm *tp = localtime(&t);
+			int buflen, hdrlen = 0;
+			buf[0] = 0; /* in case suppressHeader or strftime fails */
+			if (!suppressHeader) {
+				/*
+				 * run LogHeader through strftime --> [yields hdr] plug in Hostname --> [yields buf]
+				 */
+				char hdr[SMALL_BUFFER];
+				/* strftime returns strlen of result, provided that result plus a \0 fit into buf of size */
+				if (strftime(hdr, sizeof(hdr), LogHeader, tp)) {
+					if (gethostname(Hostname, sizeof(Hostname))==0)
+						/* gethostname successful */
+						/* result will be \0-terminated except gethostname doesn't promise to do so if it has to truncate */
+						Hostname[sizeof(Hostname)-1] = 0;
+					else
+						Hostname[0] = 0;   /* gethostname() call failed */
+					/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
+					/* return value >= size means result was truncated */
+					if ((hdrlen = snprintf(buf, sizeof(hdr), hdr, Hostname)) >= sizeof(hdr))
+						hdrlen = sizeof(hdr) - 1;
 				}
 			}
-	}
-}
+			if ((buflen = vsnprintf(buf + hdrlen, sizeof(buf) - hdrlen, ctl, va) + hdrlen) >= sizeof(buf))
+				buflen = sizeof(buf) - 1;
 
-int
-slog(char *buf, const char *ctl, int nmax, va_list va, short suppressHeader)
-{
-    time_t t = time(NULL);
-    struct tm *tp = localtime(&t);
-	int m, n;
+			write(logfd, buf, buflen);
+			/* if previous write wasn't \n-terminated, we suppress header on next write */
+			suppressHeader = (buf[buflen-1] != '\n');
+			close(logfd);
 
-	buf[0] = 0; /* in case suppressHeader or strftime fails */
-	if (!suppressHeader) {
-		char hdr[SMALL_BUFFER];
-		hdr[0] = 0; /* in case strftime fails */
-		/* strftime returns strlen of result, provided that result plus a \0 fit into buf of size */
-		if (strftime(hdr, sizeof(hdr), LogHeader, tp)) {
-			if (gethostname(Hostname, sizeof(Hostname))==0)
-				/* gethostname successful */
-				/* result will be \0-terminated except gethostname doesn't promise to do so if it has to truncate */
-				Hostname[sizeof(Hostname)-1] = 0;
-			else
-				Hostname[0] = 0;   /* gethostname() call failed */
-			/* we know sizeof(buf) > sizeof(Hostname), but we use snprintf for explicitness */
-			m = snprintf(buf, nmax, hdr, Hostname);
+		} else {
+			int e = errno;
+			fdprintf(fd, "failed to open logfile '%s' reason: %s\n",
+					LogFile,
+					strerror(e)
+					);
+			exit(e);
 		}
 	}
-	m = strlen(buf);
-	nmax -= m;
-	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
-	/* return value >= size means result was truncated */
-	if ((n = vsnprintf(buf + m, nmax, ctl, va)) < nmax)
-		return m + n;
-	else
-		return m + nmax;
 }
 
 int
