@@ -9,7 +9,7 @@
 
 #include "defs.h"
 
-Prototype void logn(int level, const char *ctl, ...);
+Prototype void logf(int level, const char *ctl, ...);
 Prototype void logfd(int level, int fd, const char *ctl, ...);
 Prototype void fdprintf(int fd, const char *ctl, ...);
 Prototype int  ChangeUser(const char *user, short dochdir);
@@ -24,7 +24,7 @@ char Hostname[SMALL_BUFFER];
 
 
 void
-logn(int level, const char *ctl, ...)
+logf(int level, const char *ctl, ...)
 {
 	va_list va;
 
@@ -150,7 +150,7 @@ ChangeUser(const char *user, short dochdir)
 	 */
 
 	if ((pas = getpwnam(user)) == 0) {
-		logn(LOG_ERR, "failed to get uid for %s\n", user);
+		logf(LOG_ERR, "failed to get uid for %s\n", user);
 		return(-1);
 	}
 	setenv("USER", pas->pw_name, 1);
@@ -162,22 +162,22 @@ ChangeUser(const char *user, short dochdir)
 	 */
 
 	if (initgroups(user, pas->pw_gid) < 0) {
-		logn(LOG_ERR, "initgroups failed: %s %s\n", user, strerror(errno));
+		logf(LOG_ERR, "initgroups failed: %s %s\n", user, strerror(errno));
 		return(-1);
 	}
 	if (setregid(pas->pw_gid, pas->pw_gid) < 0) {
-		logn(LOG_ERR, "setregid failed: %s %d\n", user, pas->pw_gid);
+		logf(LOG_ERR, "setregid failed: %s %d\n", user, pas->pw_gid);
 		return(-1);
 	}
 	if (setreuid(pas->pw_uid, pas->pw_uid) < 0) {
-		logn(LOG_ERR, "setreuid failed: %s %d\n", user, pas->pw_uid);
+		logf(LOG_ERR, "setreuid failed: %s %d\n", user, pas->pw_uid);
 		return(-1);
 	}
 	if (dochdir) {
 		if (chdir(pas->pw_dir) < 0) {
-			logn(LOG_ERR, "chdir failed: %s %s\n", user, pas->pw_dir);
+			logf(LOG_ERR, "chdir failed: %s %s\n", user, pas->pw_dir);
 			if (chdir(TempDir) < 0) {
-				logn(LOG_ERR, "chdir failed: %s %s\n", user, TempDir);
+				logf(LOG_ERR, "chdir failed: %s %s\n", user, TempDir);
 				return(-1);
 			}
 		}

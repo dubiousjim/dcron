@@ -249,7 +249,7 @@ main(int ac, char **av)
 	 *             of 1 second.
 	 */
 
-	logn(LOG_NOTICE,"%s " VERSION " dillon's cron daemon, started with loglevel %s\n", av[0], LevelAry[LogLevel]);
+	logf(LOG_NOTICE,"%s " VERSION " dillon's cron daemon, started with loglevel %s\n", av[0], LevelAry[LogLevel]);
 	SynchronizeDir(CDir, NULL, 1);
 	SynchronizeDir(SCDir, "root", 1);
 	ReadTimestamps(NULL);
@@ -295,10 +295,10 @@ main(int ac, char **av)
 				CheckUpdates(SCDir, "root", t1, t2);
 			}
 			if (DebugOpt)
-				logn(LOG_DEBUG, "Wakeup dt=%d\n", dt);
+				logf(LOG_DEBUG, "Wakeup dt=%d\n", dt);
 			if (dt < -60*60 || dt > 60*60) {
 				t1 = t2;
-				logn(LOG_NOTICE,"time disparity of %d minutes detected\n", dt / 60);
+				logf(LOG_NOTICE,"time disparity of %d minutes detected\n", dt / 60);
 			} else if (dt > 0) {
 				TestJobs(t1, t2);
 				RunJobs();

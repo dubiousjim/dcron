@@ -58,7 +58,7 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 
 		if (ChangeUser(file->cf_UserName, 1) < 0) {
-			logn(LOG_ERR, "unable to ChangeUser (user %s %s)\n",
+			logf(LOG_ERR, "unable to ChangeUser (user %s %s)\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -66,7 +66,7 @@ RunJob(CronFile *file, CronLine *line)
 		}
 
 		if (DebugOpt)
-			logn(LOG_DEBUG, "child running: %s\n", line->cl_Description);
+			logf(LOG_DEBUG, "child running: %s\n", line->cl_Description);
 
 	/* Setup close-on-exec descriptor in case exec fails */
 	dup2(2, 8);
@@ -98,7 +98,7 @@ RunJob(CronFile *file, CronLine *line)
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		logn(LOG_ERR, "unable to fork (user %s %s)\n",
+		logf(LOG_ERR, "unable to fork (user %s %s)\n",
 				file->cf_UserName,
 				line->cl_Description
 				);
@@ -180,7 +180,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				fclose(fi);
 			}
 			if (!succeeded)
-				logn(LOG_WARNING, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
+				logf(LOG_WARNING, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
 			line->cl_NotUntil = line->cl_LastRan;
 			line->cl_NotUntil += (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
 		}
@@ -202,7 +202,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			/*
 			 * log non-zero exit_status
 			 */
-			logn(LOG_NOTICE, "exit status %d from user %s %s\n",
+			logf(LOG_NOTICE, "exit status %d from user %s %s\n",
 					exit_status,
 					file->cf_UserName,
 					line->cl_Description
@@ -212,7 +212,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	}
 	if (!exit_status || exit_status == EAGAIN)
 		if (DebugOpt)
-			logn(LOG_DEBUG, "exit status %d from user %s %s\n",
+			logf(LOG_DEBUG, "exit status %d from user %s %s\n",
 						exit_status,
 						file->cf_UserName,
 						line->cl_Description
@@ -264,7 +264,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 */
 
 		if (ChangeUser(file->cf_UserName, 1) < 0) {
-			logn(LOG_ERR, "unable to ChangeUser to send mail (user %s %s)\n",
+			logf(LOG_ERR, "unable to ChangeUser to send mail (user %s %s)\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -306,7 +306,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		logn(LOG_WARNING, "unable to fork: cron output for user %s %s to /dev/null\n",
+		logf(LOG_WARNING, "unable to fork: cron output for user %s %s to /dev/null\n",
 				file->cf_UserName,
 				line->cl_Description
 			);
