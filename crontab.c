@@ -2,9 +2,9 @@
 /*
  * CRONTAB.C
  *
- * CRONTAB
- *
- * usually setuid root, -c option only works if getuid() == geteuid()
+ * crontab [-u user] [-c dir] [-l|-e|-d|file|-]
+ * usually run as setuid root
+ * -u and -c options only work if getuid() == geteuid()
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
  * Copyright 2009 James Pryor <profjim@jimpryor.net>
