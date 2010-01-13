@@ -24,8 +24,9 @@ const char *LogFile = NULL;
 short LogLevel = LOG_NOTICE;
 const char *LogHeader = NULL;
 
-void EditFile(const char *user, const char *file);
+void Usage(void);
 int GetReplaceStream(const char *user, const char *file);
+void EditFile(const char *user, const char *file);
 
 int
 main(int ac, char **av)
@@ -48,31 +49,25 @@ main(int ac, char **av)
 		errx(1, "username too long");
 	}
 
-
-	i = 1;
-	if (ac > 1) {
-		if (av[1][0] == '-' && av[1][1] == 0) {
-			option = REPLACE;
-			++i;
-		} else if (av[1][0] != '-') {
-			option = REPLACE;
-			++i;
-			repFile = av[1];
-		}
-	}
-
 	opterr = 0;
-	optind = i;
-
 	while ((i=getopt(ac,av,"ledu:c:")) != -1) {
 		switch(i) {
 			case 'l':
+				if (option != NONE)
+					Usage();
+				else
 					option = LIST;
 				break;
 			case 'e':
+				if (option != NONE)
+					Usage();
+				else
 					option = EDIT;
 				break;
 			case 'd':
+				if (option != NONE)
+					Usage();
+				else
 					option = DELETE;
 				break;
 			case 'u':
@@ -102,23 +97,23 @@ main(int ac, char **av)
 				}
 				break;
 			default:
+				/* unrecognized -X */
 				option = NONE;
 		}
 	}
 
-	if (option == NONE) {
-		/*
-		 * parse error
-		 */
-		printf("crontab " VERSION "\n");
-		printf("crontab file <opts>  replace crontab from file\n");
-		printf("crontab -    <opts>  replace crontab from stdin\n");
-		printf("crontab -u user      specify user\n");
-		printf("crontab -l [user]    list crontab for user\n");
-		printf("crontab -e [user]    edit crontab for user\n");
-		printf("crontab -d [user]    delete crontab for user\n");
-		printf("crontab -c dir       specify crontab directory\n");
-		exit(2);
+	if (option == NONE && optind == ac - 1) {
+		if (av[optind][0] != '-') {
+			option = REPLACE;
+			repFile = av[optind];
+			optind++;
+		} else if (av[optind][1] == 0) {
+			option = REPLACE;
+			optind++;
+		}
+	}
+	if (option == NONE || optind != ac) {
+		Usage();
 	}
 
 	/*
@@ -251,6 +246,22 @@ main(int ac, char **av)
 	}
 	(volatile void)exit(0);
 	/* not reached */
+}
+
+void
+Usage(void)
+{
+	/*
+	 * parse error
+	 */
+	printf("crontab " VERSION "\n");
+	printf("crontab file [-u user]  replace crontab from file\n");
+	printf("crontab -  [-u user]    replace crontab from stdin\n");
+	printf("crontab -l [-u user]    list crontab\n");
+	printf("crontab -e [-u user]    edit crontab\n");
+	printf("crontab -d [-u user]    delete crontab\n");
+	printf("crontab -c dir <opts>   specify crontab directory\n");
+	exit(2);
 }
 
 int

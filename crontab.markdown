@@ -12,11 +12,11 @@ SYNOPSIS
 
 **crontab - [-u user]** - replace crontab from stdin
 
-**crontab -l [user]** - list crontab for user
+**crontab -l [-u user]** - list crontab for user
 
-**crontab -e [user]** - edit crontab for user
+**crontab -e [-u user]** - edit crontab for user
 
-**crontab -d [user]** - delete crontab for user
+**crontab -d [-u user]** - delete crontab for user
 
 **crontab -c dir** - specify crontab directory
 
