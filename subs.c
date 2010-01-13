@@ -13,12 +13,13 @@ Prototype void logn(int level, const char *ctl, ...);
 Prototype void logfd(int level, int fd, const char *ctl, ...);
 Prototype void fdprintf(int fd, const char *ctl, ...);
 Prototype int  ChangeUser(const char *user, short dochdir);
-Prototype void vlog(int level, int fd, const char *ctl, va_list va, va_list vb);
 Prototype void startlogger(void);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
 
+void vlog(int level, int fd, const char *ctl, va_list va, va_list vb);
 int slog(char *buf, const char *ctl, int nmax, va_list va, short suppressHeader);
+
 char Hostname[SMALL_BUFFER];
 
 
