@@ -66,6 +66,8 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			/*
 			 * when -d or -f, we always (and only) log to stderr
 			 * fd will be 2 except when 2 is bound to a execing subprocess, then it will be 8
+			 * [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate
+			 * we don't care here whether it truncates
 			 */
 			vsnprintf(buf, sizeof(buf), ctl, va);
 			write(fd, buf, strlen(buf));
@@ -170,9 +172,11 @@ startlogger (void) {
 	int logfd;
 
 	if (LoggerOpt == 0)
+		/* open syslog */
 		openlog(LOG_IDENT, LOG_CONS|LOG_PID, LOG_CRON);
 
-	else { /* test logfile */
+	else {
+		/* using logfile, check it */
 		if ((logfd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0)
 			close(logfd);
 		else
@@ -185,7 +189,8 @@ startlogger (void) {
 
 void
 initsignals (void) {
-	signal(SIGHUP, SIG_IGN);	/* JP: hmm.. but, if kill -HUP original
-							 * version - has died. ;(
-							 */
+	signal(SIGHUP, SIG_IGN); /*
+							  * JP: hmm.. but, if kill -HUP original
+							  * version - has died. ;(
+							  */
 }

@@ -11,6 +11,7 @@
 
 Prototype void RunJob(CronFile *file, CronLine *line);
 Prototype void EndJob(CronFile *file, CronLine *line, int exit_status);
+
 Prototype const char *SendMail;
 
 void
@@ -33,6 +34,7 @@ RunJob(CronFile *file, CronLine *line)
 
 	if (mailFd >= 0) {
 		line->cl_MailFlag = 1;
+		/* if we didn't specify a -m Mailto, use the local user */
 		if (!value)
 			value = file->cf_UserName;
 		fdprintf(mailFd, "To: %s\nSubject: cron for user %s %s\n\n",
@@ -152,15 +154,16 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	 */
 	if (line->cl_Delay > 0) {
 		if (exit_status == EAGAIN) {
-			/* returned EAGAIN, wait cl_Delay then retry
-			 * we base off the time the job was scheduled/started waiting, not the time it finished
-			 */
 			/*
-			line->cl_NotUntil = time(NULL) + line->cl_Delay;	// to base off time finished
-			line->cl_NotUntil += line->cl_Delay; 	// already applied
+			 * returned EAGAIN, wait cl_Delay then retry
+			 * we base off the time the job was scheduled/started waiting, not the time it finished
+			 *
+			 * line->cl_NotUntil = time(NULL) + line->cl_Delay;	// use this to base off time finished
+			 * line->cl_NotUntil += line->cl_Delay; 	// already applied
 			 */
 		} else {
-			/* process finished without returning EAGAIN (it may have returned some other error)
+			/*
+			 * process finished without returning EAGAIN (it may have returned some other error)
 			 * mark as having run and update timestamp
 			 */
 			FILE *fi;
@@ -168,10 +171,9 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			int succeeded = 0;
 			/*
 			 * we base off the time the job was scheduled/started waiting, not the time it finished
+			 *
+			 * line->cl_LastRan = time(NULL);	// use this to base off time finished
 			 */
-			/*
-			line->cl_LastRan = time(NULL);	// to base off time finished
-			*/
 			line->cl_LastRan = line->cl_NotUntil - line->cl_Delay;
 			if ((fi = fopen(line->cl_Timestamp, "w")) != NULL) {
 				if (strftime(buf, sizeof(buf), CRONSTAMP_FMT, localtime(&line->cl_LastRan)))
@@ -271,9 +273,15 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			exit(0);
 		}
 
-		/* create close-on-exec log descriptor in case exec fails */
+		/* from this point we are unpriviledged */
+
+
+		/*
+		 * create close-on-exec log descriptor in case exec fails
+		 */
+
 		dup2(2, 8);
-		fcntl(8, F_SETFD, 1);
+		fcntl(8, F_SETFD, FD_CLOEXEC);
 		fclose(stderr);
 
 		/*
@@ -281,17 +289,15 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 * mail file exists!
 		 */
 
-		dup2(mailFd, 0);
-		dup2(1, 2);
-		close(mailFd);
-
 		if (!SendMail) {
+			if (1) { /* PROBLEM SPOT */
 			fdlogf(LOG_INFO, 8, "mailing cron output for user %s %s\n",
 					file->cf_UserName,
 					line->cl_Description
 				 );
+			}
 			execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
-			/* exec failed, log error */
+			/* exec failed: log the error */
 			SendMail = SENDMAIL;
 		} else
 			execl(SendMail, SendMail, NULL, NULL);
