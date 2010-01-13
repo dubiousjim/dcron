@@ -59,7 +59,7 @@ RunJob(CronFile *file, CronLine *line)
 		 * Change running state to the user in question
 		 */
 
-		if (ChangeUser(file->cf_UserName, 1) < 0) {
+		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
 			logf(LOG_ERR, "unable to ChangeUser (user %s %s)\n",
 					file->cf_UserName,
 					line->cl_Description
@@ -265,7 +265,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 * by the mailing and we already verified the mail file.
 		 */
 
-		if (ChangeUser(file->cf_UserName, 1) < 0) {
+		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
 			logf(LOG_ERR, "unable to ChangeUser to send mail (user %s %s)\n",
 					file->cf_UserName,
 					line->cl_Description

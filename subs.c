@@ -12,7 +12,6 @@
 Prototype void logf(int level, const char *ctl, ...);
 Prototype void fdlogf(int level, int fd, const char *ctl, ...);
 Prototype void fdprintf(int fd, const char *ctl, ...);
-Prototype int  ChangeUser(const char *user, short dochdir);
 Prototype void startlogger(void);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
@@ -119,51 +118,6 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			exit(e);
 		}
 	}
-}
-
-int
-ChangeUser(const char *user, short dochdir)
-{
-	struct passwd *pas;
-
-	/*
-	 * Obtain password entry and change privilages
-	 */
-
-	if ((pas = getpwnam(user)) == 0) {
-		logf(LOG_ERR, "failed to get uid for %s\n", user);
-		return(-1);
-	}
-	setenv("USER", pas->pw_name, 1);
-	setenv("HOME", pas->pw_dir, 1);
-	setenv("SHELL", "/bin/sh", 1);
-
-	/*
-	 * Change running state to the user in question
-	 */
-
-	if (initgroups(user, pas->pw_gid) < 0) {
-		logf(LOG_ERR, "initgroups failed: %s %s\n", user, strerror(errno));
-		return(-1);
-	}
-	if (setregid(pas->pw_gid, pas->pw_gid) < 0) {
-		logf(LOG_ERR, "setregid failed: %s %d\n", user, pas->pw_gid);
-		return(-1);
-	}
-	if (setreuid(pas->pw_uid, pas->pw_uid) < 0) {
-		logf(LOG_ERR, "setreuid failed: %s %d\n", user, pas->pw_uid);
-		return(-1);
-	}
-	if (dochdir) {
-		if (chdir(pas->pw_dir) < 0) {
-			logf(LOG_ERR, "chdir failed: %s %s\n", user, pas->pw_dir);
-			if (chdir(TempDir) < 0) {
-				logf(LOG_ERR, "chdir failed: %s %s\n", user, TempDir);
-				return(-1);
-			}
-		}
-	}
-	return(pas->pw_uid);
 }
 
 

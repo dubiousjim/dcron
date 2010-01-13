@@ -13,20 +13,15 @@
 
 #include "defs.h"
 
-const char *CDir = CRONTABS;
-int   UserId;
-short ForegroundOpt = 0;
-short LoggerOpt = 0;
-char *TempDir = TMPDIR;
-
-/* not used in this program, but subs.c needs them */
-const char *LogFile = NULL;
-short LogLevel = LOG_NOTICE;
-const char *LogHeader = NULL;
+Prototype void logf(int level, const char *ctl, ...);
 
 void Usage(void);
 int GetReplaceStream(const char *user, const char *file);
 void EditFile(const char *user, const char *file);
+
+const char *CDir = CRONTABS;
+int   UserId;
+
 
 int
 main(int ac, char **av)
@@ -249,6 +244,18 @@ main(int ac, char **av)
 }
 
 void
+logf(int level, const char *ctl, ...)
+{
+	va_list va;
+	char buf[LOG_BUFFER];
+
+	va_start(va, ctl);
+	vsnprintf(buf, sizeof(buf), ctl, va);
+	write(2, buf, strlen(buf));
+	va_end(va);
+}
+
+void
 Usage(void)
 {
 	/*
@@ -302,7 +309,7 @@ GetReplaceStream(const char *user, const char *file)
 
 	close(filedes[0]);
 
-	if (ChangeUser(user, 0) < 0)
+	if (ChangeUser(user, NULL) < 0)
 		exit(0);
 
 	fd = open(file, O_RDONLY);
@@ -328,7 +335,7 @@ EditFile(const char *user, const char *file)
 		const char *ptr;
 		char visual[SMALL_BUFFER];
 
-		if (ChangeUser(user, 1) < 0)
+		if (ChangeUser(user, TMPDIR) < 0)
 			exit(0);
 		if ((ptr = getenv("EDITOR")) == NULL || strlen(ptr) >= sizeof(visual))
 			if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) >= sizeof(visual))
