@@ -44,7 +44,10 @@ main(int ac, char **av)
 	}
 	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 	/* return value >= size means result was truncated */
-	snprintf(caller, sizeof(caller), "%s", pas->pw_name);
+	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
+		errx(1, "username too long");
+	}
+
 
 	i = 1;
 	if (ac > 1) {
@@ -78,6 +81,11 @@ main(int ac, char **av)
 					pas = getpwnam(optarg);
 					if (pas) {
 						UserId = pas->pw_uid;
+						/* paranoia */
+						if ((pas = getpwuid(UserId)) == NULL) {
+							perror("getpwuid");
+							exit(1);
+						}
 					} else {
 						errx(1, "user %s unknown", optarg);
 					}
@@ -111,15 +119,6 @@ main(int ac, char **av)
 		printf("crontab -d [user]    delete crontab for user\n");
 		printf("crontab -c dir       specify crontab directory\n");
 		exit(2);
-	}
-
-	/*
-	 * Get password entry
-	 */
-
-	if ((pas = getpwuid(UserId)) == NULL) {
-		perror("getpwuid");
-		exit(1);
 	}
 
 	/*
