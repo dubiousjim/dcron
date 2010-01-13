@@ -1,5 +1,5 @@
 #!/bin/sh
-# this is a bare-bones alternative to debian's run-parts
+# this is a bare-bones alternative to Debian's run-parts
 
 if ! [ -d "$1" ]; then
    echo "Usage: $0 crondir" >&2
