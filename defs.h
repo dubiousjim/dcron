@@ -107,7 +107,7 @@
 #define MAXLINES		256		/* max lines in non-root crontabs */
 #define SMALL_BUFFER	256
 #define RW_BUFFER		1024
-#define LOG_BUFFER		1024 	/* max size of log line */
+#define LOG_BUFFER		2048 	/* max size of log line */
 
 
 
