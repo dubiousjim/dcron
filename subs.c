@@ -29,7 +29,7 @@ logn(int level, const char *ctl, ...)
 
 	va_start(va, ctl);
 	if ((ForegroundOpt != 1) && (LoggerOpt != 0)) {
-		/* create second va_list exlicitly to avoid va_copy, which is C99 */
+		/* create second va_list explicitly to avoid va_copy, which is C99 */
 		va_list vb;
 		va_start(vb, ctl);
 		vlog(level, 2, ctl, va, vb);
@@ -46,7 +46,7 @@ logfd(int level, int fd, const char *ctl, ...)
 
 	va_start(va, ctl);
 	if ((ForegroundOpt != 1) && (LoggerOpt != 0)) {
-		/* create second va_list exlicitly to avoid va_copy, which is C99 */
+		/* create second va_list explicitly to avoid va_copy, which is C99 */
 		va_list vb;
 		va_start(vb, ctl);
 		vlog(level, fd, ctl, va, vb);
@@ -77,7 +77,7 @@ vlog(int level, int fd, const char *ctl, va_list va, va_list vb)
 	static short suppressHeader = 0;
 
 	if (level <= LogLevel) {
-		vsnprintf(buf,sizeof(buf), ctl, va);
+		vsnprintf(buf, sizeof(buf), ctl, va);
 		if (ForegroundOpt == 1)
 			/* when -d or -f, we always (and only) log to stderr
 			 * fd will be 2 except when 2 is bound to a execing subprocess, then it will be 8
@@ -86,7 +86,7 @@ vlog(int level, int fd, const char *ctl, va_list va, va_list vb)
 		else
 			if (LoggerOpt == 0) syslog(level, "%s", buf);
 			else {
-				if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0) {
+				if ((logfd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
 					if ((n = slog(buf, ctl, sizeof(buf), vb, suppressHeader))) {
 						write(logfd, buf, n);
 						/* if previous write wasn't \n-terminated, we suppress header on next write */
@@ -190,10 +190,10 @@ startlogger (void) {
 	int logfd;
 
 	if (LoggerOpt == 0)
-		openlog(LOG_IDENT, LOG_CONS|LOG_PID,LOG_CRON);
+		openlog(LOG_IDENT, LOG_CONS|LOG_PID, LOG_CRON);
 
 	else { /* test logfile */
-		if ((logfd = open(LogFile,O_WRONLY|O_CREAT|O_APPEND,0600)) >= 0)
+		if ((logfd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0)
 			close(logfd);
 		else
 			errx(errno, "failed to open logfile '%s' reason: %s",
@@ -205,7 +205,7 @@ startlogger (void) {
 
 void
 initsignals (void) {
-	signal(SIGHUP,SIG_IGN);	/* JP: hmm.. but, if kill -HUP original
+	signal(SIGHUP, SIG_IGN);	/* JP: hmm.. but, if kill -HUP original
 							 * version - has died. ;(
 							 */
 }
