@@ -98,13 +98,13 @@ The following formats are also recognized:
 	# hour has elapsed since it last ran successfully
 	@hourly ID=job1 date
 
-The formats @hourly, @daily, @weekly, @monthly, and @yearly need to update timestamp
-files when their jobs complete successfully (that is, exit with code zero). The
-timestamp files are saved as /var/spool/cronstamps/user.jobname. So for all of these
-formats, the cron command needs a jobname, given by prefixing the command
-with `ID=jobname`. (This syntax was chosen to maximize the chance that our crontab
-files will be readable by other cron daemons as well. They might just interpret the ID=jobname
-as a command-line environment variable assignment.)
+The formats @hourly, @daily, @weekly, @monthly, and @yearly need to update
+timestamp files when their jobs have been run. The timestamp files are saved as
+/var/spool/cronstamps/user.jobname. So for all of these formats, the cron
+command needs a jobname, given by prefixing the command with `ID=jobname`.
+(This syntax was chosen to maximize the chance that our crontab files will be
+readable by other cron daemons as well. They might just interpret the
+ID=jobname as a command-line environment variable assignment.)
 
 There's also this esoteric option, whose usefulness will be explained later:
 
@@ -171,8 +171,10 @@ create mail aliases for them or adjust this behavior. (See crond(8) for details
 how to adjust it.)
 
 Whenever jobs return an exit code that's neither 0 nor 11 (EAGAIN), that event
-will be logged, regardless of whether any stdout or stderr is generated. Any
-jobs waiting on the failed job will also be canceled.
+will be logged, regardless of whether any stdout or stderr is generated. The job's
+timestamp will also be updated, and it won't be run again until it would next
+be normally scheduled. Any jobs waiting on the failed job will be canceled; they
+won't be run until they're next scheduled.
 
 
 TODO
