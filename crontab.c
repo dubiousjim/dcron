@@ -42,6 +42,8 @@ main(int ac, char **av)
 		perror("getpwuid");
 		exit(1);
 	}
+	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
+	/* return value >= size means result was truncated */
 	snprintf(caller, sizeof(caller), "%s", pas->pw_name);
 
 	i = 1;
@@ -70,6 +72,7 @@ main(int ac, char **av)
 					option = DELETE;
 				break;
 			case 'u':
+				/* getopt guarantees optarg != 0 here */
 				if (*optarg != 0 && getuid() == geteuid()) {
 					pas = getpwnam(optarg);
 					if (pas) {
@@ -78,10 +81,11 @@ main(int ac, char **av)
 						errx(1, "user %s unknown", optarg);
 					}
 				} else {
-					errx(1, "only the superuser may specify a user");
+					errx(1, "-u option: superuser only");
 				}
 				break;
 			case 'c':
+				/* getopt guarantees optarg != 0 here */
 				if (*optarg != 0 && getuid() == geteuid()) {
 					CDir = optarg;
 				} else {
@@ -152,6 +156,7 @@ main(int ac, char **av)
 					fclose(fi);
 				} else {
 					fprintf(stderr, "no crontab for %s\n", pas->pw_name);
+					/* no error code */
 				}
 			}
 			break;
@@ -163,6 +168,12 @@ main(int ac, char **av)
 				char tmp[] = TMPDIR "/crontab.XXXXXX";
 				char buf[RW_BUFFER];
 
+				/*
+				 * Create temp file with perm 0600 and O_EXCL flag, ensuring that this call creates the file
+				 * Read from fi for "$CDir/$USER", write to fd for temp file
+				 * EditFile changes user if necessary, and runs editor on temp file
+				 * Then we delete the temp file, keeping its fd as repFd
+				 */
 				if ((fd = mkstemp(tmp)) >= 0) {
 					chown(tmp, getuid(), getgid());
 					if ((fi = fopen(pas->pw_name, "r"))) {
@@ -187,6 +198,9 @@ main(int ac, char **av)
 				int fd;
 				int n;
 
+				/*
+				 * Read from repFd, write to fd for "$CDir/$USER.new"
+				 */
 				snprintf(path, sizeof(path), "%s.new", pas->pw_name);
 				if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
 					while ((n = read(repFd, buf, sizeof(buf))) > 0) {
@@ -259,6 +273,7 @@ GetReplaceStream(const char *user, const char *file)
 	if (pid > 0) {
 		/*
 		 * PARENT
+		 * Read from pipe[0], return it (or -1 if it's empty)
 		 */
 
 		close(filedes[1]);
@@ -271,6 +286,7 @@ GetReplaceStream(const char *user, const char *file)
 
 	/*
 	 * CHILD
+	 * Read from fd for "$file", write to pipe[1]
 	 */
 
 	close(filedes[0]);
@@ -296,7 +312,7 @@ EditFile(const char *user, const char *file)
 
 	if ((pid = fork()) == 0) {
 		/*
-		 * CHILD - change user and run editor
+		 * CHILD - change user and run editor on "$file"
 		 */
 		const char *ptr;
 		char visual[SMALL_BUFFER];
