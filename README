@@ -135,7 +135,7 @@ files and NOT from defs.h or any source file. If no prototype exists for a
 particular function, contact your vendor to get an update for your includes.
 
 At the moment, less-portable features we're aware of in the source are the
-use of getopt, strsep, strptime, and asprintf.
+use of getopt, strsep, strptime, and [v]snprintf.
 
 Changes to overridable defaults in defs.h should be made in the Makefile; you
 may submit a Makefile for your platform.  Changes to the #include's in defs.h
@@ -151,4 +151,10 @@ feature-full. We have recently added some advanced features (@noauto, FREQ= and
 AFTER= tags, advanced cron.update parsing), but we did so only when they fit
 naturally into the rest of the codebase.
 
+CREDITS
+-------
+
+We use concat.c, a lightweight replacement for asprintf, in order to be more
+portable. This was written by Solar Designer and is in the public domain. See
+<http://www.openwall.com/popa3d/>.
 

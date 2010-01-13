@@ -243,7 +243,9 @@ main(int ac, char **av)
 		perror("chmod");
 		exit(1);
 	}
-	asprintf(&TempFileFmt, "%s/cron.%%s.%%d", TempDir);
+	if (!(TempFileFmt = concat(TempDir, "/cron.%s.%d", NULL))) {
+		errx(1, "out of memory");
+	}
 
 	/*
 	 * main loop - synchronize to 1 second after the minute, minimum sleep

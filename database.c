@@ -98,7 +98,9 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 	char *fname, *ptok, *job;
 	char *path;
 
-	asprintf(&path, "%s/%s", dpath, CRONUPDATE);
+	if (!(path = concat(dpath, "/", CRONUPDATE, NULL))) {
+		errx(1, "out of memory");
+	}
 	if ((fi = fopen(path, "r")) != NULL) {
 		remove(path);
 		logn(LOG_INFO, "reading %s/%s\n", dpath, CRONUPDATE);
@@ -189,7 +191,9 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	 * Since we are resynchronizing the entire directory, remove the
 	 * the CRONUPDATE file.
 	 */
-	asprintf(&path, "%s/%s", dpath, CRONUPDATE);
+	if (!(path = concat(dpath, "/", CRONUPDATE, NULL))) {
+		errx(1, "out of memory");
+	}
 	remove(path);
 	free(path);
 
@@ -215,7 +219,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	} else {
 		if (initial_scan)
 			logn(LOG_ERR, "unable to scan directory %s\n", dpath);
-		/* softerror, do not exit the program */
+			/* softerror, do not exit the program */
 	}
 }
 
@@ -323,7 +327,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 		}
 	}
 
-	asprintf(&path, "%s/%s", dpath, fileName);
+	if (!(path = concat(dpath, "/", fileName, NULL))) {
+		errx(1, "out of memory");
+	}
 	if ((fi = fopen(path, "r")) != NULL) {
 		struct stat sbuf;
 
@@ -478,7 +484,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							 * return name = ptr, and if ptr contains sep chars, overwrite first with 0 and point ptr to next char
 							 *                    else set ptr=NULL
 							 */
-							asprintf(&line.cl_Description, "job %s", strsep(&ptr, " \t"));
+							if (!(line.cl_Description = concat("job ", strsep(&ptr, " \t"), NULL))) {
+								errx(1, "out of memory");
+							}
 							line.cl_JobName = line.cl_Description + 4;
 							if (!ptr)
 								logn(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, ID_TAG, line.cl_JobName);
@@ -605,7 +613,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				line.cl_Shell = strdup(ptr);
 
 				if (line.cl_Delay > 0) {
-					asprintf(&line.cl_Timestamp, "%s/%s.%s", TSDir, userName, line.cl_JobName);
+					if (!(line.cl_Timestamp = concat(TSDir, "/", userName, ".", line.cl_JobName, NULL))) {
+						errx(1, "out of memory");
+					}
 					line.cl_NotUntil = tnow + line.cl_Delay;
 				}
 

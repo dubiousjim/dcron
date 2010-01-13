@@ -7,15 +7,16 @@
  * May be distributed under the GNU General Public License
  */
 
-/* portability issues */
-/* 1. need _POSIX_SOURCE or _XOPEN_SOURCE for getopt */
-/* 2. need _XOPEN_SOURCE for strptime */
-/* 3. need _BSD_SOURCE for strsep */
-/* 4. need _GNU_SOURCE (which includes others) for asprintf, or provide our own */
+/*
+ * portability issues
+ * 1. need _POSIX_SOURCE or _XOPEN_SOURCE for getopt
+ * 2. need _XOPEN_SOURCE for strptime
+ * 3. need _BSD_SOURCE for strsep, snprintf, vsnprintf
+ * 4. use concat.c instead of requiring asprintf / _GNU_SOURCE
+ */
 
 #define _XOPEN_SOURCE 1
 #define _BSD_SOURCE 1
-#define _GNU_SOURCE 1
 
 #include <sys/types.h>
 #include <sys/stat.h>
