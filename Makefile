@@ -1,22 +1,22 @@
 # Makefile for Dillon's crond and crontab
 VERSION = 4.3
 
--include config
-
 # these variables can be configured by e.g. `make SCRONTABS=/different/path`
-PREFIX ?= /usr/local
-CRONTAB_GROUP ?= wheel
-SCRONTABS ?= /etc/cron.d
-CRONTABS ?= /var/spool/cron/crontabs
-CRONSTAMPS ?= /var/spool/cron/cronstamps
+PREFIX = /usr/local
+CRONTAB_GROUP = wheel
+SCRONTABS = /etc/cron.d
+CRONTABS = /var/spool/cron/crontabs
+CRONSTAMPS = /var/spool/cron/cronstamps
 # used for syslog
 LOG_IDENT = crond
 # used for logging to file (syslog manages its own timestamps)
 # if LC_TIME is set, it will override any compiled-in timestamp format
 TIMESTAMP_FMT = %b %e %H:%M:%S
-SBINDIR ?= $(PREFIX)/sbin
-BINDIR ?= $(PREFIX)/bin
-MANDIR ?= $(PREFIX)/share/man
+SBINDIR = $(PREFIX)/sbin
+BINDIR = $(PREFIX)/bin
+MANDIR = $(PREFIX)/share/man
+
+-include config
 
 
 SHELL = /bin/sh
