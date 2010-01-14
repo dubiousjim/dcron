@@ -41,7 +41,8 @@ main(int ac, char **av)
 	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 	/* return value >= size means result was truncated */
 	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
-		errx(1, "username too long");
+		logf(0, "username '%s' too long", caller);
+		exit(1);
 	}
 
 	opterr = 0;
@@ -77,10 +78,12 @@ main(int ac, char **av)
 							exit(1);
 						}
 					} else {
-						errx(1, "user %s unknown", optarg);
+						logf(0, "user '%s' unknown", optarg);
+						exit(1);
 					}
 				} else {
-					errx(1, "-u option: superuser only");
+					logf(0, "-u option: superuser only");
+					exit(1);
 				}
 				break;
 			case 'c':
@@ -88,7 +91,8 @@ main(int ac, char **av)
 				if (*optarg != 0 && getuid() == geteuid()) {
 					CDir = optarg;
 				} else {
-					errx(1, "-c option: superuser only");
+					logf(0, "-c option: superuser only");
+					exit(1);
 				}
 				break;
 			default:
@@ -118,7 +122,8 @@ main(int ac, char **av)
 	if (repFile) {
 		repFd = GetReplaceStream(caller, repFile);
 		if (repFd < 0) {
-			errx(1, "unable to read replacement file");
+			logf(0, "unable to read replacement file %s", repFile);
+			exit(1);
 		}
 	}
 
@@ -127,7 +132,8 @@ main(int ac, char **av)
 	 */
 
 	if (chdir(CDir) < 0) {
-		errx(1, "cannot change dir to %s: %s", CDir, strerror(errno));
+		logf(0, "cannot change dir to %s: %s", CDir, strerror(errno));
+		exit(1);
 	}
 
 	/*
@@ -175,7 +181,8 @@ main(int ac, char **av)
 					lseek(fd, 0L, 0);
 					repFd = fd;
 				} else {
-					errx(1, "unable to create %s", tmp);
+					logf(0, "unable to create %s: %s", tmp, strerror(errno));
+					exit(1);
 				}
 
 			}
@@ -313,8 +320,10 @@ GetReplaceStream(const char *user, const char *file)
 		exit(0);
 
 	fd = open(file, O_RDONLY);
-	if (fd < 0)
-		errx(0, "unable to open %s", file);
+	if (fd < 0) {
+		logf(0, "unable to open %s: %s", file, strerror(errno));
+		exit(1);
+	}
 	buf[0] = 0;
 	write(filedes[1], buf, 1);
 	while ((n = read(fd, buf, sizeof(buf))) > 0) {
@@ -345,8 +354,8 @@ EditFile(const char *user, const char *file)
 		/* return value >= size means result was truncated */
 		if (snprintf(visual, sizeof(visual), "%s %s", ptr, file) < sizeof(visual))
 			execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
-		perror("exec");
-		exit(0);
+		logf(0, "couldn't exec %s", visual);
+		exit(1);
 	}
 	if (pid < 0) {
 		/*
