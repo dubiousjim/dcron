@@ -191,10 +191,6 @@ main(int ac, char **av)
 	fclose(stdin);
 	fclose(stdout);
 
-	for (i = 3; i < MAXOPEN; ++i) {
-        close(i);
-    }
-
 	i = open("/dev/null", O_RDWR);
 	if (i < 0) {
 		perror("open: /dev/null");
@@ -203,6 +199,9 @@ main(int ac, char **av)
 	dup2(i, 0);
 	dup2(i, 1);
 
+	for (i = 3; i < MAXOPEN; ++i) {
+        close(i);
+    }
 
 	/* create tempdir with permissions 0755 for cron output */
 	TempDir = strdup(TMPDIR "/cron.XXXXXX");
