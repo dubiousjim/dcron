@@ -56,7 +56,6 @@ void
 vlog(int level, int fd, const char *ctl, va_list va)
 {
 	char buf[LOG_BUFFER];
-	int  logfd;
 	static short suppressHeader = 0;
 
 	if (level <= LogLevel) {
@@ -74,7 +73,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			vsnprintf(buf, sizeof(buf), ctl, va);
 			syslog(level, "%s", buf);
 
-		} else if ((logfd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
+		} else {
 			/* log to file */
 
 			time_t t = time(NULL);
@@ -103,18 +102,10 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			if ((buflen = vsnprintf(buf + hdrlen, sizeof(buf) - hdrlen, ctl, va) + hdrlen) >= sizeof(buf))
 				buflen = sizeof(buf) - 1;
 
-			write(logfd, buf, buflen);
+			write(fd, buf, buflen);
 			/* if previous write wasn't \n-terminated, we suppress header on next write */
 			suppressHeader = (buf[buflen-1] != '\n');
-			close(logfd);
 
-		} else {
-			int e = errno;
-			fdprintf(fd, "failed to open logfile '%s', reason: %s\n",
-					LogFile,
-					strerror(e)
-					);
-			exit(e);
 		}
 	}
 }
