@@ -22,7 +22,6 @@ Prototype const char *TSDir;
 Prototype const char *LogFile;
 Prototype const char *LogHeader;
 Prototype uid_t DaemonUid;
-Prototype int InSyncFileRoot;
 Prototype const char *SendMail;
 Prototype const char *Mailto;
 Prototype char *TempDir;
@@ -43,7 +42,6 @@ char *TempDir;
 char *TempFileFmt;
 
 uid_t DaemonUid;
-int InSyncFileRoot;
 
 int
 main(int ac, char **av)
