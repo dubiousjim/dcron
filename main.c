@@ -245,22 +245,21 @@ main(int ac, char **av)
 		if (SyslogOpt) {
 			/* start SIGHUP handling while stderr still open */
 			initsignals();
-
+			/* 2> /dev/null */
 			fclose(stderr);
-			dup2(i, 2);
+			dup2(1, 2);
 
 			/* open syslog */
 			openlog(LOG_IDENT, LOG_CONS|LOG_PID, LOG_CRON);
 
 		} else {
 			/* open logfile */
-			if ((i = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
+			if ((fd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
 				/* start SIGHUP ignoring while stderr still open */
 				initsignals();
-
-				/* FIXME right to fclose(stderr)? */
+				/* 2> LogFile */
 				fclose(stderr);
-				dup2(i, 2);
+				dup2(fd, 2);
 			} else {
 				int n = errno;
 				fdprintf(2, "failed to open logfile '%s', reason: %s", LogFile, strerror(n));
