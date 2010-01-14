@@ -99,7 +99,9 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 	char *path;
 
 	if (!(path = concat(dpath, "/", CRONUPDATE, NULL))) {
-		errx(1, "out of memory");
+		errno = ENOMEM;
+		perror("CheckUpdates");
+		exit(1);
 	}
 	if ((fi = fopen(path, "r")) != NULL) {
 		remove(path);
@@ -192,7 +194,9 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	 * the CRONUPDATE file.
 	 */
 	if (!(path = concat(dpath, "/", CRONUPDATE, NULL))) {
-		errx(1, "out of memory");
+		errno = ENOMEM;
+		perror("SynchronizeDir");
+		exit(1);
 	}
 	remove(path);
 	free(path);
@@ -328,7 +332,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 	}
 
 	if (!(path = concat(dpath, "/", fileName, NULL))) {
-		errx(1, "out of memory");
+		errno = ENOMEM;
+		perror("SynchronizeFile");
+		exit(1);
 	}
 	if ((fi = fopen(path, "r")) != NULL) {
 		struct stat sbuf;
@@ -485,7 +491,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							 *                    else set ptr=NULL
 							 */
 							if (!(line.cl_Description = concat("job ", strsep(&ptr, " \t"), NULL))) {
-								errx(1, "out of memory");
+								errno = ENOMEM;
+								perror("SynchronizeFile");
+								exit(1);
 							}
 							line.cl_JobName = line.cl_Description + 4;
 							if (!ptr)
@@ -614,7 +622,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 
 				if (line.cl_Delay > 0) {
 					if (!(line.cl_Timestamp = concat(TSDir, "/", userName, ".", line.cl_JobName, NULL))) {
-						errx(1, "out of memory");
+						errno = ENOMEM;
+						perror("SynchronizeFile");
+						exit(1);
 					}
 					line.cl_NotUntil = tnow + line.cl_Delay;
 				}

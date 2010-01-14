@@ -215,7 +215,9 @@ main(int ac, char **av)
 		exit(1);
 	}
 	if (!(TempFileFmt = concat(TempDir, "/cron.%s.%d", NULL))) {
-		errx(1, "out of memory");
+		errno = ENOMEM;
+		perror("main");
+		exit(1);
 	}
 
 	if (ForegroundOpt == 0) {
