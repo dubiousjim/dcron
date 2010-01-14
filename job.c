@@ -25,14 +25,14 @@ RunJob(CronFile *file, CronLine *line)
 	line->cl_MailFlag = 0;
 
 	/*
-	 * open mail file - owner root so nobody can screw with it.
+	 * try to open mail output file - owner root so nobody can screw with it.
 	 */
 
 	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, (int)getpid());
-	mailFd = open(mailFile, O_CREAT|O_TRUNC|O_WRONLY|O_EXCL|O_APPEND, 0600);
 
-	if (mailFd >= 0) {
+	if ((mailFd = open(mailFile, O_CREAT|O_TRUNC|O_WRONLY|O_EXCL|O_APPEND, 0600)) >= 0) {
+		/* success: write headers to mailFile */
 		line->cl_MailFlag = 1;
 		/* if we didn't specify a -m Mailto, use the local user */
 		if (!value)
@@ -42,9 +42,14 @@ RunJob(CronFile *file, CronLine *line)
 				file->cf_UserName,
 				line->cl_Description
 				);
+		/* remember mailFile's size */
 		line->cl_MailPos = lseek(mailFd, 0, 1);
 	}
-	/* else we issue warning later */
+	/*
+	 * else no mailFd, we complain later and don't check job output
+	 * but we still run the job if we can
+	 */
+
 
 	/*
 	 * Fork as the user in question and run program
@@ -52,10 +57,8 @@ RunJob(CronFile *file, CronLine *line)
 
 	if ((line->cl_Pid = fork()) == 0) {
 		/*
-		 * CHILD, FORK OK
-		 */
-
-		/*
+		 * CHILD, FORK OK, PRE-EXEC
+		 *
 		 * Change running state to the user in question
 		 */
 
@@ -67,38 +70,56 @@ RunJob(CronFile *file, CronLine *line)
 			exit(0);
 		}
 
+		/* from this point we are unpriviledged */
+
 		if (DebugOpt)
 			logf(LOG_DEBUG, "child running: %s\n", line->cl_Description);
 
-	/* Setup close-on-exec descriptor in case exec fails */
-	dup2(2, 8);
-	fcntl(8, F_SETFD, 1);
-	fclose(stderr);
-
-	/* stdin is already /dev/null, setup stdout and stderr */
+		/*
+		 * Inside child, we copy our fd 2 (which may be /dev/null) into
+		 * an open-until-exec fd 8
+		 */
+		dup2(2, 8);
+		fcntl(8, F_SETFD, FD_CLOEXEC);
+		fclose(stderr);
 
 		if (mailFd >= 0) {
+			/* stdin is already /dev/null, setup stdout and stderr > mailFile */
 			dup2(mailFd, 1);
 			dup2(mailFd, 2);
 			close(mailFd);
 		} else {
+			/* complain about no mailFd to log (now associated with fd 8) */
 			fdlogf(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
 					mailFile,
 					file->cf_UserName,
 					line->cl_Description
 				   );
+			/* stderr > /dev/null */
+			dup2(1, 2);
 		}
+
 		execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL, NULL);
+		/*
+		 * CHILD FAILED TO EXEC CRONJOB
+		 *
+		 * Complain to our log (now associated with fd 8)
+		 */
 		fdlogf(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
 				file->cf_UserName,
 				line->cl_Shell
 			   );
-		/* we also write error to the mailed cron output */
+		/*
+		 * Also complain to stdout, which will be either the mailFile or /dev/null
+		 */
 		fdprintf(1, "unable to exec: /bin/sh -c %s\n", line->cl_Shell);
 		exit(0);
+
 	} else if (line->cl_Pid < 0) {
 		/*
 		 * PARENT, FORK FAILED
+		 *
+		 * Complain to log (with regular fd 2)
 		 */
 		logf(LOG_ERR, "unable to fork (user %s %s)\n",
 				file->cf_UserName,
@@ -106,6 +127,7 @@ RunJob(CronFile *file, CronLine *line)
 				);
 		line->cl_Pid = 0;
 		remove(mailFile);
+
 	} else {
 		/*
 		 * PARENT, FORK SUCCESS
@@ -142,7 +164,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 
 	if (line->cl_Pid <= 0) {
 		/*
-		 * No job
+		 * No job. This should never happen.
 		 */
 		line->cl_Pid = 0;
 		return;
@@ -150,7 +172,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 
 
 	/*
-	 * check return status?
+	 * check return status
 	 */
 	if (line->cl_Delay > 0) {
 		if (exit_status == EAGAIN) {
@@ -221,16 +243,18 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 					);
 
 
+	/*
+	 * Calculate mailFile's name before clearing Pid
+	 */
 	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, line->cl_Pid);
 
 	line->cl_Pid = 0;
 
-	if (line->cl_MailFlag != 1)
-	/*
-	 * End of job and no mail file
-	 */
+	if (line->cl_MailFlag != 1) {
+		/* End of job and no mail file */
 		return;
+	}
 
 	line->cl_MailFlag = 0;
 
@@ -245,6 +269,8 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		return;
 	}
 
+	/* Was mailFile tampered with, or didn't grow? */
+
 	if (fstat(mailFd, &sbuf) < 0 ||
 			sbuf.st_uid != DaemonUid ||
 			sbuf.st_nlink != 0 ||
@@ -257,11 +283,9 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 
 	if ((line->cl_Pid = fork()) == 0) {
 		/*
-		 * CHILD, FORK OK
-		 */
-
-		/*
-		 * change user id - no way in hell security can be compromised
+		 * CHILD, FORK OK, PRE-EXEC
+		 *
+		 * Change user id - no way in hell security can be compromised
 		 * by the mailing and we already verified the mail file.
 		 */
 
@@ -275,9 +299,9 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 
 		/* from this point we are unpriviledged */
 
-
 		/*
-		 * create close-on-exec log descriptor in case exec fails
+		 * Inside child, we copy our fd 2 (which may be /dev/null) into
+		 * an open-until-exec fd 8
 		 */
 
 		dup2(2, 8);
@@ -285,22 +309,39 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		fclose(stderr);
 
 		/*
-		 * run sendmail with mail file as standard input, only if
-		 * mail file exists!
+		 * Run sendmail with stdin < mailFile and stderr > /dev/null
 		 */
 
+		dup2(mailFd, 0);
+		dup2(1, 2);
+		close(mailFd);
+
 		if (!SendMail) {
-			if (1) { /* PROBLEM SPOT */
+			/*
+			 * If using standard sendmail, note in our log (now associated with fd 8)
+			 * that we're trying to mail output
+			 */
 			fdlogf(LOG_INFO, 8, "mailing cron output for user %s %s\n",
 					file->cf_UserName,
 					line->cl_Description
 				 );
-			}
 			execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
-			/* exec failed: log the error */
+
+			/* exec failed: pass through and log the error */
 			SendMail = SENDMAIL;
-		} else
+
+		} else {
+			/*
+			 * If using custom mailer script, just try to exec it
+			 */
 			execl(SendMail, SendMail, NULL, NULL);
+		}
+
+		/*
+		 * CHILD FAILED TO EXEC SENDMAIL
+		 *
+		 * Complain to our log (now associated with fd 8)
+		 */
 
 		fdlogf(LOG_WARNING, 8, "unable to exec %s: cron output for user %s %s to /dev/null\n",
 				SendMail,
@@ -308,9 +349,12 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				line->cl_Description
 			   );
 		exit(0);
+
 	} else if (line->cl_Pid < 0) {
 		/*
 		 * PARENT, FORK FAILED
+		 *
+		 * Complain to our log (with regular fd 2)
 		 */
 		logf(LOG_WARNING, "unable to fork: cron output for user %s %s to /dev/null\n",
 				file->cf_UserName,
