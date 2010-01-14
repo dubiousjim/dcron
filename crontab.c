@@ -244,7 +244,7 @@ main(int ac, char **av)
 			fprintf(stderr, "unable to append to %s/%s\n", CDir, CRONUPDATE);
 		}
 	}
-	(volatile void)exit(0);
+	exit(0);
 	/* not reached */
 }
 
