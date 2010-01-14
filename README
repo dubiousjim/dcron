@@ -180,7 +180,7 @@ into the existing codebase.
 
 Our goal is also to make this program compilable in as C89-strict a manner as
 possible. At the moment, less-portable features we're aware of in the source
-are the use of getopt, strsep, strptime, and [v]snprintf. We'll reduce these
+are the use of getopt, sigaction, strsep, strptime, and [v]snprintf. We'll reduce these
 dependencies as feasible. Do let us know if any of them are an obstacle to
 using crond on your platform.
 

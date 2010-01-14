@@ -61,7 +61,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 	static short suppressHeader = 0;
 
 	if (level <= LogLevel) {
-		if (ForegroundOpt == 1) {
+		if (ForegroundOpt) {
 			/*
 			 * when -d or -f, we always (and only) log to stderr
 			 * fd will be 2 except when 2 is bound to a execing subprocess, then it will be 8
@@ -70,7 +70,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			 */
 			vsnprintf(buf, sizeof(buf), ctl, va);
 			write(fd, buf, strlen(buf));
-		} else if (LoggerOpt == 0) {
+		} else if (SyslogOpt) {
 			/* log to syslog */
 			vsnprintf(buf, sizeof(buf), ctl, va);
 			syslog(level, "%s", buf);
@@ -111,7 +111,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 
 		} else {
 			int e = errno;
-			fdprintf(fd, "failed to open logfile '%s' reason: %s\n",
+			fdprintf(fd, "failed to open logfile '%s', reason: %s\n",
 					LogFile,
 					strerror(e)
 					);
@@ -123,28 +123,51 @@ vlog(int level, int fd, const char *ctl, va_list va)
 
 void
 startlogger (void) {
-	int logfd;
-
-	if (LoggerOpt == 0)
+	int fd;
+	if (SyslogOpt) {
 		/* open syslog */
 		openlog(LOG_IDENT, LOG_CONS|LOG_PID, LOG_CRON);
 
-	else {
+	} else {
 		/* using logfile, check it */
-		if ((logfd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0)
-			close(logfd);
-		else
-			errx(errno, "failed to open logfile '%s' reason: %s",
+		if ((fd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
+			dup2(fd, 2);
+			close(fd);
+		} else {
+			errx(errno, "failed to open logfile '%s', reason: %s",
 					LogFile,
 					strerror(errno)
 				);
+		}
+	}
+}
+
+void reopenlogger(int sig) {
+	int fd;
+	if (getpid() == DaemonPid) {
+		/* only daemon handles, children should ignore */
+		if ((fd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) < 0) {
+			/* can't reopen log file, exit */
+			exit(errno);
+		}
+		dup2(fd, 2);
+		close(fd);
 	}
 }
 
 void
 initsignals (void) {
-	signal(SIGHUP, SIG_IGN); /*
-							  * JP: hmm.. but, if kill -HUP original
-							  * version - has died. ;(
-							  */
+	struct sigaction sa;
+	sa.sa_flags = SA_RESTART;
+	if (!ForegroundOpt && !SyslogOpt)
+		sa.sa_handler = reopenlogger;
+	else
+		sa.sa_handler = SIG_IGN;
+	if (sigaction (SIGHUP, &sa, NULL) != 0) {
+		errx(errno, "failed to start SIGHUP handling, reason: %s",
+				strerror(errno)
+			);
+	}
 }
+
+

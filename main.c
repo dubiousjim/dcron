@@ -15,13 +15,14 @@
 Prototype short DebugOpt;
 Prototype short LogLevel;
 Prototype short ForegroundOpt;
-Prototype short LoggerOpt;
+Prototype short SyslogOpt;
 Prototype const char *CDir;
 Prototype const char *SCDir;
 Prototype const char *TSDir;
 Prototype const char *LogFile;
 Prototype const char *LogHeader;
 Prototype uid_t DaemonUid;
+Prototype pid_t DaemonPid;
 Prototype const char *SendMail;
 Prototype const char *Mailto;
 Prototype char *TempDir;
@@ -30,7 +31,7 @@ Prototype char *TempFileFmt;
 short DebugOpt = 0;
 short LogLevel = LOG_LEVEL;
 short ForegroundOpt = 0;
-short LoggerOpt;
+short SyslogOpt = 1;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
 const char *TSDir = CRONSTAMPS;
@@ -42,6 +43,7 @@ char *TempDir;
 char *TempFileFmt;
 
 uid_t DaemonUid;
+pid_t DaemonPid;
 
 int
 main(int ac, char **av)
@@ -134,10 +136,10 @@ main(int ac, char **av)
 				ForegroundOpt = 0;
 				break;
 			case 'S':			/* log through syslog */
-				LoggerOpt = 0;
+				SyslogOpt = 1;
 				break;
 			case 'L':			/* use internal log formatter */
-				LoggerOpt = 1;
+				SyslogOpt = 0;
 				LogFile = optarg;
 				/* if LC_TIME is defined, we use it for logging to file instead of compiled-in TIMESTAMP_FMT */
 				if (getenv("LC_TIME") != NULL) {
@@ -227,10 +229,9 @@ main(int ac, char **av)
 		}
 		/* child continues */
 
+		startlogger();
 	}
 
-	(void)startlogger();		/* need if syslog mode selected */
-	(void)initsignals();		/* set some signal handlers */
 
 	/* create tempdir with permissions 0755 for cron output */
 	TempDir = strdup(TMPDIR "/cron.XXXXXX"); 
@@ -246,6 +247,8 @@ main(int ac, char **av)
 		errx(1, "out of memory");
 	}
 
+	DaemonPid = getpid();
+	initsignals();		/* start SIGHUP handling */
 
 
 	/*

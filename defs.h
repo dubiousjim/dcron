@@ -9,7 +9,7 @@
 
 /*
  * portability issues
- * 1. need _POSIX_SOURCE or _XOPEN_SOURCE for getopt
+ * 1. need _POSIX_SOURCE or _XOPEN_SOURCE for getopt, sigaction
  * 2. need _XOPEN_SOURCE for strptime
  * 3. need _BSD_SOURCE for strsep, snprintf, vsnprintf
  * 4. use concat.c instead of requiring asprintf / _GNU_SOURCE
