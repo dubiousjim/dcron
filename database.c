@@ -363,7 +363,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				if (--maxEntries == 0)
 					break;
 
-				bzero(&line, sizeof(line));
+				memset(&line, 0, sizeof(line));
 
 				if (DebugOpt)
 					logf(LOG_DEBUG, "User %s Entry %s\n", userName, buf);
