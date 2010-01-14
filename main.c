@@ -199,10 +199,6 @@ main(int ac, char **av)
 	dup2(i, 0);
 	dup2(i, 1);
 
-	for (i = 3; i < MAXOPEN; ++i) {
-        close(i);
-    }
-
 	/* create tempdir with permissions 0755 for cron output */
 	TempDir = strdup(TMPDIR "/cron.XXXXXX");
 	if (mkdtemp(TempDir) == NULL) {
@@ -224,12 +220,11 @@ main(int ac, char **av)
 		int fd;
 		int pid;
 
-		fclose(stderr);
-		dup2(i, 2);
-
+		/* FIXME: don't know if this works well here */
 		if (setsid() < 0)
 			perror("setsid");
 
+		/* FIXME should understand this better; and can we let fd just be closed below? */
 		if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
 			ioctl(fd, TIOCNOTTY, 0);
 			close(fd);
@@ -245,9 +240,32 @@ main(int ac, char **av)
 		}
 		/* child continues */
 
-		startlogger();
+		/* setup logging for backgrounded daemons */
 
+		if (SyslogOpt) {
+			/* open syslog */
+			openlog(LOG_IDENT, LOG_CONS|LOG_PID, LOG_CRON);
+			fclose(stderr);
+			dup2(i, 2);
+
+		} else {
+			/* open logfile */
+			if ((i = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
+				/* FIXME right to fclose(stderr)? */
+				fclose(stderr);
+				dup2(i, 2);
+			} else {
+				int n = errno;
+				fdprintf(2, "failed to open logfile '%s', reason: %s", LogFile, strerror(n));
+				exit(n);
+			}
+		}
 	}
+
+	/* close all other fds, including the ones we opened as /dev/null and LogFile */
+	for (i = 3; i < MAXOPEN; ++i) {
+        close(i);
+    }
 
 	DaemonPid = getpid();
 	initsignals();		/* start SIGHUP handling */

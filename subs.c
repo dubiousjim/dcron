@@ -12,7 +12,6 @@
 Prototype void logf(int level, const char *ctl, ...);
 Prototype void fdlogf(int level, int fd, const char *ctl, ...);
 Prototype void fdprintf(int fd, const char *ctl, ...);
-Prototype void startlogger(void);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
 
@@ -120,28 +119,6 @@ vlog(int level, int fd, const char *ctl, va_list va)
 	}
 }
 
-
-void
-startlogger (void) {
-	int fd;
-	if (SyslogOpt) {
-		/* open syslog */
-		openlog(LOG_IDENT, LOG_CONS|LOG_PID, LOG_CRON);
-
-	} else {
-		/* using logfile, check it */
-		if ((fd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
-			dup2(fd, 2);
-			close(fd);
-		} else {
-			errx(errno, "failed to open logfile '%s', reason: %s",
-					LogFile,
-					strerror(errno)
-				);
-		}
-	}
-}
-
 void reopenlogger(int sig) {
 	int fd;
 	if (getpid() == DaemonPid) {
@@ -169,5 +146,4 @@ initsignals (void) {
 			);
 	}
 }
-
 
