@@ -217,14 +217,16 @@ main(int ac, char **av)
 			close(fd);
 		}
 
-		pid = fork();
-
-		if (pid < 0) {
+		if ((pid = fork()) < 0) {
+			/* fork failed */
 			perror("fork");
 			exit(1);
-		}
-		if (pid > 0)
+		} else if (pid > 0) {
+			/* parent */
 			exit(0);
+		}
+		/* child continues */
+
 	}
 
 	(void)startlogger();		/* need if syslog mode selected */
@@ -243,6 +245,8 @@ main(int ac, char **av)
 	if (!(TempFileFmt = concat(TempDir, "/cron.%s.%d", NULL))) {
 		errx(1, "out of memory");
 	}
+
+
 
 	/*
 	 * main loop - synchronize to 1 second after the minute, minimum sleep
