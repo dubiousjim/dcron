@@ -203,6 +203,21 @@ main(int ac, char **av)
 	dup2(i, 0);
 	dup2(i, 1);
 
+
+	/* create tempdir with permissions 0755 for cron output */
+	TempDir = strdup(TMPDIR "/cron.XXXXXX");
+	if (mkdtemp(TempDir) == NULL) {
+		perror("mkdtemp");
+		exit(1);
+	}
+	if (chmod(TempDir, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)) {
+		perror("chmod");
+		exit(1);
+	}
+	if (!(TempFileFmt = concat(TempDir, "/cron.%s.%d", NULL))) {
+		errx(1, "out of memory");
+	}
+
 	if (ForegroundOpt == 0) {
 
 		int fd;
@@ -230,21 +245,7 @@ main(int ac, char **av)
 		/* child continues */
 
 		startlogger();
-	}
 
-
-	/* create tempdir with permissions 0755 for cron output */
-	TempDir = strdup(TMPDIR "/cron.XXXXXX"); 
-	if (mkdtemp(TempDir) == NULL) {
-		perror("mkdtemp");
-		exit(1);
-	}
-	if (chmod(TempDir, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)) {
-		perror("chmod");
-		exit(1);
-	}
-	if (!(TempFileFmt = concat(TempDir, "/cron.%s.%d", NULL))) {
-		errx(1, "out of memory");
 	}
 
 	DaemonPid = getpid();
