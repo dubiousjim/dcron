@@ -27,7 +27,7 @@ Prototype const char *Mailto;
 Prototype char *TempDir;
 Prototype char *TempFileFmt;
 
-short DebugOpt;
+short DebugOpt = 0;
 short LogLevel = LOG_LEVEL;
 short ForegroundOpt = 0;
 short LoggerOpt;
