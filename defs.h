@@ -29,7 +29,9 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <pwd.h>
+#ifndef S_SPLINT_S
 #include <unistd.h>
+#endif
 #include <grp.h>
 #include <syslog.h>
 #include <signal.h>
