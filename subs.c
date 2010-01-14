@@ -126,15 +126,19 @@ void reopenlogger(int sig) {
 void
 initsignals (void) {
 	struct sigaction sa;
+
+	/* save daemon's pid globally */
+	DaemonPid = getpid();
+
 	sa.sa_flags = SA_RESTART;
 	if (!ForegroundOpt && !SyslogOpt)
 		sa.sa_handler = reopenlogger;
 	else
 		sa.sa_handler = SIG_IGN;
 	if (sigaction (SIGHUP, &sa, NULL) != 0) {
-		errx(errno, "failed to start SIGHUP handling, reason: %s",
-				strerror(errno)
-			);
+		int n = errno;
+		fdprintf(2, "failed to start SIGHUP handling, reason: %s", strerror(errno));
+		exit(n);
 	}
 }
 

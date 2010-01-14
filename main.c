@@ -243,14 +243,21 @@ main(int ac, char **av)
 		/* setup logging for backgrounded daemons */
 
 		if (SyslogOpt) {
-			/* open syslog */
-			openlog(LOG_IDENT, LOG_CONS|LOG_PID, LOG_CRON);
+			/* start SIGHUP handling while stderr still open */
+			initsignals();
+
 			fclose(stderr);
 			dup2(i, 2);
+
+			/* open syslog */
+			openlog(LOG_IDENT, LOG_CONS|LOG_PID, LOG_CRON);
 
 		} else {
 			/* open logfile */
 			if ((i = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
+				/* start SIGHUP ignoring while stderr still open */
+				initsignals();
+
 				/* FIXME right to fclose(stderr)? */
 				fclose(stderr);
 				dup2(i, 2);
@@ -260,15 +267,15 @@ main(int ac, char **av)
 				exit(n);
 			}
 		}
+	} else {
+		/* daemon in foreground, stderr stays open, start SIGHUP ignoring */
+		initsignals();
 	}
 
 	/* close all other fds, including the ones we opened as /dev/null and LogFile */
 	for (i = 3; i < MAXOPEN; ++i) {
         close(i);
     }
-
-	DaemonPid = getpid();
-	initsignals();		/* start SIGHUP handling */
 
 
 	/*
