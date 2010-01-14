@@ -9,9 +9,10 @@
 
 /*
  * portability issues
- * 1. need _POSIX_SOURCE or _XOPEN_SOURCE for getopt, sigaction
+ * 0. gcc defaults to _BSD_SOURCE and _POSIX_SOURCE
+ * 1. need _POSIX_SOURCE or _XOPEN_SOURCE for getopt, fileno, sigaction
  * 2. need _XOPEN_SOURCE for strptime
- * 3. need _BSD_SOURCE for strsep, snprintf, vsnprintf
+ * 3. need _BSD_SOURCE for setenv, mk{d,s}temp, [v]snprintf, initgroups, strsep, strdup, setre{u,g}id, gethostname, perror
  * 4. use concat.c instead of requiring asprintf / _GNU_SOURCE
  */
 

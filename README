@@ -178,11 +178,10 @@ adding features. Those advanced features we have added recently (such as
 @noauto, FREQ= and AFTER= tags, advanced cron.update parsing) fit naturally
 into the existing codebase.
 
-Our goal is also to make this program compilable in as C89-strict a manner as
-possible. At the moment, less-portable features we're aware of in the source
-are the use of getopt, sigaction, strsep, strptime, and [v]snprintf. We'll reduce these
-dependencies as feasible. Do let us know if any of them are an obstacle to
-using crond on your platform.
+Our goal is also to make this program compilable in as near to a C89-strict a
+manner as possible. Less-portable features we're aware of are described in the
+comments to defs.h. We'll reduce these dependencies as feasible. Do let us know
+if any of them are an obstacle to using crond on your platform.
 
 Changes to defs.h, whether to override defaults or to accommodate your platform,
 should be made by a combination of a -D option in the Makefile
