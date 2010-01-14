@@ -535,7 +535,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 								} else {
 									int waitfor = 0;
 									char *w, *wsave;
-									if ((w = index(name, '/')) != NULL) {
+									if ((w = strchr(name, '/')) != NULL) {
 										wsave = w++;
 										w = ParseInterval(&waitfor, w);
 										if (!w || *w != 0) {
