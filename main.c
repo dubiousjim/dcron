@@ -220,16 +220,6 @@ main(int ac, char **av)
 		int fd;
 		int pid;
 
-		/* FIXME: don't know if this works well here */
-		if (setsid() < 0)
-			perror("setsid");
-
-		/* FIXME should understand this better; and can we let fd just be closed below? */
-		if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
-			ioctl(fd, TIOCNOTTY, 0);
-			close(fd);
-		}
-
 		if ((pid = fork()) < 0) {
 			/* fork failed */
 			perror("fork");
@@ -239,6 +229,15 @@ main(int ac, char **av)
 			exit(0);
 		}
 		/* child continues */
+
+		/* become session leader, detach from terminal */
+
+		if (setsid() < 0)
+			perror("setsid");
+		if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+			ioctl(fd, TIOCNOTTY, 0);
+			close(fd);
+		}
 
 		/* setup logging for backgrounded daemons */
 
