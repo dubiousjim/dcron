@@ -1224,9 +1224,6 @@ CheckJobs(void)
 							status = 1;
 						EndJob(file, line, status);
 
-						/* QUESTION when would EndJob return with cl_Pid still running? */
-						if (line->cl_Pid)
-							file->cf_Running = 1;
 					} else if (r == 0) {
 						file->cf_Running = 1;
 					}

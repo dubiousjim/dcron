@@ -99,6 +99,12 @@ RunJob(CronFile *file, CronLine *line)
 			dup2(1, 2);
 		}
 
+		/*
+		 * Start a new process group, so that children still in the crond's process group
+		 * are all mailjobs.
+		 */
+		setpgid(0, 0);
+
 		execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL);
 		/*
 		 * CHILD FAILED TO EXEC CRONJOB
@@ -151,7 +157,7 @@ RunJob(CronFile *file, CronLine *line)
 }
 
 /*
- * EndJob - called when job terminates and when mail terminates
+ * EndJob - called when main job terminates
  */
 
 void
@@ -360,12 +366,17 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				file->cf_UserName,
 				line->cl_Description
 			);
+		line->cl_Pid = 0;
 	} else {
 		/*
 		 * PARENT, FORK OK
+		 *
+		 * We clear cl_Pid even when mailjob successfully forked
+		 * and catch the dead mailjobs with our SIGCHLD handler.
 		 */
+		line->cl_Pid = 0;
 	}
-	line->cl_Pid = 0;
-	close(mailFd);
-}
 
+	close(mailFd);
+
+}
