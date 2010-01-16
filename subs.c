@@ -128,7 +128,14 @@ void waitmailjob(int sig) {
 	 * Wait for any children in our process group.
 	 * These will all be mailjobs.
 	 */
-	while (waitpid(-DaemonPid, NULL, WNOHANG) > 0);
+	pid_t child;
+	do {
+		child = waitpid(-DaemonPid, NULL, WNOHANG);
+		/* call was interrupted, try again: won't happen because we use SA_RESTART */
+		/* if (child == (pid_t)-1 && errno == EINTR) continue; */
+	} while (child > (pid_t) 0);
+	/* if no pending children, child,errno == -1,ECHILD */
+	/* if all children still running, child == 0 */
 }
 
 void
