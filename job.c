@@ -243,18 +243,18 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 					);
 
 
+	if (line->cl_MailFlag != 1) {
+		/* End of job and no mail file */
+		line->cl_Pid = 0;
+		return;
+	}
+
 	/*
-	 * Calculate mailFile's name before clearing Pid
+	 * Calculate mailFile's name before clearing cl_Pid
 	 */
 	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, line->cl_Pid);
-
 	line->cl_Pid = 0;
-
-	if (line->cl_MailFlag != 1) {
-		/* End of job and no mail file */
-		return;
-	}
 
 	line->cl_MailFlag = 0;
 
