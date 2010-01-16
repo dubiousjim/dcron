@@ -1182,7 +1182,7 @@ RunJobs(void)
 							line->cl_Description
 						);
 					if (line->cl_Pid < 0)
-						/* how could this happen? RunJob will leave cl_Pid set to 0 or the actual pid */
+						/* QUESTION how could this happen? RunJob will leave cl_Pid set to 0 or the actual pid */
 						file->cf_Ready = 1;
 					else if (line->cl_Pid > 0)
 						file->cf_Running = 1;
@@ -1215,12 +1215,16 @@ CheckJobs(void)
 					int status;
 					int r = waitpid(line->cl_Pid, &status, WNOHANG);
 
+					/* waitpid returns -1 for error, 0 if cl_Pid still running, cl_Pid if it's dead */
+
 					if (r < 0 || r == line->cl_Pid) {
 						if (r > 0 && WIFEXITED(status))
 							status = WEXITSTATUS(status);
 						else
 							status = 1;
 						EndJob(file, line, status);
+
+						/* QUESTION when would EndJob return with cl_Pid still running? */
 						if (line->cl_Pid)
 							file->cf_Running = 1;
 					} else if (r == 0) {
