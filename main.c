@@ -242,7 +242,7 @@ main(int ac, char **av)
 		/* setup logging for backgrounded daemons */
 
 		if (SyslogOpt) {
-			/* start SIGHUP handling while stderr still open */
+			/* start SIGHUP and SIGCHLD handling while stderr still open */
 			initsignals();
 			/* 2> /dev/null */
 			fclose(stderr);
@@ -254,7 +254,7 @@ main(int ac, char **av)
 		} else {
 			/* open logfile */
 			if ((fd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
-				/* start SIGHUP ignoring while stderr still open */
+				/* start SIGHUP ignoring, SIGCHLD handling while stderr still open */
 				initsignals();
 				/* 2> LogFile */
 				fclose(stderr);
@@ -274,7 +274,7 @@ main(int ac, char **av)
 			exit(1);
 		}
 
-		/* stderr stays open, start SIGHUP ignoring */
+		/* stderr stays open, start SIGHUP ignoring, SIGCHLD handling */
 		initsignals();
 	}
 

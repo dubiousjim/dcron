@@ -123,9 +123,18 @@ void reopenlogger(int sig) {
 	}
 }
 
+void waitmailjob(int sig) {
+	/*
+	 * Wait for any children in our process group.
+	 * These will all be mailjobs.
+	 */
+	while (waitpid(-DaemonPid, NULL, WNOHANG) > 0);
+}
+
 void
 initsignals (void) {
 	struct sigaction sa;
+	int n;
 
 	/* save daemon's pid globally */
 	DaemonPid = getpid();
@@ -137,9 +146,17 @@ initsignals (void) {
 	else
 		sa.sa_handler = SIG_IGN;
 	if (sigaction (SIGHUP, &sa, NULL) != 0) {
-		int n = errno;
+		n = errno;
 		fdprintf(2, "failed to start SIGHUP handling, reason: %s", strerror(errno));
 		exit(n);
 	}
+	sa.sa_flags = SA_RESTART;
+	sa.sa_handler = waitmailjob;
+	if (sigaction (SIGCHLD, &sa, NULL) != 0) {
+		n = errno;
+		fdprintf(2, "failed to start SIGCHLD handling, reason: %s", strerror(errno));
+		exit(n);
+	}
+
 }
 
