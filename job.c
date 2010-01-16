@@ -99,7 +99,7 @@ RunJob(CronFile *file, CronLine *line)
 			dup2(1, 2);
 		}
 
-		execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL, NULL);
+		execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL);
 		/*
 		 * CHILD FAILED TO EXEC CRONJOB
 		 *
@@ -325,7 +325,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 					file->cf_UserName,
 					line->cl_Description
 				 );
-			execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL, NULL);
+			execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL);
 
 			/* exec failed: pass through and log the error */
 			SendMail = SENDMAIL;
@@ -334,7 +334,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			/*
 			 * If using custom mailer script, just try to exec it
 			 */
-			execl(SendMail, SendMail, NULL, NULL);
+			execl(SendMail, SendMail, NULL);
 		}
 
 		/*
