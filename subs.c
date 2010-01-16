@@ -130,6 +130,7 @@ initsignals (void) {
 	/* save daemon's pid globally */
 	DaemonPid = getpid();
 
+	/* restart any system calls that were interrupted by signal */
 	sa.sa_flags = SA_RESTART;
 	if (!ForegroundOpt && !SyslogOpt)
 		sa.sa_handler = reopenlogger;
