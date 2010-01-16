@@ -1,3 +1,26 @@
+v4.4pre  15-Jan-2010
+
+  * Since 4.0, finished mailjobs were being left as zombie processes. Fixed.
+
+  * When using crond with logging-to-file, user jobs could only log some
+    events if they had write access to the log. Fixed this by having crond
+    keep a file descriptor open to the log; also added a SIGHUP handler
+    to make crond re-open the logfile. The sample logrotate script now
+    sends that signal.
+
+  * More sensible command-line parsing by crontab.
+
+  * Add prune-cronstamps to extra; document extra/*; general improvement
+    of README and manpages.
+
+  * Portability improvements, and defs.h now has fuller comments about
+    requirements.
+
+  * Makefile improvements: `make` now caches variables for `make install`;
+    don't stomp CFLAGS environment variable, and added BINDIR,SBINDIR,MANDIR.
+
+  * Thanks to Juergen Daubert for testing and suggestions.
+
 v4.3  11-Jan-2010
 
   * Internal refactoring to make buffer overflow checks
