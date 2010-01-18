@@ -9,8 +9,8 @@
 
 #include "defs.h"
 
-Prototype void logf(int level, const char *ctl, ...);
-Prototype void fdlogf(int level, int fd, const char *ctl, ...);
+Prototype void printlogf(int level, const char *ctl, ...);
+Prototype void fdprintlogf(int level, int fd, const char *ctl, ...);
 Prototype void fdprintf(int fd, const char *ctl, ...);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
@@ -21,7 +21,7 @@ char Hostname[SMALL_BUFFER];
 
 
 void
-logf(int level, const char *ctl, ...)
+printlogf(int level, const char *ctl, ...)
 {
 	va_list va;
 
@@ -31,7 +31,7 @@ logf(int level, const char *ctl, ...)
 }
 
 void
-fdlogf(int level, int fd, const char *ctl, ...)
+fdprintlogf(int level, int fd, const char *ctl, ...)
 {
 	va_list va;
 

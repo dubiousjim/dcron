@@ -21,7 +21,7 @@ ChangeUser(const char *user, char *dochdir)
 	 */
 
 	if ((pas = getpwnam(user)) == 0) {
-		logf(LOG_ERR, "failed to get uid for %s\n", user);
+		printlogf(LOG_ERR, "failed to get uid for %s\n", user);
 		return(-1);
 	}
 	setenv("USER", pas->pw_name, 1);
@@ -33,24 +33,24 @@ ChangeUser(const char *user, char *dochdir)
 	 */
 
 	if (initgroups(user, pas->pw_gid) < 0) {
-		logf(LOG_ERR, "initgroups failed: %s %s\n", user, strerror(errno));
+		printlogf(LOG_ERR, "initgroups failed: %s %s\n", user, strerror(errno));
 		return(-1);
 	}
 	if (setregid(pas->pw_gid, pas->pw_gid) < 0) {
-		logf(LOG_ERR, "setregid failed: %s %d\n", user, pas->pw_gid);
+		printlogf(LOG_ERR, "setregid failed: %s %d\n", user, pas->pw_gid);
 		return(-1);
 	}
 	if (setreuid(pas->pw_uid, pas->pw_uid) < 0) {
-		logf(LOG_ERR, "setreuid failed: %s %d\n", user, pas->pw_uid);
+		printlogf(LOG_ERR, "setreuid failed: %s %d\n", user, pas->pw_uid);
 		return(-1);
 	}
 	if (dochdir) {
 		/* try to change to $HOME */
 		if (chdir(pas->pw_dir) < 0) {
-			logf(LOG_ERR, "chdir failed: %s %s\n", user, pas->pw_dir);
+			printlogf(LOG_ERR, "chdir failed: %s %s\n", user, pas->pw_dir);
 			/* dochdir is a backup directory, usually /tmp */
 			if (chdir(dochdir) < 0) {
-				logf(LOG_ERR, "chdir failed: %s %s\n", user, dochdir);
+				printlogf(LOG_ERR, "chdir failed: %s %s\n", user, dochdir);
 				return(-1);
 			}
 		}

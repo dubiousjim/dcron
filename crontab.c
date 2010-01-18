@@ -13,7 +13,7 @@
 
 #include "defs.h"
 
-Prototype void logf(int level, const char *ctl, ...);
+Prototype void printlogf(int level, const char *ctl, ...);
 
 void Usage(void);
 int GetReplaceStream(const char *user, const char *file);
@@ -41,7 +41,7 @@ main(int ac, char **av)
 	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 	/* return value >= size means result was truncated */
 	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
-		logf(0, "username '%s' too long", caller);
+		printlogf(0, "username '%s' too long", caller);
 		exit(1);
 	}
 
@@ -78,11 +78,11 @@ main(int ac, char **av)
 							exit(1);
 						}
 					} else {
-						logf(0, "user '%s' unknown", optarg);
+						printlogf(0, "user '%s' unknown", optarg);
 						exit(1);
 					}
 				} else {
-					logf(0, "-u option: superuser only");
+					printlogf(0, "-u option: superuser only");
 					exit(1);
 				}
 				break;
@@ -91,7 +91,7 @@ main(int ac, char **av)
 				if (*optarg != 0 && getuid() == geteuid()) {
 					CDir = optarg;
 				} else {
-					logf(0, "-c option: superuser only");
+					printlogf(0, "-c option: superuser only");
 					exit(1);
 				}
 				break;
@@ -122,7 +122,7 @@ main(int ac, char **av)
 	if (repFile) {
 		repFd = GetReplaceStream(caller, repFile);
 		if (repFd < 0) {
-			logf(0, "unable to read replacement file %s", repFile);
+			printlogf(0, "unable to read replacement file %s", repFile);
 			exit(1);
 		}
 	}
@@ -132,7 +132,7 @@ main(int ac, char **av)
 	 */
 
 	if (chdir(CDir) < 0) {
-		logf(0, "cannot change dir to %s: %s", CDir, strerror(errno));
+		printlogf(0, "cannot change dir to %s: %s", CDir, strerror(errno));
 		exit(1);
 	}
 
@@ -181,7 +181,7 @@ main(int ac, char **av)
 					lseek(fd, 0L, 0);
 					repFd = fd;
 				} else {
-					logf(0, "unable to create %s: %s", tmp, strerror(errno));
+					printlogf(0, "unable to create %s: %s", tmp, strerror(errno));
 					exit(1);
 				}
 
@@ -251,7 +251,7 @@ main(int ac, char **av)
 }
 
 void
-logf(int level, const char *ctl, ...)
+printlogf(int level, const char *ctl, ...)
 {
 	va_list va;
 	char buf[LOG_BUFFER];
@@ -321,7 +321,7 @@ GetReplaceStream(const char *user, const char *file)
 
 	fd = open(file, O_RDONLY);
 	if (fd < 0) {
-		logf(0, "unable to open %s: %s", file, strerror(errno));
+		printlogf(0, "unable to open %s: %s", file, strerror(errno));
 		exit(1);
 	}
 	buf[0] = 0;
@@ -354,7 +354,7 @@ EditFile(const char *user, const char *file)
 		/* return value >= size means result was truncated */
 		if (snprintf(visual, sizeof(visual), "%s %s", ptr, file) < sizeof(visual))
 			execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
-		logf(0, "couldn't exec %s", visual);
+		printlogf(0, "couldn't exec %s", visual);
 		exit(1);
 	}
 	if (pid < 0) {

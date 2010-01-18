@@ -63,7 +63,7 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 
 		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
-			logf(LOG_ERR, "unable to ChangeUser (user %s %s)\n",
+			printlogf(LOG_ERR, "unable to ChangeUser (user %s %s)\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -73,7 +73,7 @@ RunJob(CronFile *file, CronLine *line)
 		/* from this point we are unpriviledged */
 
 		if (DebugOpt)
-			logf(LOG_DEBUG, "child running: %s\n", line->cl_Description);
+			printlogf(LOG_DEBUG, "child running: %s\n", line->cl_Description);
 
 		/*
 		 * Inside child, we copy our fd 2 (which may be /dev/null) into
@@ -90,7 +90,7 @@ RunJob(CronFile *file, CronLine *line)
 			close(mailFd);
 		} else {
 			/* complain about no mailFd to log (now associated with fd 8) */
-			fdlogf(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
+			fdprintlogf(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
 					mailFile,
 					file->cf_UserName,
 					line->cl_Description
@@ -111,7 +111,7 @@ RunJob(CronFile *file, CronLine *line)
 		 *
 		 * Complain to our log (now associated with fd 8)
 		 */
-		fdlogf(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
+		fdprintlogf(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
 				file->cf_UserName,
 				line->cl_Shell
 			   );
@@ -127,7 +127,7 @@ RunJob(CronFile *file, CronLine *line)
 		 *
 		 * Complain to log (with regular fd 2)
 		 */
-		logf(LOG_ERR, "unable to fork (user %s %s)\n",
+		printlogf(LOG_ERR, "unable to fork (user %s %s)\n",
 				file->cf_UserName,
 				line->cl_Description
 				);
@@ -210,7 +210,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				fclose(fi);
 			}
 			if (!succeeded)
-				logf(LOG_WARNING, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
+				printlogf(LOG_WARNING, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
 			line->cl_NotUntil = line->cl_LastRan;
 			line->cl_NotUntil += (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
 		}
@@ -232,7 +232,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			/*
 			 * log non-zero exit_status
 			 */
-			logf(LOG_NOTICE, "exit status %d from user %s %s\n",
+			printlogf(LOG_NOTICE, "exit status %d from user %s %s\n",
 					exit_status,
 					file->cf_UserName,
 					line->cl_Description
@@ -242,7 +242,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	}
 	if (!exit_status || exit_status == EAGAIN)
 		if (DebugOpt)
-			logf(LOG_DEBUG, "exit status %d from user %s %s\n",
+			printlogf(LOG_DEBUG, "exit status %d from user %s %s\n",
 						exit_status,
 						file->cf_UserName,
 						line->cl_Description
@@ -296,7 +296,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 */
 
 		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
-			logf(LOG_ERR, "unable to ChangeUser to send mail (user %s %s)\n",
+			printlogf(LOG_ERR, "unable to ChangeUser to send mail (user %s %s)\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -327,7 +327,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			 * If using standard sendmail, note in our log (now associated with fd 8)
 			 * that we're trying to mail output
 			 */
-			fdlogf(LOG_INFO, 8, "mailing cron output for user %s %s\n",
+			fdprintlogf(LOG_INFO, 8, "mailing cron output for user %s %s\n",
 					file->cf_UserName,
 					line->cl_Description
 				 );
@@ -349,7 +349,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 * Complain to our log (now associated with fd 8)
 		 */
 
-		fdlogf(LOG_WARNING, 8, "unable to exec %s: cron output for user %s %s to /dev/null\n",
+		fdprintlogf(LOG_WARNING, 8, "unable to exec %s: cron output for user %s %s to /dev/null\n",
 				SendMail,
 				file->cf_UserName,
 				line->cl_Description
@@ -362,7 +362,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 *
 		 * Complain to our log (with regular fd 2)
 		 */
-		logf(LOG_WARNING, "unable to fork: cron output for user %s %s to /dev/null\n",
+		printlogf(LOG_WARNING, "unable to fork: cron output for user %s %s to /dev/null\n",
 				file->cf_UserName,
 				line->cl_Description
 			);
