@@ -1,4 +1,4 @@
-.TH CRONTAB 1 "11 Jan 2010" 
+.TH CRONTAB 1 "17 Jan 2010" 
 .SH NAME
 .PP
 crontab - manipulate per-user crontabs (dillon's lightweight cron
@@ -9,11 +9,11 @@ daemon)
 .PP
 \f[B]crontab - [-u user]\f[] - replace crontab from stdin
 .PP
-\f[B]crontab -l [user]\f[] - list crontab for user
+\f[B]crontab -l [-u user]\f[] - list crontab for user
 .PP
-\f[B]crontab -e [user]\f[] - edit crontab for user
+\f[B]crontab -e [-u user]\f[] - edit crontab for user
 .PP
-\f[B]crontab -d [user]\f[] - delete crontab for user
+\f[B]crontab -d [-u user]\f[] - delete crontab for user
 .PP
 \f[B]crontab -c dir\f[] - specify crontab directory
 .SH DESCRIPTION
@@ -24,12 +24,26 @@ Generally the -e option is used to edit your crontab.
 \f[B]crontab\f[] will use the editor specified by your EDITOR or
 VISUAL environment variable (or /usr/bin/vi) to edit the crontab.
 .PP
+\f[B]crontab\f[] doesn't provide the kinds of protections that
+programs like \f[B]visudo\f[] do against syntax errors and
+simultaneous edits.
+Errors won't be detected until \f[B]crond\f[] reads the crontab
+file.
+What \f[B]crontab\f[] does is provide a mechanism for users who may
+not themselves have write privileges to the crontab folder to
+nonetheless install or edit their crontabs.
+It also notifies a running crond daemon of any changes to these
+files.
+.PP
 Only users who belong to the same group as the \f[B]crontab\f[]
-binary will be able to install crontabs.
-However it's possible for the superuser to install crontabs for
-users who don't have the privileges to install them themselves.
+binary will be able to install or edit crontabs.
+However it'll be possible for the superuser to install crontabs
+even for users who don't have the privileges to install them
+themselves.
+(Even for users who don't have a login shell.)
 Only the superuser may use the -u or -c switches to specify a
 different user and/or crontab directory.
+.PP
 The superuser also has his or her own per-user crontab, saved as
 /var/spool/cron/root.
 .PP
@@ -101,8 +115,7 @@ The following formats are also recognized:
 \f[]
 .PP
 The formats \@hourly, \@daily, \@weekly, \@monthly, and \@yearly
-need to update timestamp files when their jobs complete
-successfully (that is, exit with code zero).
+need to update timestamp files when their jobs have been run.
 The timestamp files are saved as
 /var/spool/cronstamps/user.jobname.
 So for all of these formats, the cron command needs a jobname,
@@ -202,11 +215,17 @@ adjust this behavior.
 Whenever jobs return an exit code that's neither 0 nor 11 (EAGAIN),
 that event will be logged, regardless of whether any stdout or
 stderr is generated.
-Any jobs waiting on the failed job will also be canceled.
+The job's timestamp will also be updated, and it won't be run again
+until it would next be normally scheduled.
+Any jobs waiting on the failed job will be canceled; they won't be
+run until they're next scheduled.
 .SH TODO
 .PP
 Ought to be able to have several crontab files for any given user,
 as an organizational tool.
+.SH SEE ALSO
+.PP
+\f[B]crond\f[](8)
 .SH AUTHORS
 .PP
 Matthew Dillon (dillon\@apollo.backplane.com): original

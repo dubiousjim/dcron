@@ -1,6 +1,6 @@
-v4.4pre  15-Jan-2010
+v4.4  17-Jan-2010
 
-  * Since 4.0, finished mailjobs were being left as zombie processes. Fixed.
+  * Finished mailjobs were being left as zombie processes. Fixed.
 
   * When using crond with logging-to-file, user jobs could only log some
     events if they had write access to the log. Fixed this by having crond
