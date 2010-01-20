@@ -10,8 +10,8 @@
 #include "defs.h"
 
 Prototype void printlogf(int level, const char *ctl, ...);
-Prototype void fdprintlogf(int level, int fd, const char *ctl, ...);
-Prototype void fdprintf(int fd, const char *ctl, ...);
+Prototype void dprintlogf(int level, int fd, const char *ctl, ...);
+Prototype void dprintf(int fd, const char *ctl, ...);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
 
@@ -31,7 +31,7 @@ printlogf(int level, const char *ctl, ...)
 }
 
 void
-fdprintlogf(int level, int fd, const char *ctl, ...)
+dprintlogf(int level, int fd, const char *ctl, ...)
 {
 	va_list va;
 
@@ -41,7 +41,7 @@ fdprintlogf(int level, int fd, const char *ctl, ...)
 }
 
 void
-fdprintf(int fd, const char *ctl, ...)
+dprintf(int fd, const char *ctl, ...)
 {
 	va_list va;
 	char buf[LOG_BUFFER];
@@ -154,14 +154,14 @@ initsignals (void) {
 		sa.sa_handler = SIG_IGN;
 	if (sigaction (SIGHUP, &sa, NULL) != 0) {
 		n = errno;
-		fdprintf(2, "failed to start SIGHUP handling, reason: %s", strerror(errno));
+		dprintf(2, "failed to start SIGHUP handling, reason: %s", strerror(errno));
 		exit(n);
 	}
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = waitmailjob;
 	if (sigaction (SIGCHLD, &sa, NULL) != 0) {
 		n = errno;
-		fdprintf(2, "failed to start SIGCHLD handling, reason: %s", strerror(errno));
+		dprintf(2, "failed to start SIGCHLD handling, reason: %s", strerror(errno));
 		exit(n);
 	}
 

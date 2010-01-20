@@ -37,7 +37,7 @@ RunJob(CronFile *file, CronLine *line)
 		/* if we didn't specify a -m Mailto, use the local user */
 		if (!value)
 			value = file->cf_UserName;
-		fdprintf(mailFd, "To: %s\nSubject: cron for user %s %s\n\n",
+		dprintf(mailFd, "To: %s\nSubject: cron for user %s %s\n\n",
 				value,
 				file->cf_UserName,
 				line->cl_Description
@@ -90,7 +90,7 @@ RunJob(CronFile *file, CronLine *line)
 			close(mailFd);
 		} else {
 			/* complain about no mailFd to log (now associated with fd 8) */
-			fdprintlogf(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
+			dprintlogf(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
 					mailFile,
 					file->cf_UserName,
 					line->cl_Description
@@ -111,14 +111,14 @@ RunJob(CronFile *file, CronLine *line)
 		 *
 		 * Complain to our log (now associated with fd 8)
 		 */
-		fdprintlogf(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
+		dprintlogf(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
 				file->cf_UserName,
 				line->cl_Shell
 			   );
 		/*
 		 * Also complain to stdout, which will be either the mailFile or /dev/null
 		 */
-		fdprintf(1, "unable to exec: /bin/sh -c %s\n", line->cl_Shell);
+		dprintf(1, "unable to exec: /bin/sh -c %s\n", line->cl_Shell);
 		exit(0);
 
 	} else if (line->cl_Pid < 0) {
@@ -327,7 +327,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			 * If using standard sendmail, note in our log (now associated with fd 8)
 			 * that we're trying to mail output
 			 */
-			fdprintlogf(LOG_INFO, 8, "mailing cron output for user %s %s\n",
+			dprintlogf(LOG_INFO, 8, "mailing cron output for user %s %s\n",
 					file->cf_UserName,
 					line->cl_Description
 				 );
@@ -349,7 +349,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 * Complain to our log (now associated with fd 8)
 		 */
 
-		fdprintlogf(LOG_WARNING, 8, "unable to exec %s: cron output for user %s %s to /dev/null\n",
+		dprintlogf(LOG_WARNING, 8, "unable to exec %s: cron output for user %s %s to /dev/null\n",
 				SendMail,
 				file->cf_UserName,
 				line->cl_Description
