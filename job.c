@@ -26,8 +26,8 @@ RunJob(CronFile *file, CronLine *line)
 
 	/*
 	 * try to open mail output file - owner root so nobody can screw with it.
+	 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 	 */
-
 	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, (int)getpid());
 
@@ -139,6 +139,7 @@ RunJob(CronFile *file, CronLine *line)
 		 * PARENT, FORK SUCCESS
 		 *
 		 * rename mail-file based on pid of child process
+		 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 		 */
 		char mailFile2[SMALL_BUFFER];
 
@@ -257,6 +258,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 
 	/*
 	 * Calculate mailFile's name before clearing cl_Pid
+	 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 	 */
 	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, line->cl_Pid);

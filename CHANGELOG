@@ -1,3 +1,9 @@
+v4.5pre
+
+  * Internal changes: factored out string calls to strsubs.c, continued
+    portability improvements.
+
+
 v4.4  17-Jan-2010
 
   * Finished mailjobs were being left as zombie processes. Fixed.

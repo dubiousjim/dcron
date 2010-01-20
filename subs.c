@@ -9,51 +9,52 @@
 
 #include "defs.h"
 
-Prototype void printlogf(int level, const char *ctl, ...);
-Prototype void dprintlogf(int level, int fd, const char *ctl, ...);
-Prototype void dprintf(int fd, const char *ctl, ...);
+Prototype void printlogf(int level, const char *fmt, ...);
+Prototype void dprintlogf(int level, int fd, const char *fmt, ...);
+Prototype void dprintf(int fd, const char *fmt, ...);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
 
-void vlog(int level, int fd, const char *ctl, va_list va);
+void vlog(int level, int fd, const char *fmt, va_list va);
 
 char Hostname[SMALL_BUFFER];
 
 
 void
-printlogf(int level, const char *ctl, ...)
+printlogf(int level, const char *fmt, ...)
 {
 	va_list va;
 
-	va_start(va, ctl);
-	vlog(level, 2, ctl, va);
+	va_start(va, fmt);
+	vlog(level, 2, fmt, va);
 	va_end(va);
 }
 
 void
-dprintlogf(int level, int fd, const char *ctl, ...)
+dprintlogf(int level, int fd, const char *fmt, ...)
 {
 	va_list va;
 
-	va_start(va, ctl);
-	vlog(level, fd, ctl, va);
+	va_start(va, fmt);
+	vlog(level, fd, fmt, va);
 	va_end(va);
 }
 
 void
-dprintf(int fd, const char *ctl, ...)
+dprintf(int fd, const char *fmt, ...)
 {
 	va_list va;
 	char buf[LOG_BUFFER];
 
-	va_start(va, ctl);
-	vsnprintf(buf, sizeof(buf), ctl, va);
+	va_start(va, fmt);
+	/* [v]snprintf always \0-terminate; we don't care here if result was truncated */
+	vsnprintf(buf, sizeof(buf), fmt, va);
 	write(fd, buf, strlen(buf));
 	va_end(va);
 }
 
 void
-vlog(int level, int fd, const char *ctl, va_list va)
+vlog(int level, int fd, const char *fmt, va_list va)
 {
 	char buf[LOG_BUFFER];
 	static short suppressHeader = 0;
@@ -63,14 +64,13 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			/*
 			 * when -d or -f, we always (and only) log to stderr
 			 * fd will be 2 except when 2 is bound to a execing subprocess, then it will be 8
-			 * [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate
-			 * we don't care here whether it truncates
+			 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 			 */
-			vsnprintf(buf, sizeof(buf), ctl, va);
+			vsnprintf(buf, sizeof(buf), fmt, va);
 			write(fd, buf, strlen(buf));
 		} else if (SyslogOpt) {
 			/* log to syslog */
-			vsnprintf(buf, sizeof(buf), ctl, va);
+			vsnprintf(buf, sizeof(buf), fmt, va);
 			syslog(level, "%s", buf);
 
 		} else {
@@ -93,13 +93,12 @@ vlog(int level, int fd, const char *ctl, va_list va)
 						Hostname[sizeof(Hostname)-1] = 0;
 					else
 						Hostname[0] = 0;   /* gethostname() call failed */
-					/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 					/* return value >= size means result was truncated */
-					if ((hdrlen = snprintf(buf, sizeof(hdr), hdr, Hostname)) >= sizeof(hdr))
+					if ((hdrlen = try_sprintf(buf, sizeof(hdr), hdr, Hostname)) >= sizeof(hdr))
 						hdrlen = sizeof(hdr) - 1;
 				}
 			}
-			if ((buflen = vsnprintf(buf + hdrlen, sizeof(buf) - hdrlen, ctl, va) + hdrlen) >= sizeof(buf))
+			if ((buflen = try_vsprintf(buf + hdrlen, sizeof(buf) - hdrlen, fmt, va) + hdrlen) >= sizeof(buf))
 				buflen = sizeof(buf) - 1;
 
 			write(fd, buf, buflen);
