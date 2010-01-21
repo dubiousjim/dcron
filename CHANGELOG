@@ -3,6 +3,10 @@ v4.5pre
   * Internal changes: factored out string calls to strsubs.c, continued
     portability improvements.
 
+  * Numeric loglevels specified by 'crond -l <level>' weren't being validated.
+    Given that loglevels can already be specified symbolically, I've chosen
+    to just remove the ability to specify loglevels numerically.
+
 
 v4.4  17-Jan-2010
 
