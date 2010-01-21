@@ -71,7 +71,7 @@ wanting to edit defs.h directly, try editing the DEFS line in the Makefile inste
 	make PREFIX=/usr CRONTAB_GROUP=users
 
 (3) If you're using the git version, you might also want to `make man`,
-to be sure the manpages are updated. This requires 
+to be sure the manpages are updated. This requires
 [pandoc](http://johnmacfarlane.net/pandoc/).
 
 

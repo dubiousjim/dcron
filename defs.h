@@ -106,7 +106,7 @@
 #define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ": "
 
 /* Limits */
-#define MAXOPEN			256		/* close fds < this limit */ 
+#define MAXOPEN			256		/* close fds < this limit */
 #define MAXLINES		256		/* max lines in non-root crontabs */
 #define SMALL_BUFFER	256
 #define RW_BUFFER		1024

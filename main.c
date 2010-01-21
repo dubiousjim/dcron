@@ -175,7 +175,7 @@ main(int ac, char **av)
 				printf("-M mailhandler (defaults to %s)\n", SENDMAIL);
 				printf("-S             log to syslog using identity '%s' (default)\n", LOG_IDENT);
 				printf("-L file        log to specified file instead of syslog\n");
-				printf("-l loglevel    log events at specified loglevel (defaults to %s)\n", LevelAry[LOG_LEVEL]); 
+				printf("-l loglevel    log events at specified loglevel (defaults to %s)\n", LevelAry[LOG_LEVEL]);
 				printf("-b             run in background (default)\n");
 				printf("-f             run in foreground and log to stderr\n");
 				printf("-d             run in debugging mode\n");
