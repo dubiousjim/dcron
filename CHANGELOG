@@ -1,15 +1,26 @@
+TODO
+
+	* /etc/conf.d/dcron, make sure cmdline options are all overridable
+
+	* add timestamps to -d output
+
+	* manual cron.update prodding doesn't affect cl_NotUntil
+
 v4.5pre
+
+  * Jobs were sometimes being scheduled again while running; fixed.
 
   * Numeric loglevels specified by 'crond -l <level>' weren't being validated.
     Given that loglevels can already be specified symbolically, I've chosen
     to just remove the ability to specify loglevels numerically.
 
-  * Internal changes: factored out string calls to strsubs.c, continued
+  * Internal changes: factored string calls to strsubs.c, continued
     portability improvements.
 
-  * Doc changes.
+  * Doc and error message changes.
 
-  * Thanks to Juergen Daubert and Rogutės Sparnuotos for suggestions.
+  * Thanks to Juergen Daubert and Rogutės Sparnuotos for suggestions, and 
+    ataraxia and Spider.007 for testing.
 
 v4.4  17-Jan-2010
 
