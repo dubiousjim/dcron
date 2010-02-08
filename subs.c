@@ -112,6 +112,7 @@ vlog(int level, int fd, const char *fmt, va_list va)
 
 static void reopenlogger(int sig) {
 	int fd;
+	int saverr = errno;
 	if (getpid() == DaemonPid) {
 		/* only daemon handles, children should ignore */
 		if ((fd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) < 0) {
@@ -124,6 +125,7 @@ static void reopenlogger(int sig) {
 		dup2(fd, 2);
 		close(fd);
 	}
+	errno =  saverr;
 }
 
 static void waitmailjob(int sig) {
@@ -132,6 +134,7 @@ static void waitmailjob(int sig) {
 	 * These will all be mailjobs.
 	 */
 	pid_t child;
+	int saverr = errno;
 	do {
 		child = waitpid(-DaemonPid, NULL, WNOHANG);
 		/* call was interrupted, try again: won't happen because we use SA_RESTART */
@@ -139,6 +142,7 @@ static void waitmailjob(int sig) {
 	} while (child > (pid_t) 0);
 	/* if no pending children, child,errno == -1,ECHILD */
 	/* if all children still running, child == 0 */
+	errno =  saverr;
 }
 
 void
