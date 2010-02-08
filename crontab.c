@@ -197,7 +197,7 @@ main(int ac, char **av)
 
 			}
 			option = REPLACE;
-			/* fall through */
+			/*@fallthrough@*/
 		case REPLACE:
 			{
 				char buf[RW_BUFFER];

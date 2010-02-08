@@ -129,7 +129,7 @@ main(int ac, char **av)
 			case 'd':
 				DebugOpt = TRUE;
 				LogLevel = LOG_DEBUG;
-				/* fall through to include f too */
+				/*@fallthrough@*/
 			case 'f':
 				ForegroundOpt = TRUE;
 				break;
