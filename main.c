@@ -19,12 +19,12 @@ Prototype bool SyslogOpt;
 Prototype const char *CDir;
 Prototype const char *SCDir;
 Prototype const char *TSDir;
-Prototype const char *LogFile;
+Prototype /*@null@*/ const char *LogFile;
 Prototype const char *LogHeader;
 Prototype uid_t DaemonUid;
 Prototype pid_t DaemonPid;
-Prototype const char *SendMail;
-Prototype const char *Mailto;
+Prototype /*@null@*/ const char *SendMail;
+Prototype /*@null@*/ const char *Mailto;
 Prototype char *TempDir;
 Prototype char *TempFileFmt;
 
@@ -35,10 +35,10 @@ bool SyslogOpt = TRUE;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
 const char *TSDir = CRONSTAMPS;
-const char *LogFile = NULL; 	/* opened with mode 0600 */
+/*@null@*/ const char *LogFile = NULL; 	/* opened with mode 0600 */
 const char *LogHeader = LOGHEADER;
-const char *SendMail = NULL;
-const char *Mailto = NULL;
+/*@null@*/ const char *SendMail = NULL;
+/*@null@*/ const char *Mailto = NULL;
 char *TempDir;
 char *TempFileFmt;
 

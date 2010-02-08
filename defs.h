@@ -141,8 +141,8 @@ typedef int bool;
 
 
 typedef struct CronFile {
-    struct CronFile *cf_Next;
-    struct CronLine *cf_LineBase;
+    /*@null@*/ struct CronFile *cf_Next;
+    /*@null@*/ struct CronLine *cf_LineBase;
     char	*cf_DPath;	/* Directory path to cronfile */
     char	*cf_FileName;	/* Name of cronfile */
     char	*cf_UserName;	/* username to execute jobs as */
@@ -152,13 +152,13 @@ typedef struct CronFile {
 } CronFile;
 
 typedef struct CronLine {
-    struct CronLine *cl_Next;
-    char	*cl_Shell;	/* shell command			*/
-	char	*cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
-	char	*cl_JobName;	/* job name, if any			*/
-	char	*cl_Timestamp;	/* path to timestamp file, if cl_Freq defined */
-	struct	CronWaiter *cl_Waiters;
-	struct	CronNotifier *cl_Notifs;
+    /*@null@*/ struct CronLine *cl_Next;
+    /*@null@*/ char	*cl_Shell;		/* shell command				*/
+	/*@null@*/ char	*cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
+	/*@null@*/ char	*cl_JobName;	/* job name, if any				*/
+	/*@null@*/ char	*cl_Timestamp;	/* path to timestamp file, if cl_Freq defined */
+	/*@null@*/ struct	CronWaiter *cl_Waiters;
+	/*@null@*/ struct	CronNotifier *cl_Notifs;
 	time_t	cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (reboot)	*/
 	time_t	cl_Delay;		/* defaults to cl_Freq or hourly	*/
 	time_t	cl_LastRan;
@@ -174,16 +174,16 @@ typedef struct CronLine {
 } CronLine;
 
 typedef struct CronWaiter {
-	struct	CronWaiter *cw_Next;
-	struct	CronNotifier *cw_Notifier;
-	struct	CronLine *cw_NotifLine;
+	/*@null@*/ struct	CronWaiter *cw_Next;
+	/*@null@*/ struct	CronNotifier *cw_Notifier;
+	/*@null@*/ struct	CronLine *cw_NotifLine;
 	short	cw_Flag;
 	time_t	cw_MaxWait;
 } CronWaiter;
 
 typedef struct CronNotifier {
-	struct	CronNotifier *cn_Next;
-	struct	CronWaiter *cn_Waiter;
+	/*@null@*/ struct	CronNotifier *cn_Next;
+	/*@null@*/ struct	CronWaiter *cn_Waiter;
 } CronNotifier;
 
 #include "protos.h"

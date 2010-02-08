@@ -20,11 +20,11 @@ Prototype int CheckJobs(void);
 
 static void SynchronizeFile(const char *dpath, const char *fileName, const char *userName);
 static void DeleteFile(CronFile **pfile);
-static char *ParseInterval(time_t *interval, char *ptr);
-static char *ParseField(char *user, short *ary, int modvalue, int off, int onvalue, const char **names, char *ptr);
+static /*@null@*/ char *ParseInterval(time_t *interval, char *ptr);
+static /*@null@*/ char *ParseField(char *user, short *ary, int modvalue, int off, int onvalue, /*@null@*/ const char **names, char *ptr);
 static void FixDayDow(CronLine *line);
 
-static CronFile *FileBase = NULL;
+static /*@null@*/ CronFile *FileBase = NULL;
 
 static const char *DowAry[] = {
 	"sun",
