@@ -20,8 +20,8 @@ Prototype int CheckJobs(void);
 
 static void SynchronizeFile(const char *dpath, const char *fileName, const char *userName);
 static void DeleteFile(CronFile **pfile);
-static char *ParseInterval(int *interval, char *ptr);
-static char *ParseField(char *user, char *ary, int modvalue, int off, int onvalue, const char **names, char *ptr);
+static char *ParseInterval(time_t *interval, char *ptr);
+static char *ParseField(char *user, short *ary, int modvalue, int off, int onvalue, const char **names, char *ptr);
 static void FixDayDow(CronLine *line);
 
 static CronFile *FileBase = NULL;
@@ -354,7 +354,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 			while (fgets(buf, sizeof(buf), fi) != NULL && --maxLines) {
 				CronLine line;
 				char *ptr = buf;
-				int len;
+				size_t len;
 
 				while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
 					++ptr;
@@ -435,14 +435,14 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							line.cl_Delay = 60;
 						/* all minutes are permitted */
 						for (j=0; j<60; ++j)
-							line.cl_Mins[j] = 1;
+							line.cl_Mins[j] = (short)1;
 						for (j=0; j<24; ++j)
-							line.cl_Hrs[j] = 1;
+							line.cl_Hrs[j] = (short)1;
 						for (j=1; j<32; ++j)
 							/* days are numbered 1..31 */
-							line.cl_Days[j] = 1;
+							line.cl_Days[j] = (short)1;
 						for (j=0; j<12; ++j)
-							line.cl_Mons[j] = 1;
+							line.cl_Mons[j] = (short)1;
 					}
 
 					while (*ptr == ' ' || *ptr == '\t')
@@ -543,7 +543,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 									printlogf(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, WAIT_TAG, name);
 									ptr = NULL;
 								} else {
-									int waitfor = 0;
+									time_t waitfor = 0;
 									char *w, *wsave;
 									if ((w = strchr(name, '/')) != NULL) {
 										wsave = w++;
@@ -662,10 +662,10 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 }
 
 char *
-ParseInterval(int *interval, char *ptr)
+ParseInterval(time_t *interval, char *ptr)
 {
 	int n = 0;
-	if (ptr && *ptr >= '0' && *ptr <= '9' && (n = strtol(ptr, &ptr, 10)) > 0)
+	if (ptr && *ptr >= '0' && *ptr <= '9' && (n = (int)strtol(ptr, &ptr, 10)) > 0)
 		switch (*ptr) {
 			case 'm':
 				n *= 60;
@@ -690,7 +690,7 @@ ParseInterval(int *interval, char *ptr)
 }
 
 char *
-ParseField(char *user, char *ary, int modvalue, int off, int onvalue, const char **names, char *ptr)
+ParseField(char *user, short *ary, int modvalue, int off, int onvalue, const char **names, char *ptr)
 {
 	char *base = ptr;
 	int n1 = -1;
@@ -713,9 +713,9 @@ ParseField(char *user, char *ary, int modvalue, int off, int onvalue, const char
 			++ptr;
 		} else if (*ptr >= '0' && *ptr <= '9') {
 			if (n1 < 0)
-				n1 = strtol(ptr, &ptr, 10) + off;
+				n1 = (int)strtol(ptr, &ptr, 10) + off;
 			else
-				n2 = strtol(ptr, &ptr, 10) + off;
+				n2 = (int)strtol(ptr, &ptr, 10) + off;
 			skip = 1;
 		} else if (names) {
 			int i;
@@ -759,7 +759,7 @@ ParseField(char *user, char *ary, int modvalue, int off, int onvalue, const char
 		n2 = n2 % modvalue;
 
 		if (*ptr == '/')
-			skip = strtol(ptr + 1, &ptr, 10);
+			skip = (int)strtol(ptr + 1, &ptr, 10);
 
 		/*
 		 * fill array, using a failsafe is the easiest way to prevent
@@ -775,7 +775,7 @@ ParseField(char *user, char *ary, int modvalue, int off, int onvalue, const char
 				n1 = (n1 + 1) % modvalue;
 
 				if (--s0 == 0) {
-					ary[n1] = onvalue;
+					ary[n1] = (short)onvalue;
 					s0 = skip;
 				}
 			} while (n1 != n2 && --failsafe);
@@ -985,8 +985,7 @@ TestJobs(time_t t1, time_t t2)
 	for (t = t1 - t1 % 60; t <= t2; t += 60) {
 		if (t > t1) {
 			struct tm *tp = localtime(&t);
-
-			unsigned short n_wday = (tp->tm_mday - 1)%7 + 1;
+			int n_wday = (tp->tm_mday - 1)%7 + 1;
 			if (n_wday >= 4) {
 				struct tm tnext = *tp;
 				tnext.tm_mday += 7;
@@ -1066,8 +1065,7 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 					for (t = t1 - t1 % 60; t <= t2; t += 60) {
 						if (t > t1) {
 							struct tm *tp = localtime(&t);
-
-							unsigned short n_wday = (tp->tm_mday - 1)%7 + 1;
+							int n_wday = (tp->tm_mday - 1)%7 + 1;
 							if (n_wday >= 4) {
 								struct tm tnext = *tp;
 								tnext.tm_mday += 7;
@@ -1215,7 +1213,7 @@ CheckJobs(void)
 			for (line = file->cf_LineBase; line; line = line->cl_Next) {
 				if (line->cl_Pid > 0) {
 					int status;
-					int r = waitpid(line->cl_Pid, &status, WNOHANG);
+					pid_t r = waitpid(line->cl_Pid, &status, WNOHANG);
 
 					/* waitpid returns -1 for error, 0 if cl_Pid still running, cl_Pid if it's dead */
 

@@ -13,7 +13,7 @@
 #include "defs.h"
 
 Prototype short DebugOpt;
-Prototype short LogLevel;
+Prototype int LogLevel;
 Prototype short ForegroundOpt;
 Prototype short SyslogOpt;
 Prototype const char *CDir;
@@ -29,7 +29,7 @@ Prototype char *TempDir;
 Prototype char *TempFileFmt;
 
 short DebugOpt = 0;
-short LogLevel = LOG_LEVEL;
+int LogLevel = LOG_LEVEL;
 short ForegroundOpt = 0;
 short SyslogOpt = 1;
 const char  *CDir = CRONTABS;
@@ -219,7 +219,7 @@ main(int ac, char **av)
 	if (ForegroundOpt == 0) {
 
 		int fd;
-		int pid;
+		pid_t pid;
 
 		if ((pid = fork()) < 0) {
 			/* fork failed */
@@ -236,7 +236,7 @@ main(int ac, char **av)
 		if (setsid() < 0)
 			perror("setsid");
 		if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
-			ioctl(fd, TIOCNOTTY, 0);
+			ioctl(fd, (unsigned long)TIOCNOTTY, 0);
 			close(fd);
 		}
 
@@ -297,13 +297,12 @@ main(int ac, char **av)
 
 	{
 		time_t t1 = time(NULL);
-		time_t t2;
-		long dt;
-		short rescan = 60;
-		short stime = 60;
+		time_t t2, dt;
+		int rescan = 60;
+		int stime = 60;
 
 		for (;;) {
-			sleep((stime + 1) - (short)(time(NULL) % stime));
+			sleep((unsigned)((stime + 1) - (short)(time(NULL) % stime)));
 
 			t2 = time(NULL);
 			dt = t2 - t1;
@@ -342,7 +341,7 @@ main(int ac, char **av)
 			} else if (dt > 0) {
 				TestJobs(t1, t2);
 				RunJobs();
-				sleep(5);
+				sleep((unsigned)5);
 				if (CheckJobs() > 0)
 					stime = 10;
 				else

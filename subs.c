@@ -78,7 +78,7 @@ vlog(int level, int fd, const char *fmt, va_list va)
 
 			time_t t = time(NULL);
 			struct tm *tp = localtime(&t);
-			int buflen, hdrlen = 0;
+			size_t buflen, hdrlen = 0;
 			buf[0] = '\0'; /* in case suppressHeader or strftime fails */
 			if (!suppressHeader) {
 				/*

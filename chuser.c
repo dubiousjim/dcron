@@ -9,9 +9,9 @@
 
 #include "defs.h"
 
-Prototype int ChangeUser(const char *user, char *dochdir);
+Prototype uid_t ChangeUser(const char *user, char *dochdir);
 
-int
+uid_t
 ChangeUser(const char *user, char *dochdir)
 {
 	struct passwd *pas;
@@ -22,7 +22,7 @@ ChangeUser(const char *user, char *dochdir)
 
 	if ((pas = getpwnam(user)) == 0) {
 		printlogf(LOG_ERR, "failed to get uid for %s\n", user);
-		return(-1);
+		return((uid_t)-1);
 	}
 	setenv("USER", pas->pw_name, 1);
 	setenv("HOME", pas->pw_dir, 1);
@@ -34,15 +34,15 @@ ChangeUser(const char *user, char *dochdir)
 
 	if (initgroups(user, pas->pw_gid) < 0) {
 		printlogf(LOG_ERR, "initgroups failed for user %s: %s\n", user, strerror(errno));
-		return(-1);
+		return((uid_t)-1);
 	}
 	if (setregid(pas->pw_gid, pas->pw_gid) < 0) {
 		printlogf(LOG_ERR, "setregid failed for user %s gid %d\n", user, pas->pw_gid);
-		return(-1);
+		return((uid_t)-1);
 	}
 	if (setreuid(pas->pw_uid, pas->pw_uid) < 0) {
 		printlogf(LOG_ERR, "setreuid failed for user %s uid %d\n", user, pas->pw_uid);
-		return(-1);
+		return((uid_t)-1);
 	}
 	if (dochdir) {
 		/* try to change to $HOME */
@@ -51,7 +51,7 @@ ChangeUser(const char *user, char *dochdir)
 			/* dochdir is a backup directory, usually /tmp */
 			if (chdir(dochdir) < 0) {
 				printlogf(LOG_ERR, "chdir to %s failed for user %s\n", dochdir, user);
-				return(-1);
+				return((uid_t)-1);
 			}
 		}
 	}

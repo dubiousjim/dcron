@@ -21,7 +21,7 @@ static int GetReplaceStream(const char *user, const char *file);
 static void EditFile(const char *user, const char *file);
 
 const char *CDir = CRONTABS;
-static int   UserId;
+static uid_t   UserId;
 
 
 int
@@ -161,7 +161,7 @@ main(int ac, char **av)
 			{
 				FILE *fi;
 				int fd;
-				int n;
+				size_t n;
 				char tmp[] = TMPDIR "/crontab.XXXXXX";
 				char buf[RW_BUFFER];
 
@@ -193,8 +193,8 @@ main(int ac, char **av)
 			{
 				char buf[RW_BUFFER];
 				char path[SMALL_BUFFER];
+				ssize_t n;
 				int fd;
-				int n;
 
 				/*
 				 * Read from repFd, write to fd for "$CDir/$USER.new"
@@ -202,7 +202,7 @@ main(int ac, char **av)
 				snprintf(path, sizeof(path), "%s.new", pas->pw_name);
 				if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
 					while ((n = read(repFd, buf, sizeof(buf))) > 0) {
-						write(fd, buf, n);
+						write(fd, buf, (size_t)n);
 					}
 					close(fd);
 					rename(path, pas->pw_name);
@@ -286,9 +286,9 @@ int
 GetReplaceStream(const char *user, const char *file)
 {
 	int filedes[2];
-	int pid;
+	pid_t pid;
 	int fd;
-	int n;
+	ssize_t n;
 	char buf[RW_BUFFER];
 
 	if (pipe(filedes) < 0) {
@@ -331,7 +331,7 @@ GetReplaceStream(const char *user, const char *file)
 	buf[0] = '\0';
 	write(filedes[1], buf, 1);
 	while ((n = read(fd, buf, sizeof(buf))) > 0) {
-		write(filedes[1], buf, n);
+		write(filedes[1], buf, (size_t)n);
 	}
 	exit(EXIT_SUCCESS);
 }
@@ -339,7 +339,7 @@ GetReplaceStream(const char *user, const char *file)
 void
 EditFile(const char *user, const char *file)
 {
-	int pid;
+	pid_t pid;
 
 	if ((pid = fork()) == 0) {
 		/*

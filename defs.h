@@ -135,18 +135,18 @@ typedef struct CronLine {
 	char	*cl_Timestamp;	/* path to timestamp file, if cl_Freq defined */
 	struct	CronWaiter *cl_Waiters;
 	struct	CronNotifier *cl_Notifs;
-	int		cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (startup)	*/
-	int		cl_Delay;		/* defaults to cl_Freq or hourly	*/
+	time_t	cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (startup)	*/
+	time_t	cl_Delay;		/* defaults to cl_Freq or hourly	*/
 	time_t	cl_LastRan;
 	time_t	cl_NotUntil;
-	int		cl_Pid;			/* running pid, 0, or armed (-1), or waiting (-2) */
+	pid_t	cl_Pid;			/* running pid, 0, or armed (-1), or waiting (-2) */
     int		cl_MailFlag;	/* running pid is for mail		*/
-    int		cl_MailPos;	/* 'empty file' size			*/
-    char	cl_Mins[60];	/* 0-59				*/
-    char	cl_Hrs[24];	/* 0-23					*/
-    char	cl_Days[32];	/* 1-31					*/
-    char	cl_Mons[12];	/* 0-11				*/
-    char	cl_Dow[7];	/* 0-6, beginning sunday		*/
+    off_t	cl_MailPos;	/* 'empty file' size			*/
+    short	cl_Mins[60];	/* 0-59				*/
+    short	cl_Hrs[24];	/* 0-23					*/
+    short	cl_Days[32];	/* 1-31					*/
+    short	cl_Mons[12];	/* 0-11				*/
+    short	cl_Dow[7];	/* 0-6, beginning sunday		*/
 } CronLine;
 
 typedef struct CronWaiter {
@@ -154,7 +154,7 @@ typedef struct CronWaiter {
 	struct	CronNotifier *cw_Notifier;
 	struct	CronLine *cw_NotifLine;
 	short	cw_Flag;
-	int		cw_MaxWait;
+	time_t	cw_MaxWait;
 } CronWaiter;
 
 typedef struct CronNotifier {
