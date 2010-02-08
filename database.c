@@ -410,8 +410,10 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 								break;
 							case 5:
 								line.cl_Freq = MONTHLY_FREQ;
+								break;
 							case 6:
 								line.cl_Freq = YEARLY_FREQ;
+								break;
 							/* else line.cl_Freq will remain 0 */
 						}
 					}
