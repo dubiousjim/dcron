@@ -158,8 +158,8 @@ main(int ac, char **av)
 
 				if ((fi = fopen(pas->pw_name, "r"))) {
 					while (fgets(buf, sizeof(buf), fi) != NULL)
-						fputs(buf, stdout);
-					fclose(fi);
+						(void)fputs(buf, stdout);
+					(void)fclose(fi);
 				} else {
 					printlogf(0, "no crontab for %s\n", pas->pw_name);
 					/* no error code */
@@ -181,14 +181,14 @@ main(int ac, char **av)
 				 * Then we delete the temp file, keeping its fd as repFd
 				 */
 				if ((fd = mkstemp(tmp)) >= 0) {
-					chown(tmp, getuid(), getgid());
+					(void)chown(tmp, getuid(), getgid());
 					if ((fi = fopen(pas->pw_name, "r"))) {
 						while ((n = fread(buf, 1, sizeof(buf), fi)) > 0)
-							write(fd, buf, n);
+							(void)write(fd, buf, n);
 					}
 					EditFile(caller, tmp);
-					remove(tmp);
-					lseek(fd, 0L, 0);
+					(void)remove(tmp);
+					(void)lseek(fd, 0L, 0);
 					repFd = fd;
 				} else {
 					printlogf(0, "failed creating %s: %s\n", tmp, strerror(errno));
@@ -213,13 +213,13 @@ main(int ac, char **av)
 				if ((k = stringcpy(path, pas->pw_name, sizeof(path)-4)) >= sizeof(path)-4) {
 					saverr = ENAMETOOLONG;
 				} else {
-					strcat(path + k, ".new");
+					(void)strcat(path + k, ".new");
 					if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
 						while ((n = read(repFd, buf, sizeof(buf))) > 0) {
-							write(fd, buf, (size_t)n);
+							(void)write(fd, buf, (size_t)n);
 						}
-						close(fd);
-						rename(path, pas->pw_name);
+						(void)close(fd);
+						(void)rename(path, pas->pw_name);
 					} else {
 						saverr = errno;
 					}
@@ -231,11 +231,11 @@ main(int ac, char **av)
 							strerror(saverr)
 						   );
 				}
-				close(repFd);
+				(void)close(repFd);
 			}
 			break;
 		case DELETE:
-			remove(pas->pw_name);
+			(void)remove(pas->pw_name);
 			break;
 		case NONE:
 		default:
@@ -253,12 +253,12 @@ main(int ac, char **av)
 
 		while ((fo = fopen(CRONUPDATE, "a"))) {
 			fprintf(fo, "%s\n", pas->pw_name);
-			fflush(fo);
+			(void)fflush(fo);
 			if (fstat(fileno(fo), &st) != 0 || st.st_nlink != 0) {
-				fclose(fo);
+				(void)fclose(fo);
 				break;
 			}
-			fclose(fo);
+			(void)fclose(fo);
 			/* loop */
 		}
 		if (fo == NULL) {
@@ -277,10 +277,10 @@ printlogf(int level, const char *fmt, ...)
 
 	va_start(va, fmt);
 	/*
-	vsnprintf(buf, sizeof(buf), fmt, va);
-	write(2, buf, strlen(buf));
+	(void)vsnprintf(buf, sizeof(buf), fmt, va);
+	(void)write(2, buf, strlen(buf));
 	*/
-	vfprintf(stderr, fmt, va);
+	(void)vfprintf(stderr, fmt, va);
 	va_end(va);
 }
 
@@ -323,9 +323,9 @@ GetReplaceStream(const char *user, const char *file)
 		 * Read from pipe[0], return it (or -1 if it's empty)
 		 */
 
-		close(filedes[1]);
+		(void)close(filedes[1]);
 		if (read(filedes[0], buf, 1) != 1) {
-			close(filedes[0]);
+			(void)close(filedes[0]);
 			filedes[0] = -1;
 		}
 		return(filedes[0]);
@@ -336,7 +336,7 @@ GetReplaceStream(const char *user, const char *file)
 	 * Read from fd for "$file", write to pipe[1]
 	 */
 
-	close(filedes[0]);
+	(void)close(filedes[0]);
 
 	if (ChangeUser(user, NULL) < 0)
 		exit(EXIT_SUCCESS);
@@ -347,9 +347,9 @@ GetReplaceStream(const char *user, const char *file)
 		exit(EXIT_FAILURE);
 	}
 	buf[0] = '\0';
-	write(filedes[1], buf, 1);
+	(void)write(filedes[1], buf, 1);
 	while ((n = read(fd, buf, sizeof(buf))) > 0) {
-		write(filedes[1], buf, (size_t)n);
+		(void)write(filedes[1], buf, (size_t)n);
 	}
 	exit(EXIT_SUCCESS);
 }
@@ -373,7 +373,7 @@ EditFile(const char *user, const char *file)
 				ptr = PATH_VI;
 
 		visual = stringcat(ptr, " ", file, (char *)NULL);
-		execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
+		(void)execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
 
 		printlogf(0, "exec /bin/sh -c '%s' failed\n", visual);
 		exit(EXIT_FAILURE);
@@ -385,6 +385,6 @@ EditFile(const char *user, const char *file)
 		perror("fork");
 		exit(EXIT_FAILURE);
 	}
-	waitpid(pid, NULL, 0);
+	(void)waitpid(pid, NULL, 0);
 }
 

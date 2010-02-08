@@ -100,7 +100,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 
 	path = stringcat(dpath, "/", CRONUPDATE, (char *)NULL);
 	if ((fi = fopen(path, "r")) != NULL) {
-		remove(path);
+		(void)remove(path);
 		printlogf(LOG_INFO, "reading %s/%s\n", dpath, CRONUPDATE);
 		while (fgets(buf, sizeof(buf), fi) != NULL) {
 			/*
@@ -145,7 +145,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 							line = line->cl_Next;
 						}
 						if (line)
-							ArmJob(file, line, t1, force);
+							(void)ArmJob(file, line, t1, force);
 						else {
 							printlogf(LOG_WARNING, "prodding user %s failed: unknown job %s\n", fname, job);
 							/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
@@ -154,7 +154,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 				}
 			}
 		}
-		fclose(fi);
+		(void)fclose(fi);
 	}
 	free(path);
 }
@@ -190,7 +190,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	 * the CRONUPDATE file.
 	 */
 	path = stringcat(dpath, "/", CRONUPDATE, (char *)NULL);
-	remove(path);
+	(void)remove(path);
 	free(path);
 
 	/*
@@ -211,7 +211,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 						dpath, den->d_name);
 			}
 		}
-		closedir(dir);
+		(void)closedir(dir);
 	} else {
 		if (initial_scan)
 			printlogf(LOG_ERR, "failed to scan directory %s\n", dpath);
@@ -266,7 +266,7 @@ ReadTimestamps(const char *user)
 								}
 							}
 						}
-						fclose(fi);
+						(void)fclose(fi);
 					} else {
 						int succeeded = 0;
 						printlogf(LOG_NOTICE, "no timestamp found for user %s job %s\n", file->cf_UserName, line->cl_JobName);
@@ -276,7 +276,7 @@ ReadTimestamps(const char *user)
 								if (fputs("after ", fi) >= 0)
 									if (fputs(buf,fi) >= 0)
 										succeeded = 1;
-							fclose(fi);
+							(void)fclose(fi);
 						}
 						if (!succeeded)
 							printlogf(LOG_WARNING, "failed writing timestamp to %s for user %s %s\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
@@ -629,7 +629,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 			if (maxLines == 0 || maxEntries == 0)
 				printlogf(LOG_WARNING, "maximum number of lines reached for user %s\n", userName);
 		}
-		fclose(fi);
+		(void)fclose(fi);
 	}
 	free(path);
 }
@@ -1025,7 +1025,7 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 				line->cl_Pid = -2;
 			} else if (waiter->cw_NotifLine->cl_Freq < 0) {
 				/* arm any @noauto or @reboot jobs we're waiting on */
-				ArmJob(file, waiter->cw_NotifLine, t1, t2);
+				(void)ArmJob(file, waiter->cw_NotifLine, t1, t2);
 				waiter->cw_Flag = -1;
 				line->cl_Pid = -2;
 			} else {
@@ -1113,7 +1113,7 @@ TestStartupJobs(void)
 					line->cl_Pid = -2;
 					/* we only arm @noauto jobs we're waiting on, not other @reboot jobs */
 					if (waiter->cw_NotifLine && waiter->cw_NotifLine->cl_Freq == FREQ_NOAUTO)
-						ArmJob(file, waiter->cw_NotifLine, t1, t1+60);
+						(void)ArmJob(file, waiter->cw_NotifLine, t1, t1+60);
 					waiter = waiter->cw_Next;
 				}
 				if (line->cl_Pid == -1) {

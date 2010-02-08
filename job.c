@@ -28,7 +28,7 @@ RunJob(CronFile *file, CronLine *line)
 	 * try to open mail output file - owner root so nobody can screw with it.
 	 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 	 */
-	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
+	(void)snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, (int)getpid());
 
 	if ((mailFd = open(mailFile, O_CREAT|O_TRUNC|O_WRONLY|O_EXCL|O_APPEND, 0600)) >= 0) {
@@ -83,15 +83,15 @@ RunJob(CronFile *file, CronLine *line)
 		 * Inside child, we copy our fd 2 (which may be /dev/null) into
 		 * an open-until-exec fd 8
 		 */
-		dup2(2, 8);
-		fcntl(8, F_SETFD, FD_CLOEXEC);
-		fclose(stderr);
+		(void)dup2(2, 8);
+		(void)fcntl(8, F_SETFD, FD_CLOEXEC);
+		(void)fclose(stderr);
 
 		if (mailFd >= 0) {
 			/* stdin is already /dev/null, setup stdout and stderr > mailFile */
-			dup2(mailFd, 1);
-			dup2(mailFd, 2);
-			close(mailFd);
+			(void)dup2(mailFd, 1);
+			(void)dup2(mailFd, 2);
+			(void)close(mailFd);
 		} else {
 			/* complain about no mailFd to log (now associated with fd 8) */
 			dprintlogf(LOG_WARNING, 8, "creating mailfile %s for user %s %s failed: output to /dev/null\n",
@@ -100,16 +100,16 @@ RunJob(CronFile *file, CronLine *line)
 					line->cl_Description
 				   );
 			/* stderr > /dev/null */
-			dup2(1, 2);
+			(void)dup2(1, 2);
 		}
 
 		/*
 		 * Start a new process group, so that children still in the crond's process group
 		 * are all mailjobs.
 		 */
-		setpgid(0, 0);
+		(void)setpgid(0, 0);
 
-		execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL);
+		(void)execl("/bin/sh", "/bin/sh", "-c", line->cl_Shell, NULL);
 		/*
 		 * CHILD FAILED TO EXEC CRONJOB
 		 *
@@ -137,7 +137,7 @@ RunJob(CronFile *file, CronLine *line)
 				line->cl_Description
 				);
 		line->cl_Pid = 0;
-		remove(mailFile);
+		(void)remove(mailFile);
 
 	} else {
 		/*
@@ -148,9 +148,9 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 		char mailFile2[PATH_MAX];
 
-		snprintf(mailFile2, sizeof(mailFile2), TempFileFmt,
+		(void)snprintf(mailFile2, sizeof(mailFile2), TempFileFmt,
 				file->cf_UserName, line->cl_Pid);
-		rename(mailFile, mailFile2);
+		(void)rename(mailFile, mailFile2);
 	}
 
 	/*
@@ -159,7 +159,7 @@ RunJob(CronFile *file, CronLine *line)
 	 */
 
 	if (mailFd >= 0)
-		close(mailFd);
+		(void)close(mailFd);
 }
 
 /*
@@ -213,7 +213,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				if (strftime(buf, sizeof(buf), CRONSTAMP_FMT, localtime(&line->cl_LastRan)))
 					if (fputs(buf, fi) >= 0)
 						succeeded = 1;
-				fclose(fi);
+				(void)fclose(fi);
 			}
 			if (!succeeded)
 				printlogf(LOG_WARNING, "failed writing timestamp to %s for user %s %s\n",
@@ -269,7 +269,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	 * Calculate mailFile's name before clearing cl_Pid
 	 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 	 */
-	snprintf(mailFile, sizeof(mailFile), TempFileFmt,
+	(void)snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, line->cl_Pid);
 	line->cl_Pid = 0;
 
@@ -281,7 +281,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	 */
 
 	mailFd = open(mailFile, O_RDONLY);
-	remove(mailFile);
+	(void)remove(mailFile);
 	if (mailFd < 0) {
 		return;
 	}
@@ -294,7 +294,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			sbuf.st_size == line->cl_MailPos ||
 			!S_ISREG(sbuf.st_mode)
 	   ) {
-		close(mailFd);
+		(void)close(mailFd);
 		return;
 	}
 
@@ -322,17 +322,17 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 * an open-until-exec fd 8
 		 */
 
-		dup2(2, 8);
-		fcntl(8, F_SETFD, FD_CLOEXEC);
-		fclose(stderr);
+		(void)dup2(2, 8);
+		(void)fcntl(8, F_SETFD, FD_CLOEXEC);
+		(void)fclose(stderr);
 
 		/*
 		 * Run sendmail with stdin < mailFile and stderr > /dev/null
 		 */
 
-		dup2(mailFd, 0);
-		dup2(1, 2);
-		close(mailFd);
+		(void)dup2(mailFd, 0);
+		(void)dup2(1, 2);
+		(void)close(mailFd);
 
 		if (!SendMail) {
 			/*
@@ -343,7 +343,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 					line->cl_Description,
 					file->cf_UserName
 				 );
-			execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL);
+			(void)execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL);
 
 			/* exec failed: pass through and log the error */
 			SendMail = SENDMAIL;
@@ -352,7 +352,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			/*
 			 * If using custom mailer script, just try to exec it
 			 */
-			execl(SendMail, SendMail, NULL);
+			(void)execl(SendMail, SendMail, NULL);
 		}
 
 		/*
@@ -390,6 +390,6 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		line->cl_Pid = 0;
 	}
 
-	close(mailFd);
+	(void)close(mailFd);
 
 }

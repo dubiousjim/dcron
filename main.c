@@ -189,16 +189,16 @@ main(int ac, char **av)
 	 * optional detach from controlling terminal
 	 */
 
-	fclose(stdin);
-	fclose(stdout);
+	(void)fclose(stdin);
+	(void)fclose(stdout);
 
 	i = open("/dev/null", O_RDWR);
 	if (i < 0) {
 		perror("open: /dev/null");
 		exit(EXIT_FAILURE);
 	}
-	dup2(i, 0);
-	dup2(i, 1);
+	(void)dup2(i, 0);
+	(void)dup2(i, 1);
 
 	/* create tempdir with permissions 0755 for cron output */
 	TempDir = stringdup(TMPDIR "/cron.XXXXXX", PATH_MAX);
@@ -228,8 +228,8 @@ main(int ac, char **av)
 		if (setsid() < 0)
 			perror("setsid");
 		if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
-			ioctl(fd, (unsigned long)TIOCNOTTY, 0);
-			close(fd);
+			(void)ioctl(fd, (unsigned long)TIOCNOTTY, 0);
+			(void)close(fd);
 		}
 
 		/* setup logging for backgrounded daemons */
@@ -238,8 +238,8 @@ main(int ac, char **av)
 			/* start SIGHUP and SIGCHLD handling while stderr still open */
 			initsignals();
 			/* 2> /dev/null */
-			fclose(stderr);
-			dup2(1, 2);
+			(void)fclose(stderr);
+			(void)dup2(1, 2);
 
 			/* open syslog */
 			openlog(LOG_IDENT, LOG_CONS|LOG_PID, LOG_CRON);
@@ -250,8 +250,8 @@ main(int ac, char **av)
 				/* start SIGHUP ignoring, SIGCHLD handling while stderr still open */
 				initsignals();
 				/* 2> LogFile */
-				fclose(stderr);
-				dup2(fd, 2);
+				(void)fclose(stderr);
+				(void)dup2(fd, 2);
 			} else {
 				dprintf(2, "crond: opening logfile %s failed: %s\n", LogFile, strerror(errno));
 				exit(EXIT_FAILURE);
@@ -272,7 +272,7 @@ main(int ac, char **av)
 
 	/* close all other fds, including the ones we opened as /dev/null and LogFile */
 	for (i = 3; i < FD_MAX; ++i) {
-        close(i);
+        (void)close(i);
     }
 
 
@@ -285,7 +285,7 @@ main(int ac, char **av)
 	SynchronizeDir(CDir, NULL, 1);
 	SynchronizeDir(SCDir, "root", 1);
 	ReadTimestamps(NULL);
-	TestStartupJobs(); /* @startup jobs only run when crond is started, not when their crontab is loaded */
+	(void)TestStartupJobs(); /* @startup jobs only run when crond is started, not when their crontab is loaded */
 
 	{
 		time_t t1 = time(NULL);
@@ -294,7 +294,7 @@ main(int ac, char **av)
 		int stime = 60;
 
 		for (;;) {
-			sleep((unsigned)((stime + 1) - (short)(time(NULL) % stime)));
+			(void)sleep((unsigned)((stime + 1) - (short)(time(NULL) % stime)));
 
 			t2 = time(NULL);
 			dt = t2 - t1;
@@ -331,9 +331,9 @@ main(int ac, char **av)
 				t1 = t2;
 				printlogf(LOG_NOTICE,"time disparity of %d minutes detected\n", dt / 60);
 			} else if (dt > 0) {
-				TestJobs(t1, t2);
+				(void)TestJobs(t1, t2);
 				RunJobs();
-				sleep((unsigned)5);
+				(void)sleep((unsigned)5);
 				if (CheckJobs() > 0)
 					stime = 10;
 				else

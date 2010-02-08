@@ -24,9 +24,9 @@ ChangeUser(const char *user, char *dochdir)
 		printlogf(LOG_ERR, "failed to get uid for %s\n", user);
 		return((uid_t)-1);
 	}
-	setenv("USER", pas->pw_name, 1);
-	setenv("HOME", pas->pw_dir, 1);
-	setenv("SHELL", "/bin/sh", 1);
+	(void)setenv("USER", pas->pw_name, 1);
+	(void)setenv("HOME", pas->pw_dir, 1);
+	(void)setenv("SHELL", "/bin/sh", 1);
 
 	/*
 	 * Change running state to the user in question

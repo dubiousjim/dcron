@@ -48,8 +48,8 @@ dprintf(int fd, const char *fmt, ...)
 
 	va_start(va, fmt);
 	/* [v]snprintf always \0-terminate; we don't care here if result was truncated */
-	vsnprintf(buf, sizeof(buf), fmt, va);
-	write(fd, buf, strlen(buf));
+	(void)vsnprintf(buf, sizeof(buf), fmt, va);
+	(void)write(fd, buf, strlen(buf));
 	va_end(va);
 }
 
@@ -66,11 +66,11 @@ vlog(int level, int fd, const char *fmt, va_list va)
 			 * fd will be 2 except when 2 is bound to a execing subprocess, then it will be 8
 			 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 			 */
-			vsnprintf(buf, sizeof(buf), fmt, va);
-			write(fd, buf, strlen(buf));
+			(void)vsnprintf(buf, sizeof(buf), fmt, va);
+			(void)write(fd, buf, strlen(buf));
 		} else if (SyslogOpt) {
 			/* log to syslog */
-			vsnprintf(buf, sizeof(buf), fmt, va);
+			(void)vsnprintf(buf, sizeof(buf), fmt, va);
 			syslog(level, "%s", buf);
 
 		} else {
@@ -101,7 +101,7 @@ vlog(int level, int fd, const char *fmt, va_list va)
 			if ((buflen = vstringprintf(buf + hdrlen, sizeof(buf) - hdrlen, fmt, va) + hdrlen) >= sizeof(buf))
 				buflen = sizeof(buf) - 1;
 
-			write(fd, buf, buflen);
+			(void)write(fd, buf, buflen);
 			/* if previous write wasn't \n-terminated, we suppress header on next write */
 			suppressHeader = (buf[buflen-1] != '\n');
 
@@ -118,11 +118,11 @@ static void reopenlogger(int sig) {
 			/* can't reopen log file, exit */
 			char errmsg[] = "reopening logfile failed\n";
 			/* unclear whether the va_start/end and vsnprintf calls of dprintf are safe to call during signal handler */
-			write(2, errmsg, sizeof(errmsg)-1);
+			(void)write(2, errmsg, sizeof(errmsg)-1);
 			exit(EXIT_FAILURE);
 		}
-		dup2(fd, 2);
-		close(fd);
+		(void)dup2(fd, 2);
+		(void)close(fd);
 	}
 	errno =  saverr;
 }
