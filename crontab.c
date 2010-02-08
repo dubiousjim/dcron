@@ -16,12 +16,12 @@
 /* needed by chuser.c */
 Prototype void printlogf(int level, const char *fmt, ...);
 
-void Usage(void);
-int GetReplaceStream(const char *user, const char *file);
-void EditFile(const char *user, const char *file);
+static void Usage(void);
+static int GetReplaceStream(const char *user, const char *file);
+static void EditFile(const char *user, const char *file);
 
 const char *CDir = CRONTABS;
-int   UserId;
+static int   UserId;
 
 
 int

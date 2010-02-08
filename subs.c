@@ -15,7 +15,7 @@ Prototype void dprintf(int fd, const char *fmt, ...);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
 
-void vlog(int level, int fd, const char *fmt, va_list va);
+static void vlog(int level, int fd, const char *fmt, va_list va);
 
 char Hostname[SMALL_BUFFER];
 
@@ -110,7 +110,7 @@ vlog(int level, int fd, const char *fmt, va_list va)
 	}
 }
 
-void reopenlogger(int sig) {
+static void reopenlogger(int sig) {
 	int fd;
 	if (getpid() == DaemonPid) {
 		/* only daemon handles, children should ignore */
@@ -126,7 +126,7 @@ void reopenlogger(int sig) {
 	}
 }
 
-void waitmailjob(int sig) {
+static void waitmailjob(int sig) {
 	/*
 	 * Wait for any children in our process group.
 	 * These will all be mailjobs.
