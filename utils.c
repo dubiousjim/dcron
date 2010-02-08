@@ -7,11 +7,11 @@
 #include "defs.h"
 
 
-Prototype void fatal(const char *msg);
+Prototype /*@noreturn@*/ void fatal(const char *msg);
 
-Prototype void *xmalloc(size_t size);
-Prototype void *xcalloc(size_t n, size_t size);
-Prototype void *xrealloc(void *ptr, size_t size);
+Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xmalloc(size_t size);
+Prototype /*@only@*/ /*@null@*/ void *xcalloc(size_t n, size_t size);
+Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xrealloc(/*@only@*/ void *ptr, size_t size);
 
 Prototype char *stringdup(const char *src, size_t maxlen);
 Prototype char *stringcat(const char *first, ...);
@@ -38,8 +38,10 @@ fatal(const char *msg)
 }
 
 
+/*@-incondefs@*/
 void *
-xmalloc(size_t size)
+xmalloc(size_t size) /*@ensures maxSet(result) == (size-1); @*/
+/*@=incondefs@*/
 {
 	register void *result = malloc(size);
 	if (size > 0 && result==NULL)
@@ -47,8 +49,11 @@ xmalloc(size_t size)
 	return result;
 }
 
+/*@-incondefs@*/
+/* can't do multiplication within splint's ensures clauses: assume size=1 */
 void *
-xcalloc(size_t n, size_t size)
+xcalloc(size_t n, size_t size) /*@ensures maxSet(result) >= (n-1); @*/
+/*@=incondefs@*/
 {
 	register void *result = calloc(n, size);
 	if (n > 0 && size > 0 && result==NULL)
@@ -56,8 +61,10 @@ xcalloc(size_t n, size_t size)
 	return result;
 }
 
+/*@-incondefs@*/
 void *
-xrealloc(void *ptr, size_t size)
+xrealloc(void *ptr, size_t size) /*@ensures maxSet(ptr) == (size-1); @*/
+/*@=incondefs@*/
 {
 	register void *result = realloc(ptr, size);
 	if (size > 0 && result==NULL)
