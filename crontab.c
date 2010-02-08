@@ -39,12 +39,22 @@ main(int ac, char **av)
 		perror("getpwuid");
 		exit(EXIT_FAILURE);
 	}
+
+	/* FIXME */
 	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 	/* return value >= size means result was truncated */
 	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
 		printlogf(0, "username '%s' too long\n", caller);
 		exit(EXIT_FAILURE);
 	}
+	/*
+	char *caller;		// user that ran program
+	if (!(caller = strdup(pas->pw_name))) {
+		errno = ENOMEM;
+		perror("caller");
+		exit(EXIT_FAILURE);
+	}
+	*/
 
 	opterr = 0;
 	while ((i=getopt(ac,av,"ledu:c:")) != -1) {
@@ -191,25 +201,34 @@ main(int ac, char **av)
 		case REPLACE:
 			{
 				char buf[RW_BUFFER];
-				char path[SMALL_BUFFER];
+				char path[PATH_MAX];
+				size_t k;
 				ssize_t n;
 				int fd;
+				int saverr = 0;
 
 				/*
 				 * Read from repFd, write to fd for "$CDir/$USER.new"
 				 */
-				snprintf(path, sizeof(path), "%s.new", pas->pw_name);
-				if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
-					while ((n = read(repFd, buf, sizeof(buf))) > 0) {
-						write(fd, buf, (size_t)n);
-					}
-					close(fd);
-					rename(path, pas->pw_name);
+				if ((k = stringcpy(path, pas->pw_name, sizeof(path)-4)) >= sizeof(path)-4) {
+					saverr = ENAMETOOLONG;
 				} else {
+					strcat(path + k, ".new");
+					if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
+						while ((n = read(repFd, buf, sizeof(buf))) > 0) {
+							write(fd, buf, (size_t)n);
+						}
+						close(fd);
+						rename(path, pas->pw_name);
+					} else {
+						saverr = errno;
+					}
+				}
+				if (saverr) {
 					printlogf(0, "failed creating %s/%s: %s\n",
 							CDir,
 							pas->pw_name,
-							strerror(errno)
+							strerror(saverr)
 						   );
 				}
 				close(repFd);
@@ -345,18 +364,16 @@ EditFile(const char *user, const char *file)
 		 * CHILD - change user and run editor on "$file"
 		 */
 		const char *ptr;
-		char visual[SMALL_BUFFER];
+		char *visual;
 
 		if (ChangeUser(user, TMPDIR) < 0)
 			exit(EXIT_SUCCESS);
-		if ((ptr = getenv("EDITOR")) == NULL || strlen(ptr) >= sizeof(visual))
-			if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) >= sizeof(visual))
+		if ((ptr = getenv("EDITOR")) == NULL)
+			if ((ptr = getenv("VISUAL")) == NULL)
 				ptr = PATH_VI;
 
-		/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
-		/* return value >= size means result was truncated */
-		if (snprintf(visual, sizeof(visual), "%s %s", ptr, file) < sizeof(visual))
-			execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
+		visual = stringcat(ptr, " ", file, (char *)NULL);
+		execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
 
 		printlogf(0, "exec /bin/sh -c '%s' failed\n", visual);
 		exit(EXIT_FAILURE);
