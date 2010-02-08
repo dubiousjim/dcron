@@ -94,11 +94,11 @@ vlog(int level, int fd, const char *fmt, va_list va)
 					else
 						Hostname[0] = '\0';   /* gethostname() call failed */
 					/* return value >= size means result was truncated */
-					if ((hdrlen = snprintf(buf, sizeof(hdr), hdr, Hostname)) >= sizeof(hdr))
+					if ((hdrlen = stringprintf(buf, sizeof(hdr), hdr, Hostname)) >= sizeof(hdr))
 						hdrlen = sizeof(hdr) - 1;
 				}
 			}
-			if ((buflen = vsnprintf(buf + hdrlen, sizeof(buf) - hdrlen, fmt, va) + hdrlen) >= sizeof(buf))
+			if ((buflen = vstringprintf(buf + hdrlen, sizeof(buf) - hdrlen, fmt, va) + hdrlen) >= sizeof(buf))
 				buflen = sizeof(buf) - 1;
 
 			write(fd, buf, buflen);
