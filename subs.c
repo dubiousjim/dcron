@@ -109,7 +109,7 @@ vlog(int level, int fd, const char *fmt, va_list va)
 	}
 }
 
-static void reopenlogger(int sig) {
+static void reopenlogger(/*@unused@*/ int sig) {
 	int fd;
 	int saverr = errno;
 	if (getpid() == DaemonPid) {
@@ -127,7 +127,7 @@ static void reopenlogger(int sig) {
 	errno =  saverr;
 }
 
-static void waitmailjob(int sig) {
+static void waitmailjob(/*@unused@*/ int sig) {
 	/*
 	 * Wait for any children in our process group.
 	 * These will all be mailjobs.

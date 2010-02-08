@@ -14,7 +14,7 @@
 #include "defs.h"
 
 /* needed by chuser.c */
-Prototype void printlogf(int level, const char *fmt, ...);
+Prototype void printlogf(/*@unused@*/ int level, const char *fmt, ...);
 
 static void Usage(void);
 static int GetReplaceStream(const char *user, const char *file);
@@ -270,7 +270,7 @@ main(int ac, char **av)
 }
 
 void
-printlogf(int level, const char *fmt, ...)
+printlogf(/*@unused@*/ int level, const char *fmt, ...)
 {
 	va_list va;
 	/* char buf[LOG_BUFFER]; */
