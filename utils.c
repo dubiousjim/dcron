@@ -21,42 +21,45 @@
 
 #include "defs.h"
 
-Prototype char *concat(const char *s1, ...);
+Prototype char *stringcat(const char *first, ...);
 
 char *
-concat(const char *s1, ...)
+stringcat(const char *first, ...)
 {
-	va_list args;
-	char *s, *p, *result;
-	unsigned long l, m, n;
+	va_list va;
+	char *s, *p;
+	register char *dst;
+	size_t k, m, n;
 
-	m = n = strlen(s1);
-	va_start(args, s1);
-	while ((s = va_arg(args, char *))) {
-		l = strlen(s);
-		if ((m += l) < l) break;
+	m = n = strlen(first);
+	va_start(va, first);
+	while ((s = va_arg(va, char *))) {
+		k = strlen(s);
+		if ((m += k) < k) break;
 	}
-	va_end(args);
+	va_end(va);
 	if (s || m >= INT_MAX) return NULL;
 
-	result = malloc(m + 1);
-	if (!result) return NULL;
+	if (!(dst = malloc(m + 1))) return NULL;
 
-	memcpy(p = result, s1, n);
+	memcpy(p = dst, first, n);
 	p += n;
-	va_start(args, s1);
-	while ((s = va_arg(args, char *))) {
-		l = strlen(s);
-		if ((n += l) < l || n > m) break;
-		memcpy(p, s, l);
-		p += l;
+	va_start(va, first);
+	while ((s = va_arg(va, char *))) {
+		/*
+		 * somewhat inefficient: calculates each strlen twice
+		 * but not as bad as using strcat here, as C FAQ 15.4 does
+		 */
+		k = strlen(s);
+		if ((n += k) < k || n > m) break;
+		memcpy(p, s, k);
+		p += k;
 	}
-	va_end(args);
-	if (s || m != n || p - result != n) {
-		free(result);
+	va_end(va);
+	if (s || m != n || p - dst != n) {
+		free(dst);
 		return NULL;
 	}
-
-	*p = 0;
-	return result;
+	*p = '\0';
+	return dst;
 }

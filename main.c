@@ -210,11 +210,7 @@ main(int ac, char **av)
 		perror("chmod");
 		exit(EXIT_FAILURE);
 	}
-	if (!(TempFileFmt = concat(TempDir, "/cron.%s.%d", NULL))) {
-		errno = ENOMEM;
-		perror("main");
-		exit(EXIT_FAILURE);
-	}
+	TempFileFmt = stringcat(TempDir, "/cron.%s.%d", (char *)NULL);
 
 	if (!ForegroundOpt) {
 

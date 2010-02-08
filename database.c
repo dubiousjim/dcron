@@ -98,11 +98,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 	char *fname, *ptok, *job;
 	char *path;
 
-	if (!(path = concat(dpath, "/", CRONUPDATE, NULL))) {
-		errno = ENOMEM;
-		perror("CheckUpdates");
-		exit(EXIT_FAILURE);
-	}
+	path = stringcat(dpath, "/", CRONUPDATE, (char *)NULL);
 	if ((fi = fopen(path, "r")) != NULL) {
 		remove(path);
 		printlogf(LOG_INFO, "reading %s/%s\n", dpath, CRONUPDATE);
@@ -193,11 +189,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	 * Since we are resynchronizing the entire directory, remove the
 	 * the CRONUPDATE file.
 	 */
-	if (!(path = concat(dpath, "/", CRONUPDATE, NULL))) {
-		errno = ENOMEM;
-		perror("SynchronizeDir");
-		exit(EXIT_FAILURE);
-	}
+	path = stringcat(dpath, "/", CRONUPDATE, (char *)NULL);
 	remove(path);
 	free(path);
 
@@ -331,11 +323,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 		}
 	}
 
-	if (!(path = concat(dpath, "/", fileName, NULL))) {
-		errno = ENOMEM;
-		perror("SynchronizeFile");
-		exit(EXIT_FAILURE);
-	}
+	path = stringcat(dpath, "/", fileName, (char *)NULL);
 	if ((fi = fopen(path, "r")) != NULL) {
 		struct stat sbuf;
 
@@ -487,11 +475,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							 * return name = ptr, and if ptr contains sep chars, overwrite first with 0 and point ptr to next char
 							 *                    else set ptr=NULL
 							 */
-							if (!(line.cl_Description = concat("job ", strsep(&ptr, " \t"), NULL))) {
-								errno = ENOMEM;
-								perror("SynchronizeFile");
-								exit(EXIT_FAILURE);
-							}
+							line.cl_Description = stringcat("job ", strsep(&ptr, " \t"), (char *)NULL);
 							line.cl_JobName = line.cl_Description + 4;
 							if (!ptr)
 								printlogf(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, ID_TAG, line.cl_JobName);
@@ -618,11 +602,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				line.cl_Shell = strdup(ptr);
 
 				if (line.cl_Delay > 0) {
-					if (!(line.cl_Timestamp = concat(TSDir, "/", userName, ".", line.cl_JobName, NULL))) {
-						errno = ENOMEM;
-						perror("SynchronizeFile");
-						exit(EXIT_FAILURE);
-					}
+					line.cl_Timestamp = stringcat(TSDir, "/", userName, ".", line.cl_JobName, (char *)NULL);
 					line.cl_NotUntil = tnow + line.cl_Delay;
 				}
 
