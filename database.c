@@ -314,7 +314,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 	if (strcmp(userName, "root") == 0)
 		maxEntries = 65535;
 	else
-		maxEntries = MAXLINES;
+		maxEntries = LINES_MAX;
 	maxLines = maxEntries * 10;
 
 	/*

@@ -106,9 +106,9 @@
 #define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ": "
 #define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ": "
 
-/* Limits */
-#define MAXOPEN			256		/* close fds < this limit */
-#define MAXLINES		256		/* max lines in non-root crontabs */
+/* limits */
+#define FD_MAX		256		/* close fds < this limit */
+#define LINES_MAX		256		/* max lines in non-root crontabs */
 #define SMALL_BUFFER	256
 #define RW_BUFFER		1024
 #define LOG_BUFFER		2048 	/* max size of log line */

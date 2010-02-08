@@ -279,7 +279,7 @@ main(int ac, char **av)
 	}
 
 	/* close all other fds, including the ones we opened as /dev/null and LogFile */
-	for (i = 3; i < MAXOPEN; ++i) {
+	for (i = 3; i < FD_MAX; ++i) {
         close(i);
     }
 
