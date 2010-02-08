@@ -3,7 +3,7 @@
  * SUBS.C
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
- * Copyright 2009 James Pryor <profjim@jimpryor.net>
+ * Copyright 2009-2010 James Pryor <profjim@jimpryor.net>
  * May be distributed under the GNU General Public License
  */
 
