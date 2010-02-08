@@ -333,9 +333,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 			tnow -= tnow % 60;
 
 			file = calloc(1, sizeof(CronFile));
-			file->cf_UserName = strdup(userName);
-			file->cf_FileName = strdup(fileName);
-			file->cf_DPath = strdup(dpath);
+			file->cf_UserName = stringdup(userName, SMALL_BUFFER);
+			file->cf_FileName = stringdup(fileName, SMALL_BUFFER);
+			file->cf_DPath = stringdup(dpath, PATH_MAX);
 			pline = &file->cf_LineBase;
 
 			/* fgets reads at most size-1 chars until \n or EOF, then adds a\0; \n if present is stored in buf */
@@ -599,7 +599,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				/*
 				 * copy command string
 				 */
-				line.cl_Shell = strdup(ptr);
+				line.cl_Shell = stringdup(ptr, RW_BUFFER);
 
 				if (line.cl_Delay > 0) {
 					line.cl_Timestamp = stringcat(TSDir, "/", userName, ".", line.cl_JobName, (char *)NULL);

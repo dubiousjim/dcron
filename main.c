@@ -201,11 +201,7 @@ main(int ac, char **av)
 	dup2(i, 1);
 
 	/* create tempdir with permissions 0755 for cron output */
-	TempDir = strdup(TMPDIR "/cron.XXXXXX");
-	if (mkdtemp(TempDir) == NULL) {
-		perror("mkdtemp");
-		exit(EXIT_FAILURE);
-	}
+	TempDir = stringdup(TMPDIR "/cron.XXXXXX", PATH_MAX);
 	if (chmod(TempDir, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)) {
 		perror("chmod");
 		exit(EXIT_FAILURE);
