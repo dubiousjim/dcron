@@ -2,6 +2,74 @@
 /*
  * UTILS.C
  *
+ */
+
+#include "defs.h"
+
+
+Prototype void fatal(const char *msg);
+
+Prototype void *xmalloc(size_t size);
+Prototype void *xrealloc(void *ptr, size_t size);
+
+Prototype char *stringdup(const char *src, size_t maxlen);
+Prototype char *stringcat(const char *first, ...);
+Prototype size_t stringcpy(char *dest, const char *src, size_t destsize);
+Prototype size_t vstringprintf(char *dest, size_t destsize, const char *fmt, va_list va);
+Prototype size_t stringprintf(char *dest, size_t destsize, const char *fmt, ...);
+
+
+/*
+ * Write "dcron: ${msg}\n" >&2, and exit(1)
+ */
+void
+fatal(const char *msg)
+{
+	/* in general, we should first flush stdout */
+	const char progname[] = "dcron: ";
+	size_t k = strlen(msg);
+	/* FIXME perhaps write to syslog? */
+	(void) write(2, progname, sizeof(progname)-1);
+	(void) write(2, msg, k);
+	if (k > 0 && msg[k-1] != '\n')
+		(void) write(2, "\n", 1);
+	exit(EXIT_FAILURE);
+}
+
+
+void *
+xmalloc(size_t size)
+{
+	register void *result = malloc(size);
+	if (size > 0 && result==NULL)
+		fatal(strerror(ENOMEM)); /* Cannot allocate memory */
+	return result;
+}
+
+
+void *
+xrealloc(void *ptr, size_t size)
+{
+	register void *result = realloc(ptr, size);
+	if (size > 0 && result==NULL)
+		fatal(strerror(ENOMEM)); /* Cannot allocate memory */
+	return result;
+}
+
+/*
+ * returned ptr may be up to maxlen+1 bytes, will always be terminated
+ * improves upon strndup by fail()ing if out of memory, instead of returning NULL
+ * also strndup requires _GNU_SOURCE
+ */
+char *
+stringdup(const char *src, size_t maxlen)
+{
+	register char *dst = (char *)xmalloc(maxlen + 1);
+	*dst = '\0';
+	return strncat(dst, src, maxlen);
+}
+
+/*
  * Concatenates a variable number of strings.  The argument list must be
  * terminated with a NULL.  Returns a pointer to malloc(3)'ed memory with
  * the concatenated string, or NULL on error.
@@ -19,10 +87,6 @@
  *
  */
 
-#include "defs.h"
-
-Prototype char *stringcat(const char *first, ...);
-
 char *
 stringcat(const char *first, ...)
 {
@@ -38,9 +102,12 @@ stringcat(const char *first, ...)
 		if ((m += k) < k) break;
 	}
 	va_end(va);
-	if (s || m >= INT_MAX) return NULL;
+	/* if (s || m >= INT_MAX) return NULL; */
+	if (s || m >= (size_t)INT_MAX)
+		fatal(strerror(ENOMEM));
 
-	if (!(dst = malloc(m + 1))) return NULL;
+	/* if (!(dst = malloc(m + 1))) return NULL; */
+	dst = xmalloc(m + 1);
 
 	memcpy(p = dst, first, n);
 	p += n;
@@ -56,10 +123,81 @@ stringcat(const char *first, ...)
 		p += k;
 	}
 	va_end(va);
-	if (s || m != n || p - dst != n) {
+	if (s || m != n || (size_t)(p - dst) != n) {
 		free(dst);
-		return NULL;
+		/* return NULL; */
+		fatal(strerror(ENOMEM)); /* Cannot allocate memory */
 	}
 	*p = '\0';
 	return dst;
+}
+
+/*
+ * if src and its terminating \0 fit into dstsize, copy them to dst and return strlen(src)
+ * if too long to fit, copy nothing and return strlen that would be needed
+ * improves upon strncpy by returning needed strlen if dst too small (rather than doing unterminated copy); and by not filling rest of dst with additional \0s
+ * equivalent to stringprintf(dst, dstsize, "%s", src);
+ */
+size_t
+stringcpy(char *dst, const char *src, size_t dstsize)
+{
+	size_t k = strlen(src);
+	if (k < dstsize) {
+		strcpy(dst, src);
+	}
+	return k;
+}
+
+/*
+ * portability wrapper around [v]sprintf to ensure C99-ish behavior
+ * if dstsize > 0 and you don't care about truncation, can just use plain [v]sprintf
+ *
+ * if result string and its terminating \0 fit into dstsize, return result's strlen (excluding \0)
+ * C99-ish behavior: if needed to truncate, returns a strlen >= dstsize (which you can rely on to be long enough when > dstsize)
+ *                   if dstsize == 0, dst may be NULL; returns a strlen >= 0 (which you can rely on to be long enough when > 0)
+ */
+size_t
+vstringprintf(char *dst, size_t dstsize, const char *fmt, va_list va)
+{
+	int k;
+	if (dstsize > 0) {
+		/*
+		 * [v]snprintf always terminates, and writes at most dstsize including \0
+		 * on some systems including glibc < 2.0.6, return value will be -1 if needs to truncate
+		 * on C99 and glibc >= 2.1, return value will be the strlen needed (excluding \0)
+		 */
+		k = vsnprintf(dst, dstsize, fmt, va);
+		if (k >= 0) {
+			return (size_t)k;
+		} else {
+			/* hack: this tells the caller we truncated, but an even longer strlen may be required */
+			return dstsize;
+		}
+	} else {
+		/*
+		 * C99 permits dst to be NULL when dstsize == 0, and result will still be strlen needed
+		 * SUSv2 stipulates an unspecified return value < 1 (and does not allow dst == NULL?)
+		 */
+		char dst2[2];
+		k = vsnprintf(dst2, 2, fmt, va);
+		if (k < 1) {
+			/*
+			 * hack: a longer strlen may be required, but we may not be able to determine how long except by doing unbounded sprintf
+			 */
+			return 0;
+		} else {
+			return (size_t)k;
+		}
+	}
+}
+
+size_t
+stringprintf(char *dst, size_t dstsize, const char *fmt, ...)
+{
+	size_t k;
+	va_list va;
+	va_start(va, fmt);
+	k = vstringprintf(dst, dstsize, fmt, va);
+	va_end(va);
+	return k;
 }
