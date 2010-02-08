@@ -340,11 +340,11 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 		struct stat sbuf;
 
 		if (fstat(fileno(fi), &sbuf) == 0 && sbuf.st_uid == DaemonUid) {
-			CronFile *file = calloc(1, sizeof(CronFile));
 			CronLine **pline;
 			time_t tnow = time(NULL);
 			tnow -= tnow % 60;
 
+			file = calloc(1, sizeof(CronFile));
 			file->cf_UserName = strdup(userName);
 			file->cf_FileName = strdup(fileName);
 			file->cf_DPath = strdup(dpath);
