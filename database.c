@@ -119,7 +119,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 				SynchronizeFile(dpath, fname, user_override);
 			else if (!getpwnam(fname))
 				printlogf(LOG_WARNING, "ignoring %s/%s: no such user\n", dpath, fname);
-			else if (*ptok == 0 || *ptok == '\n') {
+			else if (*ptok == '\0' || *ptok == '\n') {
 				SynchronizeFile(dpath, fname, fname);
 				ReadTimestamps(fname);
 			} else {
@@ -255,7 +255,7 @@ ReadTimestamps(const char *user)
 							}
 							sec = (time_t)-1;
 							ptr = strptime(ptr, CRONSTAMP_FMT, &tm);
-							if (ptr && (*ptr == 0 || *ptr == '\n'))
+							if (ptr && (*ptr == '\0' || *ptr == '\n'))
 								/* strptime uses current seconds when seconds not specified? anyway, we don't get round minutes */
 								tm.tm_sec = 0;
 								sec = mktime(&tm);
@@ -361,9 +361,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 
 				len = strlen(ptr);
 				if (len && ptr[len-1] == '\n')
-					ptr[--len] = 0;
+					ptr[--len] = '\0';
 
-				if (*ptr == 0 || *ptr == '#')
+				if (*ptr == '\0' || *ptr == '#')
 					continue;
 
 				if (--maxEntries == 0)
@@ -536,7 +536,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 									more = 0;
 									name = strsep(&ptr, " \t");
 								}
-								if (!ptr || *ptr == 0) {
+								if (!ptr || *ptr == '\0') {
 									/* unexpectedly this was the last token in buf; so abort */
 									printlogf(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, WAIT_TAG, name);
 									ptr = NULL;
@@ -546,12 +546,12 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 									if ((w = strchr(name, '/')) != NULL) {
 										wsave = w++;
 										w = ParseInterval(&waitfor, w);
-										if (!w || *w != 0) {
+										if (!w || *w != '\0') {
 											printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s%s\n", userName, WAIT_TAG, name);
 											ptr = NULL;
 										} else
 											/* truncate name */
-											*wsave = 0;
+											*wsave = '\0';
 									}
 									if (ptr) {
 										/* look for a matching CronLine */
@@ -589,7 +589,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 						++ptr;
 				} while (!line.cl_JobName || !line.cl_Waiters || !line.cl_Freq);
 
-				if (line.cl_JobName && (!ptr || *line.cl_JobName == 0)) {
+				if (line.cl_JobName && (!ptr || *line.cl_JobName == '\0')) {
 					/* we're aborting, or ID= was empty */
 					free(line.cl_Description);
 					line.cl_Description = NULL;

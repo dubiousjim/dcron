@@ -148,19 +148,19 @@ main(int ac, char **av)
 				}
 				break;
 			case 'c':
-				if (*optarg != 0) CDir = optarg;
+				if (*optarg != '\0') CDir = optarg;
 				break;
 			case 's':
-				if (*optarg != 0) SCDir = optarg;
+				if (*optarg != '\0') SCDir = optarg;
 				break;
 			case 't':
-				if (*optarg != 0) TSDir = optarg;
+				if (*optarg != '\0') TSDir = optarg;
 				break;
 			case 'M':
-				if (*optarg != 0) SendMail = optarg;
+				if (*optarg != '\0') SendMail = optarg;
 				break;
 			case 'm':
-				if (*optarg != 0) Mailto = optarg;
+				if (*optarg != '\0') Mailto = optarg;
 				break;
 			default:
 				/*

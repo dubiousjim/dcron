@@ -69,7 +69,7 @@ main(int ac, char **av)
 				break;
 			case 'u':
 				/* getopt guarantees optarg != 0 here */
-				if (*optarg != 0 && getuid() == geteuid()) {
+				if (*optarg != '\0' && getuid() == geteuid()) {
 					pas = getpwnam(optarg);
 					if (pas) {
 						UserId = pas->pw_uid;
@@ -89,7 +89,7 @@ main(int ac, char **av)
 				break;
 			case 'c':
 				/* getopt guarantees optarg != 0 here */
-				if (*optarg != 0 && getuid() == geteuid()) {
+				if (*optarg != '\0' && getuid() == geteuid()) {
 					CDir = optarg;
 				} else {
 					printlogf(0, "-c option: superuser only\n");
@@ -107,7 +107,7 @@ main(int ac, char **av)
 			option = REPLACE;
 			repFile = av[optind];
 			optind++;
-		} else if (av[optind][1] == 0) {
+		} else if (av[optind][1] == '\0') {
 			option = REPLACE;
 			optind++;
 		}
@@ -328,7 +328,7 @@ GetReplaceStream(const char *user, const char *file)
 		printlogf(0, "failed opening %s: %s\n", file, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	buf[0] = 0;
+	buf[0] = '\0';
 	write(filedes[1], buf, 1);
 	while ((n = read(fd, buf, sizeof(buf))) > 0) {
 		write(filedes[1], buf, n);

@@ -79,7 +79,7 @@ vlog(int level, int fd, const char *fmt, va_list va)
 			time_t t = time(NULL);
 			struct tm *tp = localtime(&t);
 			int buflen, hdrlen = 0;
-			buf[0] = 0; /* in case suppressHeader or strftime fails */
+			buf[0] = '\0'; /* in case suppressHeader or strftime fails */
 			if (!suppressHeader) {
 				/*
 				 * run LogHeader through strftime --> [yields hdr] plug in Hostname --> [yields buf]
@@ -90,9 +90,9 @@ vlog(int level, int fd, const char *fmt, va_list va)
 					if (gethostname(Hostname, sizeof(Hostname))==0)
 						/* gethostname successful */
 						/* result will be \0-terminated except gethostname doesn't promise to do so if it has to truncate */
-						Hostname[sizeof(Hostname)-1] = 0;
+						Hostname[sizeof(Hostname)-1] = '\0';
 					else
-						Hostname[0] = 0;   /* gethostname() call failed */
+						Hostname[0] = '\0';   /* gethostname() call failed */
 					/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 					/* return value >= size means result was truncated */
 					if ((hdrlen = snprintf(buf, sizeof(hdr), hdr, Hostname)) >= sizeof(hdr))
