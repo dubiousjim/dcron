@@ -378,13 +378,11 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 						ptr += strlen(FreqAry[j]);
 						switch(j) {
 							case 0:
-								/* noauto */
-								line.cl_Freq = -2;
+								line.cl_Freq = FREQ_NOAUTO;
 								line.cl_Delay = 0;
 								break;
 							case 1:
-								/* reboot */
-								line.cl_Freq = -1;
+								line.cl_Freq = FREQ_REBOOT;
 								line.cl_Delay = 0;
 								break;
 							case 2:
@@ -1105,8 +1103,7 @@ TestStartupJobs(void)
 					printlogf(LOG_DEBUG, "    LINE %s\n", line->cl_Shell);
 			}
 
-			if (line->cl_Freq == -1) {
-				/* freq is @reboot */
+			if (line->cl_Freq == FREQ_REBOOT) {
 
 				line->cl_Pid = -1;
 				/* if we have any waiters, reset them and arm Pid = -2 */
@@ -1115,7 +1112,7 @@ TestStartupJobs(void)
 					waiter->cw_Flag = -1;
 					line->cl_Pid = -2;
 					/* we only arm @noauto jobs we're waiting on, not other @reboot jobs */
-					if (waiter->cw_NotifLine && waiter->cw_NotifLine->cl_Freq == -2)
+					if (waiter->cw_NotifLine && waiter->cw_NotifLine->cl_Freq == FREQ_NOAUTO)
 						ArmJob(file, waiter->cw_NotifLine, t1, t1+60);
 					waiter = waiter->cw_Next;
 				}

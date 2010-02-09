@@ -132,6 +132,11 @@ typedef int bool;
 #define TRUE ((bool)!FALSE)
 #endif
 
+#define FREQ_NOAUTO (-1)
+#define FREQ_REBOOT (-2)
+
+#define PID_ARMED (-1)
+#define PID_WAITING (-2)
 
 
 typedef struct CronFile {
@@ -153,7 +158,7 @@ typedef struct CronLine {
 	char	*cl_Timestamp;	/* path to timestamp file, if cl_Freq defined */
 	struct	CronWaiter *cl_Waiters;
 	struct	CronNotifier *cl_Notifs;
-	time_t	cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (startup)	*/
+	time_t	cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (reboot)	*/
 	time_t	cl_Delay;		/* defaults to cl_Freq or hourly	*/
 	time_t	cl_LastRan;
 	time_t	cl_NotUntil;
