@@ -19,12 +19,12 @@ Prototype bool SyslogOpt;
 Prototype /*@observer@*/ const char *CDir;
 Prototype /*@observer@*/ const char *SCDir;
 Prototype /*@observer@*/ const char *TSDir;
-Prototype /*@null@*/ const char *LogFile;
+Prototype STRING LogFile;
 Prototype /*@observer@*/ const char *LogHeader;
 Prototype uid_t DaemonUid;
 Prototype pid_t DaemonPid;
-Prototype /*@observer@*/ /*@null@*/ const char *SendMail;
-Prototype /*@null@*/ const char *Mailto;
+Prototype /*@observer@*/ STRING SendMail;
+Prototype STRING Mailto;
 Prototype char *TempDir;
 Prototype char *TempFileFmt;
 
@@ -35,10 +35,10 @@ bool SyslogOpt = TRUE;
 /*@observer@*/ const char  *CDir = CRONTABS;
 /*@observer@*/ const char  *SCDir = SCRONTABS;
 /*@observer@*/ const char *TSDir = CRONSTAMPS;
-/*@null@*/ const char *LogFile = NULL; 	/* opened with mode 0600 */
+STRING LogFile = NULL; 	/* opened with mode 0600 */
 /*@observer@*/ const char *LogHeader = LOGHEADER;
-/*@observer@*/ /*@null@*/ const char *SendMail = NULL;
-/*@null@*/ const char *Mailto = NULL;
+/*@observer@*/ STRING SendMail = NULL;
+STRING Mailto = NULL;
 char *TempDir;
 char *TempFileFmt;
 
@@ -48,7 +48,7 @@ pid_t DaemonPid;
 int
 main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0;@*/
 {
-	/*@observer@*/ const char *LevelAry[] = {
+	/*@observer@*/ STRING LevelAry[] = {
 		"emerg",
 		"alert",
 		"crit",

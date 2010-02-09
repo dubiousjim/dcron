@@ -9,9 +9,9 @@
 
 #include "defs.h"
 
-Prototype void CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2);
-Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
-Prototype void ReadTimestamps(const char *user);
+Prototype void CheckUpdates(const char *dpath, STRING user_override, time_t t1, time_t t2);
+Prototype void SynchronizeDir(const char *dpath, STRING user_override, int initial_scan);
+Prototype void ReadTimestamps(STRING user);
 Prototype int TestJobs(time_t t1, time_t t2);
 Prototype int TestStartupJobs(void);
 Prototype int ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2);
@@ -26,7 +26,7 @@ static void FixDayDow(CronLine *line);
 
 static /*@null@*/ CronFile *FileBase = NULL;
 
-static /*@observer@*/ const char *DowAry[] = {
+static /*@observer@*/ STRING DowAry[] = {
 	"sun",
 	"mon",
 	"tue",
@@ -45,7 +45,7 @@ static /*@observer@*/ const char *DowAry[] = {
 	NULL
 };
 
-static /*@observer@*/ const char *MonAry[] = {
+static /*@observer@*/ STRING MonAry[] = {
 	"jan",
 	"feb",
 	"mar",
@@ -74,7 +74,7 @@ static /*@observer@*/ const char *MonAry[] = {
 	NULL
 };
 
-static /*@observer@*/ const char *FreqAry[] = {
+static /*@observer@*/ STRING FreqAry[] = {
 	"noauto",
 	"reboot",
 	"hourly",
@@ -91,7 +91,7 @@ static /*@observer@*/ const char *FreqAry[] = {
  * the file, otherwise they belong to the user_override user.
  */
 void
-CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
+CheckUpdates(const char *dpath, STRING user_override, time_t t1, time_t t2)
 {
 	FILE *fi;
 	char buf[SMALL_BUFFER];
@@ -160,7 +160,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 }
 
 void
-SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
+SynchronizeDir(const char *dpath, STRING user_override, int initial_scan)
 {
 	CronFile **pfile;
 	CronFile *file;
@@ -221,7 +221,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 
 
 void
-ReadTimestamps(const char *user)
+ReadTimestamps(STRING user)
 {
 	CronFile *file;
 	CronLine *line;

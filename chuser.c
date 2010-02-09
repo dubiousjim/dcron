@@ -9,10 +9,10 @@
 
 #include "defs.h"
 
-Prototype uid_t ChangeUser(const char *user, char *dochdir);
+Prototype uid_t ChangeUser(const char *user, STRING dochdir);
 
 uid_t
-ChangeUser(const char *user, char *dochdir)
+ChangeUser(const char *user, STRING dochdir)
 {
 	struct passwd *pas;
 

@@ -133,6 +133,8 @@ typedef int bool;
 #define TRUE ((bool)!FALSE)
 #endif
 
+typedef /*@null@*/ const char *STRING;
+
 #define FREQ_NOAUTO (-1)
 #define FREQ_REBOOT (-2)
 
