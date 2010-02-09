@@ -191,6 +191,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	 * check return status
 	 */
 	if (line->cl_Delay > 0) {
+		assert(line->cl_Timestamp!=NULL);
 		if (exit_status == EAGAIN) {
 			/*
 			 * returned EAGAIN, wait cl_Delay then retry
