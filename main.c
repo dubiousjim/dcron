@@ -228,7 +228,9 @@ main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0
 		if (setsid() < 0)
 			perror("setsid");
 		if ((fd = open("/dev/tty", O_RDWR)) >= 0) {
+			/*@-nullpass@*/
 			(void)ioctl(fd, (unsigned long)TIOCNOTTY, 0);
+			/*@=nullpass@*/
 			(void)close(fd);
 		}
 
