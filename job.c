@@ -28,8 +28,10 @@ RunJob(CronFile *file, CronLine *line)
 	 * try to open mail output file - owner root so nobody can screw with it.
 	 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 	 */
+	/*@-formatconst@*/
 	(void)snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, (int)getpid());
+	/*@=formatconst@*/
 
 	if ((mailFd = open(mailFile, O_CREAT|O_TRUNC|O_WRONLY|O_EXCL|O_APPEND, 0600)) >= 0) {
 		/* success: write headers to mailFile */
@@ -148,8 +150,10 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 		char mailFile2[PATH_MAX];
 
+		/*@-formatconst@*/
 		(void)snprintf(mailFile2, sizeof(mailFile2), TempFileFmt,
 				file->cf_UserName, line->cl_Pid);
+		/*@=formatconst@*/
 		(void)rename(mailFile, mailFile2);
 	}
 
@@ -269,8 +273,10 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	 * Calculate mailFile's name before clearing cl_Pid
 	 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 	 */
+	/*@-formatconst@*/
 	(void)snprintf(mailFile, sizeof(mailFile), TempFileFmt,
 			file->cf_UserName, line->cl_Pid);
+	/*@=formatconst@*/
 	line->cl_Pid = 0;
 
 	line->cl_MailFlag = FALSE;
