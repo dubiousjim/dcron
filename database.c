@@ -109,13 +109,20 @@ CheckUpdates(const char *dpath, STRING user_override, time_t t1, time_t t2)
 			 * 		if there's a following sep, overwrite it to 0 and point ptok to next char
 			 * 		else point ptok at buf's terminating 0
 			 */
+			/*@-unrecog@*/
 			fname = strtok_r(buf, " \t\n", &ptok);
+			/*@=unrecog@*/
+			/* FIXME splint thinks ptok is still undefined */
 
 			if (user_override)
 				SynchronizeFile(dpath, fname, user_override);
 			else if (!getpwnam(fname))
 				printlogf(LOG_WARNING, "ignoring %s/%s: no such user\n", dpath, fname);
-			else if (*ptok == '\0' || *ptok == '\n') {
+			else
+				/*@-usedef@*/
+				if (*ptok == '\0' || *ptok == '\n')
+				/*@=usedef@*/
+			{
 				SynchronizeFile(dpath, fname, fname);
 				ReadTimestamps(fname);
 			} else {
@@ -246,7 +253,9 @@ ReadTimestamps(STRING user)
 								ptr += 6;
 							}
 							sec = (time_t)-1;
+							/*@-unrecog@*/
 							ptr = strptime(ptr, CRONSTAMP_FMT, &tm);
+							/*@=unrecog@*/
 							if (ptr && (*ptr == '\0' || *ptr == '\n'))
 								/* strptime uses current seconds when seconds not specified? anyway, we don't get round minutes */
 								tm.tm_sec = 0;
@@ -473,7 +482,12 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							 * return name = ptr, and if ptr contains sep chars, overwrite first with 0 and point ptr to next char
 							 *                    else set ptr=NULL
 							 */
-							line.cl_Description = stringcat("job ", strsep(&ptr, " \t"), (char *)NULL);
+							line.cl_Description = stringcat("job ",
+									/*@-unrecog@*/
+								   strsep(&ptr, " \t"),
+									/*@=unrecog@*/
+								   (char *)NULL
+							);
 							line.cl_JobName = line.cl_Description + 4;
 							if (!ptr)
 								printlogf(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, ID_TAG, line.cl_JobName);
