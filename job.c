@@ -17,7 +17,7 @@ Prototype const char *SendMail;
 void
 RunJob(CronFile *file, CronLine *line)
 {
-	char mailFile[SMALL_BUFFER];
+	char mailFile[PATH_MAX];
 	int mailFd;
 	const char *value = Mailto;
 
@@ -145,7 +145,7 @@ RunJob(CronFile *file, CronLine *line)
 		 *
 		 * rename mail-file based on pid of child process
 		 */
-		char mailFile2[SMALL_BUFFER];
+		char mailFile2[PATH_MAX];
 
 		snprintf(mailFile2, sizeof(mailFile2), TempFileFmt,
 				file->cf_UserName, line->cl_Pid);
@@ -169,7 +169,7 @@ void
 EndJob(CronFile *file, CronLine *line, int exit_status)
 {
 	int mailFd;
-	char mailFile[SMALL_BUFFER];
+	char mailFile[PATH_MAX];
 	struct stat sbuf;
 	struct	CronNotifier *notif;
 
