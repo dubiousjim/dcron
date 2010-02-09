@@ -18,10 +18,10 @@ Prototype int ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2);
 Prototype void RunJobs(void);
 Prototype int CheckJobs(void);
 
-static void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
+static void SynchronizeFile(const char *dpath, const char *fileName, const char *userName);
 static void DeleteFile(CronFile **pfile);
 static char *ParseInterval(int *interval, char *ptr);
-static char *ParseField(char *userName, char *ary, int modvalue, int off, int onvalue, const char **names, char *ptr);
+static char *ParseField(char *user, char *ary, int modvalue, int off, int onvalue, const char **names, char *ptr);
 static void FixDayDow(CronLine *line);
 
 static CronFile *FileBase = NULL;
