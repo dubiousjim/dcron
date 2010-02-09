@@ -13,8 +13,8 @@ Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xmalloc(size_t size);
 Prototype /*@only@*/ /*@null@*/ void *xcalloc(size_t n, size_t size);
 Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xrealloc(/*@only@*/ void *ptr, size_t size);
 
-Prototype char *stringdup(const char *src, size_t maxlen);
-Prototype char *stringcat(const char *first, ...);
+Prototype /*@maynotreturn@*/ /*@only@*/ char *stringdup(const char *src, size_t maxlen);
+Prototype /*@maynotreturn@*/ /*@only@*/ char *stringcat(const char *first, ...);
 Prototype size_t stringcpy(/*@unique@*/ /*@out@*/ char *dst, const char *src, size_t dstsize) /*@modifies *dst@*/;
 Prototype size_t vstringprintf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, va_list va) /*@modifies *dst@*/;
 Prototype size_t stringprintf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, ...) /*@modifies *dst@*/;
@@ -81,6 +81,7 @@ char *
 stringdup(const char *src, size_t maxlen)
 {
 	register char *dst = (char *)xmalloc(maxlen + 1);
+	assert(dst!=NULL);
 	*dst = '\0';
 	return strncat(dst, src, maxlen);
 }
@@ -124,6 +125,7 @@ stringcat(const char *first, ...)
 
 	/* if (!(dst = malloc(m + 1))) return NULL; */
 	dst = xmalloc(m + 1);
+	assert(dst!=NULL);
 
 	memcpy(p = dst, first, n);
 	p += n;
