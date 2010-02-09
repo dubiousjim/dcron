@@ -205,6 +205,7 @@ SynchronizeDir(const char *dpath, STRING user_override, int initial_scan)
 	 */
 	if ((dir = opendir(dpath)) != NULL) {
 		while ((den = readdir(dir)) != NULL) {
+			assert(den->d_name != NULL);
 			if (strchr(den->d_name, '.') != NULL)
 				continue;
 			if (strcmp(den->d_name, CRONUPDATE) == 0)
