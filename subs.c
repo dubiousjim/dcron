@@ -114,6 +114,7 @@ static void reopenlogger(/*@unused@*/ int sig) {
 	int saverr = errno;
 	if (getpid() == DaemonPid) {
 		/* only daemon handles, children should ignore */
+		assert(LogFile!=NULL);
 		if ((fd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) < 0) {
 			/* can't reopen log file, exit */
 			char errmsg[] = "reopening logfile failed\n";

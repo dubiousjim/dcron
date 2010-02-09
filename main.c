@@ -246,6 +246,7 @@ main(int ac, char **av)
 
 		} else {
 			/* open logfile */
+			assert(LogFile!=NULL);
 			if ((fd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) >= 0) {
 				/* start SIGHUP ignoring, SIGCHLD handling while stderr still open */
 				initsignals();
