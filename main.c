@@ -16,14 +16,14 @@ Prototype bool DebugOpt;
 Prototype int LogLevel;
 Prototype bool ForegroundOpt;
 Prototype bool SyslogOpt;
-Prototype const char *CDir;
-Prototype const char *SCDir;
-Prototype const char *TSDir;
+Prototype /*@observer@*/ const char *CDir;
+Prototype /*@observer@*/ const char *SCDir;
+Prototype /*@observer@*/ const char *TSDir;
 Prototype /*@null@*/ const char *LogFile;
-Prototype const char *LogHeader;
+Prototype /*@observer@*/ const char *LogHeader;
 Prototype uid_t DaemonUid;
 Prototype pid_t DaemonPid;
-Prototype /*@null@*/ const char *SendMail;
+Prototype /*@observer@*/ /*@null@*/ const char *SendMail;
 Prototype /*@null@*/ const char *Mailto;
 Prototype char *TempDir;
 Prototype char *TempFileFmt;
@@ -32,12 +32,12 @@ bool DebugOpt = FALSE;
 int LogLevel = LOG_LEVEL;
 bool ForegroundOpt = FALSE;
 bool SyslogOpt = TRUE;
-const char  *CDir = CRONTABS;
-const char  *SCDir = SCRONTABS;
-const char *TSDir = CRONSTAMPS;
+/*@observer@*/ const char  *CDir = CRONTABS;
+/*@observer@*/ const char  *SCDir = SCRONTABS;
+/*@observer@*/ const char *TSDir = CRONSTAMPS;
 /*@null@*/ const char *LogFile = NULL; 	/* opened with mode 0600 */
-const char *LogHeader = LOGHEADER;
-/*@null@*/ const char *SendMail = NULL;
+/*@observer@*/ const char *LogHeader = LOGHEADER;
+/*@observer@*/ /*@null@*/ const char *SendMail = NULL;
 /*@null@*/ const char *Mailto = NULL;
 char *TempDir;
 char *TempFileFmt;
@@ -48,7 +48,7 @@ pid_t DaemonPid;
 int
 main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0;@*/
 {
-	const char *LevelAry[] = {
+	/*@observer@*/ const char *LevelAry[] = {
 		"emerg",
 		"alert",
 		"crit",

@@ -7,7 +7,7 @@
 #include "defs.h"
 
 
-Prototype /*@noreturn@*/ void fatal(const char *msg);
+Prototype /*@noreturn@*/ void fatal(/*@observer@*/ const char *msg);
 
 Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xmalloc(size_t size);
 Prototype /*@only@*/ /*@null@*/ void *xcalloc(size_t n, size_t size);

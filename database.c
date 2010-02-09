@@ -26,7 +26,7 @@ static void FixDayDow(CronLine *line);
 
 static /*@null@*/ CronFile *FileBase = NULL;
 
-static const char *DowAry[] = {
+static /*@observer@*/ const char *DowAry[] = {
 	"sun",
 	"mon",
 	"tue",
@@ -45,7 +45,7 @@ static const char *DowAry[] = {
 	NULL
 };
 
-static const char *MonAry[] = {
+static /*@observer@*/ const char *MonAry[] = {
 	"jan",
 	"feb",
 	"mar",
@@ -74,7 +74,7 @@ static const char *MonAry[] = {
 	NULL
 };
 
-static const char *FreqAry[] = {
+static /*@observer@*/ const char *FreqAry[] = {
 	"noauto",
 	"reboot",
 	"hourly",
