@@ -70,8 +70,7 @@ main(int ac, char **av)
 			case 'u':
 				/* getopt guarantees optarg != 0 here */
 				if (*optarg != '\0' && getuid() == geteuid()) {
-					pas = getpwnam(optarg);
-					if (pas) {
+					if ((pas = getpwnam(optarg))) {
 						UserId = pas->pw_uid;
 						/* paranoia */
 						if ((pas = getpwuid(UserId)) == NULL) {

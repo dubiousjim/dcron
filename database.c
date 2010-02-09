@@ -453,16 +453,11 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					 * parse date ranges
 					 */
 
-					ptr = ParseField(file->cf_UserName, line.cl_Mins, 60, 0, 1,
-							NULL, ptr);
-					ptr = ParseField(file->cf_UserName, line.cl_Hrs,  24, 0, 1,
-							NULL, ptr);
-					ptr = ParseField(file->cf_UserName, line.cl_Days, 32, 0, 1,
-							NULL, ptr);
-					ptr = ParseField(file->cf_UserName, line.cl_Mons, 12, -1, 1,
-							MonAry, ptr);
-					ptr = ParseField(file->cf_UserName, line.cl_Dow, 7, 0, 31,
-							DowAry, ptr);
+					ptr = ParseField(file->cf_UserName, line.cl_Mins, 60, 0, 1, NULL, ptr);
+					ptr = ParseField(file->cf_UserName, line.cl_Hrs,  24, 0, 1, NULL, ptr);
+					ptr = ParseField(file->cf_UserName, line.cl_Days, 32, 0, 1, NULL, ptr);
+					ptr = ParseField(file->cf_UserName, line.cl_Mons, 12, -1, 1, MonAry, ptr);
+					ptr = ParseField(file->cf_UserName, line.cl_Dow, 7, 0, 31, DowAry, ptr);
 					/*
 					 * check failure
 					 */
@@ -888,7 +883,8 @@ DeleteFile(CronFile **pfile)
 			free(line->cl_Shell);
 
 			if (line->cl_JobName)
-				/* this frees both cl_Description and cl_JobName
+				/*
+				 * this frees both cl_Description and cl_JobName
 				 * if cl_JobName is NULL, Description pointed to ch_Shell, which was already freed
 				 */
 				free(line->cl_Description);

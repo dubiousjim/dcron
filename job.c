@@ -215,7 +215,11 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				fclose(fi);
 			}
 			if (!succeeded)
-				printlogf(LOG_WARNING, "failed writing timestamp to %s for user %s %s\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
+				printlogf(LOG_WARNING, "failed writing timestamp to %s for user %s %s\n",
+						line->cl_Timestamp,
+						file->cf_UserName,
+						line->cl_Description
+						);
 			line->cl_NotUntil = line->cl_LastRan;
 			line->cl_NotUntil += (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
 		}
