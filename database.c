@@ -20,8 +20,8 @@ Prototype int CheckJobs(void);
 
 static void SynchronizeFile(const char *dpath, const char *fileName, const char *userName);
 static void DeleteFile(CronFile **pfile);
-static /*@null@*/ char *ParseInterval(time_t *interval, char *ptr);
-static /*@null@*/ char *ParseField(char *user, short *ary, int modvalue, int off, int onvalue, /*@null@*/ const char **names, char *ptr);
+static /*@null@*/ char *ParseInterval(time_t *interval, /*@returned@*/ char *ptr);
+static /*@null@*/ char *ParseField(char *user, short *ary, int modvalue, int off, int onvalue, /*@null@*/ const char **names, /*@null@*/ /*@returned@*/ char *ptr);
 static void FixDayDow(CronLine *line);
 
 static /*@null@*/ CronFile *FileBase = NULL;
