@@ -63,6 +63,11 @@ main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0
 		NULL
 	};
 	int i;
+	assert(LOG_LEVEL<11);
+	/*@-boundsread@*/
+	assert(LevelAry[0]!=NULL);
+	assert(LevelAry[LOG_LEVEL]!=NULL);
+	/*@=boundsread@*/
 
 	/*
 	 * parse options
@@ -148,6 +153,7 @@ main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0
 					LogHeader = LOCALE_LOGHEADER;
 				}
 				break;
+			/*@-boundsread@*/
 			case 'c':
 				if (*optarg != '\0') CDir = optarg;
 				break;
@@ -163,6 +169,7 @@ main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0
 			case 'm':
 				if (*optarg != '\0') Mailto = optarg;
 				break;
+			/*@=boundsread@*/
 			default:
 				/*
 				 * check for parse error
@@ -285,7 +292,9 @@ main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0
 	 *             of 1 second.
 	 */
 
+	/*@-boundsread@*/
 	printlogf(LOG_NOTICE,"%s " VERSION " dillon's cron daemon, started with loglevel %s\n", av[0], LevelAry[LogLevel]);
+	/*@=boundsread@*/
 	SynchronizeDir(CDir, NULL, 1);
 	SynchronizeDir(SCDir, "root", 1);
 	ReadTimestamps(NULL);
