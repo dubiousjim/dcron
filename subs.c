@@ -56,7 +56,7 @@ void
 vlog(int level, int fd, const char *fmt, va_list va)
 {
 	char buf[LOG_BUFFER];
-	static short suppressHeader = 0;
+	static bool suppressHeader = FALSE;
 
 	if (level <= LogLevel) {
 		if (ForegroundOpt) {

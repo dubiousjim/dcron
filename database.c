@@ -182,7 +182,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	 */
 	pfile = &FileBase;
 	while ((file = *pfile) != NULL) {
-		if (file->cf_Deleted == 0 && strcmp(file->cf_DPath, dpath) == 0) {
+		if (!file->cf_Deleted && strcmp(file->cf_DPath, dpath) == 0) {
 			DeleteFile(pfile);
 		} else {
 			pfile = &file->cf_Next;
@@ -241,7 +241,7 @@ ReadTimestamps(const char *user)
 
 	file = FileBase;
 	while (file != NULL) {
-		if (file->cf_Deleted == 0 && (!user || strcmp(user, file->cf_UserName) == 0)) {
+		if (!file->cf_Deleted && (!user || strcmp(user, file->cf_UserName) == 0)) {
 			line = file->cf_LineBase;
 			while (line != NULL) {
 				if (line->cl_Timestamp) {
@@ -322,7 +322,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 	 */
 	pfile = &FileBase;
 	while ((file = *pfile) != NULL) {
-		if (file->cf_Deleted == 0 && strcmp(file->cf_DPath, dpath) == 0 &&
+		if (!file->cf_Deleted && strcmp(file->cf_DPath, dpath) == 0 &&
 				strcmp(file->cf_FileName, fileName) == 0
 		   ) {
 			DeleteFile(pfile);
@@ -527,7 +527,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							printlogf(LOG_WARNING, "failed parsing crontab for user %s: repeated %s\n", userName, ptr);
 							ptr = NULL;
 						} else {
-							short more = 1;
+							bool more = TRUE;
 							char *name;
 							ptr += strlen(WAIT_TAG);
 							do {
@@ -535,7 +535,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 								if (strcspn(ptr,",") < strcspn(ptr," \t"))
 									name = strsep(&ptr, ",");
 								else {
-									more = 0;
+									more = FALSE;
 									name = strsep(&ptr, " \t");
 								}
 								if (!ptr || *ptr == '\0') {
@@ -818,12 +818,12 @@ void
 FixDayDow(CronLine *line)
 {
 	unsigned short i,j;
-	short weekUsed = 0;
-	short daysUsed = 0;
+	bool weekUsed = FALSE;
+	bool daysUsed = FALSE;
 
 	for (i = 0; i < arysize(line->cl_Dow); ++i) {
 		if (line->cl_Dow[i] == 0) {
-			weekUsed = 1;
+			weekUsed = TRUE;
 			break;
 		}
 	}
@@ -831,7 +831,7 @@ FixDayDow(CronLine *line)
 		if (line->cl_Days[i] == 0) {
 			if (weekUsed) {
 				if (!daysUsed) {
-					daysUsed = 1;
+					daysUsed = TRUE;
 					/* change from "every Mon" to "ith Mon"
 					 * 6th,7th... Dow are treated as 1st,2nd... */
 					for (j = 0; j < arysize(line->cl_Dow); ++j) {
@@ -847,7 +847,7 @@ FixDayDow(CronLine *line)
 				/* continue cycling through cl_Days */
 			}
 			else {
-				daysUsed = 1;
+				daysUsed = TRUE;
 				break;
 			}
 		}
@@ -876,12 +876,12 @@ DeleteFile(CronFile **pfile)
 	CronWaiter **pwaiters, *waiters;
 	CronNotifier **pnotifs, *notifs;
 
-	file->cf_Running = 0;
-	file->cf_Deleted = 1;
+	file->cf_Running = FALSE;
+	file->cf_Deleted = TRUE;
 
 	while ((line = *pline) != NULL) {
 		if (line->cl_Pid > 0) {
-			file->cf_Running = 1;
+			file->cf_Running = TRUE;
 			pline = &line->cl_Next;
 		} else {
 			*pline = line->cl_Next;
@@ -915,7 +915,7 @@ DeleteFile(CronFile **pfile)
 			free(line);
 		}
 	}
-	if (file->cf_Running == 0) {
+	if (!file->cf_Running) {
 		*pfile = file->cf_Next;
 		free(file->cf_DPath);
 		free(file->cf_FileName);
@@ -1033,7 +1033,7 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 			);
 	} else if (t2 == -1 && line->cl_Pid != -1) {
 		line->cl_Pid = -1;
-		file->cf_Ready = 1;
+		file->cf_Ready = TRUE;
 		return 1;
 	} else if (line->cl_Pid == 0) {
 		/* arming a waiting job (cl_Pid == -2) without forcing has no effect */
@@ -1090,7 +1090,7 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 		}
 		if (line->cl_Pid == -1) {
 			/* job is ready to run */
-			file->cf_Ready = 1;
+			file->cf_Ready = TRUE;
 			if (DebugOpt)
 				printlogf(LOG_DEBUG, "scheduled user %s %s\n",
 						file->cf_UserName,
@@ -1145,7 +1145,7 @@ TestStartupJobs(void)
 				}
 				if (line->cl_Pid == -1) {
 					/* job is ready to run */
-					file->cf_Ready = 1;
+					file->cf_Ready = TRUE;
 					++nJobs;
 					if (DebugOpt)
 						printlogf(LOG_DEBUG, "    scheduled %s\n", line->cl_Description);
@@ -1167,7 +1167,7 @@ RunJobs(void)
 
 	for (file = FileBase; file; file = file->cf_Next) {
 		if (file->cf_Ready) {
-			file->cf_Ready = 0;
+			file->cf_Ready = FALSE;
 
 			for (line = file->cf_LineBase; line; line = line->cl_Next) {
 				if (line->cl_Pid == -1) {
@@ -1183,9 +1183,9 @@ RunJobs(void)
 						);
 					if (line->cl_Pid < 0)
 						/* QUESTION how could this happen? RunJob will leave cl_Pid set to 0 or the actual pid */
-						file->cf_Ready = 1;
+						file->cf_Ready = TRUE;
 					else if (line->cl_Pid > 0)
-						file->cf_Running = 1;
+						file->cf_Running = TRUE;
 				}
 			}
 		}
@@ -1208,7 +1208,7 @@ CheckJobs(void)
 
 	for (file = FileBase; file; file = file->cf_Next) {
 		if (file->cf_Running) {
-			file->cf_Running = 0;
+			file->cf_Running = FALSE;
 
 			for (line = file->cf_LineBase; line; line = line->cl_Next) {
 				if (line->cl_Pid > 0) {
@@ -1225,12 +1225,12 @@ CheckJobs(void)
 						EndJob(file, line, status);
 
 					} else if (r == 0) {
-						file->cf_Running = 1;
+						file->cf_Running = TRUE;
 					}
 				}
 			}
 		}
-		nStillRunning += file->cf_Running;
+		nStillRunning += (int)file->cf_Running;
 	}
 	return(nStillRunning);
 }

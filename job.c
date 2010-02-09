@@ -22,7 +22,7 @@ RunJob(CronFile *file, CronLine *line)
 	const char *value = Mailto;
 
 	line->cl_Pid = 0;
-	line->cl_MailFlag = 0;
+	line->cl_MailFlag = FALSE;
 
 	/*
 	 * try to open mail output file - owner root so nobody can screw with it.
@@ -33,7 +33,7 @@ RunJob(CronFile *file, CronLine *line)
 
 	if ((mailFd = open(mailFile, O_CREAT|O_TRUNC|O_WRONLY|O_EXCL|O_APPEND, 0600)) >= 0) {
 		/* success: write headers to mailFile */
-		line->cl_MailFlag = 1;
+		line->cl_MailFlag = TRUE;
 		/* if we didn't specify a -m Mailto, use the local user */
 		if (!value)
 			value = file->cf_UserName;
@@ -254,7 +254,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 					);
 
 
-	if (line->cl_MailFlag != 1) {
+	if (!line->cl_MailFlag) {
 		/* End of job and no mail file */
 		line->cl_Pid = 0;
 		return;
@@ -267,7 +267,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			file->cf_UserName, line->cl_Pid);
 	line->cl_Pid = 0;
 
-	line->cl_MailFlag = 0;
+	line->cl_MailFlag = FALSE;
 
 	/*
 	 * Check mail file. If size has increased and

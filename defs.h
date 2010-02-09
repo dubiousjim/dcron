@@ -114,6 +114,21 @@
 #define LOG_BUFFER		2048 	/* max size of log line */
 
 
+/* types */
+
+/* bool is a keyword in C++ */
+/*@-cppnames@*/
+typedef int bool;
+/*@=cppnames@*/
+
+#ifndef FALSE
+#define FALSE ((bool)0)
+#endif
+
+#ifndef TRUE
+#define TRUE ((bool)!FALSE)
+#endif
+
 
 
 typedef struct CronFile {
@@ -122,9 +137,9 @@ typedef struct CronFile {
     char	*cf_DPath;	/* Directory path to cronfile */
     char	*cf_FileName;	/* Name of cronfile */
     char	*cf_UserName;	/* username to execute jobs as */
-    int		cf_Ready;	/* bool: one or more jobs ready	*/
-    int		cf_Running;	/* bool: one or more jobs running */
-    int		cf_Deleted;	/* marked for deletion, ignore	*/
+    bool	cf_Ready;		/* bool: one or more jobs ready	*/
+    bool	cf_Running;		/* bool: one or more jobs running */
+    bool	cf_Deleted;		/* marked for deletion, ignore	*/
 } CronFile;
 
 typedef struct CronLine {
@@ -140,7 +155,7 @@ typedef struct CronLine {
 	time_t	cl_LastRan;
 	time_t	cl_NotUntil;
 	pid_t	cl_Pid;			/* running pid, 0, or armed (-1), or waiting (-2) */
-    int		cl_MailFlag;	/* running pid is for mail		*/
+    bool	cl_MailFlag;	/* running pid is for mail		*/
     off_t	cl_MailPos;	/* 'empty file' size			*/
     short	cl_Mins[60];	/* 0-59				*/
     short	cl_Hrs[24];	/* 0-23					*/

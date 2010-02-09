@@ -12,10 +12,10 @@
 
 #include "defs.h"
 
-Prototype short DebugOpt;
+Prototype bool DebugOpt;
 Prototype int LogLevel;
-Prototype short ForegroundOpt;
-Prototype short SyslogOpt;
+Prototype bool ForegroundOpt;
+Prototype bool SyslogOpt;
 Prototype const char *CDir;
 Prototype const char *SCDir;
 Prototype const char *TSDir;
@@ -28,10 +28,10 @@ Prototype const char *Mailto;
 Prototype char *TempDir;
 Prototype char *TempFileFmt;
 
-short DebugOpt = 0;
+bool DebugOpt = FALSE;
 int LogLevel = LOG_LEVEL;
-short ForegroundOpt = 0;
-short SyslogOpt = 1;
+bool ForegroundOpt = FALSE;
+bool SyslogOpt = TRUE;
 const char  *CDir = CRONTABS;
 const char  *SCDir = SCRONTABS;
 const char *TSDir = CRONSTAMPS;
@@ -127,20 +127,20 @@ main(int ac, char **av)
 				}
 				break;
 			case 'd':
-				DebugOpt = 1;
+				DebugOpt = TRUE;
 				LogLevel = LOG_DEBUG;
 				/* fall through to include f too */
 			case 'f':
-				ForegroundOpt = 1;
+				ForegroundOpt = TRUE;
 				break;
 			case 'b':
-				ForegroundOpt = 0;
+				ForegroundOpt = FALSE;
 				break;
 			case 'S':			/* log through syslog */
-				SyslogOpt = 1;
+				SyslogOpt = TRUE;
 				break;
 			case 'L':			/* use internal log formatter */
-				SyslogOpt = 0;
+				SyslogOpt = FALSE;
 				LogFile = optarg;
 				/* if LC_TIME is defined, we use it for logging to file instead of compiled-in TIMESTAMP_FMT */
 				if (getenv("LC_TIME") != NULL) {
@@ -216,7 +216,7 @@ main(int ac, char **av)
 		exit(EXIT_FAILURE);
 	}
 
-	if (ForegroundOpt == 0) {
+	if (!ForegroundOpt) {
 
 		int fd;
 		pid_t pid;
