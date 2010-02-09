@@ -81,6 +81,7 @@ main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0
 					ptr = optarg;
 					for (j = 0; LevelAry[j]; ++j) {
 						if (strncmp(ptr, LevelAry[j], strlen(LevelAry[j])) == 0) {
+							/*@innerbreak@*/
 							break;
 						}
 					}
