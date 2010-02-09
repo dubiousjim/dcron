@@ -241,7 +241,7 @@ ReadTimestamps(const char *user)
 						if (fgets(buf, sizeof(buf), fi) != NULL) {
 							int fake = 0;
 							ptr = buf;
-							if (strncmp(buf, "after ", 6) == 0) {
+							if (strcmp(buf, "after ") == 0) {
 								fake = 1;
 								ptr += 6;
 							}
@@ -370,7 +370,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					line.cl_Delay = -1;
 					ptr += 1;
 					for (j = 0; FreqAry[j]; ++j) {
-						if (strncmp(ptr, FreqAry[j], strlen(FreqAry[j])) == 0) {
+						if (strcmp(ptr, FreqAry[j]) == 0) {
 							break;
 						}
 					}
@@ -463,7 +463,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 
 				/* check for ID=... and AFTER=... and FREQ=... */
 				do {
-					if (strncmp(ptr, ID_TAG, strlen(ID_TAG)) == 0) {
+					if (strcmp(ptr, ID_TAG) == 0) {
 						if (line.cl_JobName) {
 							/* only assign ID_TAG once */
 							printlogf(LOG_WARNING, "failed parsing crontab for user %s: repeated %s\n", userName, ptr);
@@ -480,7 +480,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							if (!ptr)
 								printlogf(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, ID_TAG, line.cl_JobName);
 						}
-					} else if (strncmp(ptr, FREQ_TAG, strlen(FREQ_TAG)) == 0) {
+					} else if (strcmp(ptr, FREQ_TAG) == 0) {
 						if (line.cl_Freq) {
 							/* only assign FREQ_TAG once */
 							printlogf(LOG_WARNING, "failed parsing crontab for user %s: repeated %s\n", userName, ptr);
@@ -500,7 +500,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 								ptr = NULL;
 							}
 						}
-					} else if (strncmp(ptr, WAIT_TAG, strlen(WAIT_TAG)) == 0) {
+					} else if (strcmp(ptr, WAIT_TAG) == 0) {
 						if (line.cl_Waiters) {
 							/* only assign WAIT_TAG once */
 							printlogf(LOG_WARNING, "failed parsing crontab for user %s: repeated %s\n", userName, ptr);
@@ -696,7 +696,7 @@ ParseField(char *user, short *ary, int modvalue, int off, int onvalue, const cha
 			int i;
 
 			for (i = 0; names[i]; ++i) {
-				if (strncmp(ptr, names[i], strlen(names[i])) == 0) {
+				if (strcmp(ptr, names[i]) == 0) {
 					break;
 				}
 			}
