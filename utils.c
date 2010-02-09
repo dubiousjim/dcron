@@ -27,7 +27,7 @@ void
 fatal(const char *msg)
 {
 	/* in general, we should first flush stdout */
-	const char progname[] = "dcron: ";
+	const char progname[8] = "dcron: ";
 	size_t k = strlen(msg);
 	/* FIXME perhaps write to syslog? */
 	(void) write(2, progname, sizeof(progname)-1);
