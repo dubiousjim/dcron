@@ -46,7 +46,7 @@ uid_t DaemonUid;
 pid_t DaemonPid;
 
 int
-main(int ac, char **av)
+main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0;@*/
 {
 	const char *LevelAry[] = {
 		"emerg",
