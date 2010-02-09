@@ -157,13 +157,17 @@ initsignals (void) {
 		sa.sa_handler = reopenlogger;
 	else
 		sa.sa_handler = SIG_IGN;
-	if (sigaction (SIGHUP, &sa, NULL) != 0) {
+	if ( /*@-compdef@*/
+		sigaction (SIGHUP, &sa, NULL) != 0
+		/*@=compdef@*/) {
 		dprintf(2, "failed starting SIGHUP handling: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = waitmailjob;
-	if (sigaction (SIGCHLD, &sa, NULL) != 0) {
+	if ( /*@-compdef@*/
+		sigaction (SIGCHLD, &sa, NULL) != 0
+		/*@=compdef@*/) {
 		dprintf(2, "failed starting SIGCHLD handling: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
