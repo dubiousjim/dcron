@@ -26,8 +26,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/wait.h>
-#include <sys/resource.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <errno.h>
@@ -35,6 +33,8 @@
 #include <fcntl.h>
 #include <pwd.h>
 #ifndef S_SPLINT_S
+#include <sys/wait.h>
+#include <sys/resource.h>
 #include <unistd.h>
 #endif
 #include <grp.h>
@@ -47,6 +47,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 #define Prototype extern
 #define arysize(ary)	(sizeof(ary)/sizeof((ary)[0]))
