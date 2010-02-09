@@ -10,6 +10,7 @@
 Prototype void fatal(const char *msg);
 
 Prototype void *xmalloc(size_t size);
+Prototype void *xcalloc(size_t n, size_t size);
 Prototype void *xrealloc(void *ptr, size_t size);
 
 Prototype char *stringdup(const char *src, size_t maxlen);
@@ -46,6 +47,14 @@ xmalloc(size_t size)
 	return result;
 }
 
+void *
+xcalloc(size_t n, size_t size)
+{
+	register void *result = calloc(n, size);
+	if (n > 0 && size > 0 && result==NULL)
+		fatal(strerror(ENOMEM)); /* Cannot allocate memory */
+	return result;
+}
 
 void *
 xrealloc(void *ptr, size_t size)
