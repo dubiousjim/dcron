@@ -82,8 +82,10 @@ stringdup(const char *src, size_t maxlen)
 {
 	register char *dst = (char *)xmalloc(maxlen + 1);
 	assert(dst!=NULL);
+	/*@-boundswrite@*/
 	*dst = '\0';
 	return strncat(dst, src, maxlen);
+	/*@=boundswrite@*/
 }
 
 /*
@@ -127,7 +129,9 @@ stringcat(const char *first, ...)
 	dst = xmalloc(m + 1);
 	assert(dst!=NULL);
 
+	/*@-mayaliasunique@*/
 	memcpy(p = dst, first, n);
+	/*@=mayaliasunique@*/
 	p += n;
 	va_start(va, first);
 	while ((s = va_arg(va, char *))) {
@@ -137,7 +141,9 @@ stringcat(const char *first, ...)
 		 */
 		k = strlen(s);
 		if ((n += k) < k || n > m) break;
+		/*@-boundswrite@*/
 		memcpy(p, s, k);
+		/*@=boundswrite@*/
 		p += k;
 	}
 	va_end(va);
@@ -146,7 +152,9 @@ stringcat(const char *first, ...)
 		/* return NULL; */
 		fatal(strerror(ENOMEM)); /* Cannot allocate memory */
 	}
+	/*@-boundswrite@*/
 	*p = '\0';
+	/*@=boundswrite@*/
 	return dst;
 }
 
@@ -163,9 +171,13 @@ stringcpy(char *dst, const char *src, size_t dstsize) /*@requires maxSet(dst) >=
 {
 	size_t k = strlen(src);
 	if (k < dstsize) {
+		/*@-boundswrite@*/
 		strcpy(dst, src);
+		/*@=boundswrite@*/
 	}
+	/*@-mustdefine@*/
 	return k;
+	/*@=mustdefine@*/
 }
 
 /*
@@ -188,7 +200,9 @@ vstringprintf(char *dst, size_t dstsize, const char *fmt, va_list va) /*@require
 		 * on some systems including glibc < 2.0.6, return value will be -1 if needs to truncate
 		 * on C99 and glibc >= 2.1, return value will be the strlen needed (excluding \0)
 		 */
+		/*@-mods@*/
 		k = vsnprintf(dst, dstsize, fmt, va);
+		/*@=mods@*/
 		if (k >= 0) {
 			return (size_t)k;
 		} else {
@@ -202,6 +216,7 @@ vstringprintf(char *dst, size_t dstsize, const char *fmt, va_list va) /*@require
 		 */
 		char dst2[2];
 		k = vsnprintf(dst2, 2, fmt, va);
+		/*@-mustdefine@*/
 		if (k < 1) {
 			/*
 			 * hack: a longer strlen may be required, but we may not be able to determine how long except by doing unbounded sprintf
@@ -210,6 +225,7 @@ vstringprintf(char *dst, size_t dstsize, const char *fmt, va_list va) /*@require
 		} else {
 			return (size_t)k;
 		}
+		/*@=mustdefine@*/
 	}
 }
 
