@@ -310,6 +310,12 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 	char *path;
 	FILE *fi;
 
+	/*@-boundsread@*/
+	assert(DowAry[0]!=NULL);
+	assert(MonAry[0]!=NULL);
+	assert(FreqAry[0]!=NULL);
+	/*@=boundsread@*/
+
 	/*
 	 * Limit entries
 	 */
