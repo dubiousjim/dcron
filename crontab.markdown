@@ -43,7 +43,7 @@ themselves. (Even for users who don't have a login shell.) Only the superuser ma
 the -u or -c switches to specify a different user and/or crontab directory.
 
 The superuser also has his or her own per-user crontab, saved as
-/var/spool/cron/crontabs/root.
+/var/spool/cron/root.
 
 
 Unlike other cron daemons, this crond/crontab package doesn't try to do
@@ -95,12 +95,12 @@ The following formats are also recognized:
 	@reboot date
 
 	# schedule this job whenever crond is running, and sees that at least one
-	# hour has elapsed since it last ran
+	# hour has elapsed since it last ran successfully
 	@hourly ID=job1 date
 
 The formats @hourly, @daily, @weekly, @monthly, and @yearly need to update
 timestamp files when their jobs have been run. The timestamp files are saved as
-/var/spool/cron/cronstamps/user.jobname. So for all of these formats, the cron
+/var/spool/cronstamps/user.jobname. So for all of these formats, the cron
 command needs a jobname, given by prefixing the command with `ID=jobname`.
 (This syntax was chosen to maximize the chance that our crontab files will be
 readable by other cron daemons as well. They might just interpret the
@@ -116,7 +116,7 @@ There's also this esoteric option, whose usefulness will be explained later:
 There's also a format available for finer-grained control of frequencies:
 
 	# run whenever it's between 2-4 am, and at least one day (1d)
-	# has elapsed since this job ran
+	# has elapsed since this job ran successfully
 	* 2-4 * * * ID=job2 FREQ=1d date
 
 	# as before, but re-try every 10 minutes (10m) if my_command

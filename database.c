@@ -996,7 +996,7 @@ TestJobs(time_t t1, time_t t2)
 				if (file->cf_Deleted)
 					continue;
 				for (line = file->cf_LineBase; line; line = line->cl_Next) {
-					if ((line->cl_Pid == -2 || line->cl_Pid == 0) && (line->cl_Freq == 0 || (line->cl_Freq > 0 && t2 >= line->cl_NotUntil))) {
+					if (line->cl_Pid != -1 && (line->cl_Freq == 0 || (line->cl_Freq > 0 && t2 >= line->cl_NotUntil))) {
 						/* (re)schedule job? */
 						if (line->cl_Mins[tp->tm_min] &&
 								line->cl_Hrs[tp->tm_hour] &&
