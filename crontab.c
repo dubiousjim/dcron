@@ -311,11 +311,11 @@ GetReplaceStream(const char *user, const char *file)
 
 	if (pipe(filedes) < 0) {
 		perror("pipe");
-		return(-1);
+		return -1;
 	}
 	if ((pid = fork()) < 0) {
 		perror("fork");
-		return(-1);
+		return -1;
 	}
 	if (pid > 0) {
 		/*
@@ -328,7 +328,7 @@ GetReplaceStream(const char *user, const char *file)
 			(void)close(filedes[0]);
 			filedes[0] = -1;
 		}
-		return(filedes[0]);
+		return filedes[0];
 	}
 
 	/*

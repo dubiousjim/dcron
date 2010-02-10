@@ -22,7 +22,7 @@ ChangeUser(const char *user, STRING dochdir)
 
 	if ((pas = getpwnam(user)) == 0) {
 		printlogf(LOG_ERR, "failed to get uid for %s\n", user);
-		return((uid_t)-1);
+		return (uid_t)-1;
 	}
 	(void)setenv("USER", pas->pw_name, 1);
 	(void)setenv("HOME", pas->pw_dir, 1);
@@ -34,15 +34,15 @@ ChangeUser(const char *user, STRING dochdir)
 
 	if (initgroups(user, pas->pw_gid) < 0) {
 		printlogf(LOG_ERR, "initgroups failed for user %s: %s\n", user, strerror(errno));
-		return((uid_t)-1);
+		return (uid_t)-1;
 	}
 	if (setregid(pas->pw_gid, pas->pw_gid) < 0) {
 		printlogf(LOG_ERR, "setregid failed for user %s gid %d\n", user, pas->pw_gid);
-		return((uid_t)-1);
+		return (uid_t)-1;
 	}
 	if (setreuid(pas->pw_uid, pas->pw_uid) < 0) {
 		printlogf(LOG_ERR, "setreuid failed for user %s uid %d\n", user, pas->pw_uid);
-		return((uid_t)-1);
+		return (uid_t)-1;
 	}
 	if (dochdir) {
 		/* first try to cd $HOME */
@@ -51,10 +51,10 @@ ChangeUser(const char *user, STRING dochdir)
 			/* if that fails, cd to the backup dochdir, usually /tmp */
 			if (chdir(dochdir) < 0) {
 				printlogf(LOG_ERR, "chdir to %s failed for user %s\n", dochdir, user);
-				return((uid_t)-1);
+				return (uid_t)-1;
 			}
 		}
 	}
-	return(pas->pw_uid);
+	return pas->pw_uid;
 }
 

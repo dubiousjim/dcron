@@ -677,9 +677,9 @@ ParseInterval(time_t *interval, char *ptr)
 		}
 	if (n > 0) {
 		*interval = n;
-		return (ptr+1);
+		return ptr+1;
 	} else
-		return (NULL);
+		return NULL;
 }
 
 char *
@@ -734,7 +734,7 @@ ParseField(char *user, short *ary, int modvalue, int off, int onvalue, const cha
 
 		if (skip == 0) {
 			printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s\n", user, base);
-			return(NULL);
+			return NULL;
 		}
 		if (*ptr == '-' && n2 < 0) {
 			++ptr;
@@ -775,7 +775,7 @@ ParseField(char *user, short *ary, int modvalue, int off, int onvalue, const cha
 
 			if (failsafe == 0) {
 				printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s\n", user, base);
-				return(NULL);
+				return NULL;
 			}
 		}
 		if (*ptr != ',')
@@ -787,7 +787,7 @@ ParseField(char *user, short *ary, int modvalue, int off, int onvalue, const cha
 
 	if (*ptr != ' ' && *ptr != '\t' && *ptr != '\n') {
 		printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s\n", user, base);
-		return(NULL);
+		return NULL;
 	}
 
 	while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
@@ -804,7 +804,7 @@ ParseField(char *user, short *ary, int modvalue, int off, int onvalue, const cha
 		printlogf(LOG_DEBUG, "\n");
 	}
 
-	return(ptr);
+	return ptr;
 }
 
 void
@@ -1007,7 +1007,7 @@ TestJobs(time_t t1, time_t t2)
 			}
 		}
 	}
-	return(nJobs);
+	return nJobs;
 }
 
 /*
@@ -1149,7 +1149,7 @@ TestStartupJobs(void)
 
 		} /* for line */
 	}
-	return(nJobs);
+	return nJobs;
 }
 
 void
@@ -1225,6 +1225,6 @@ CheckJobs(void)
 		}
 		nStillRunning += (int)file->cf_Running;
 	}
-	return(nStillRunning);
+	return nStillRunning;
 }
 
