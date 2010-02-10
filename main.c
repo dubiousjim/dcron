@@ -121,7 +121,7 @@ main(int ac, char **av)
 							LogLevel = LOG_DEBUG;
 							break;
 						default:
-							printf("unrecognized loglevel '-l %s'; see crond's manpage\n", optarg);
+							dprintf(2, "-l option: unrecognized loglevel %s\n", optarg);
 							exit(1);
 					}
 				}
@@ -261,9 +261,8 @@ main(int ac, char **av)
 				fclose(stderr);
 				dup2(fd, 2);
 			} else {
-				int n = errno;
-				dprintf(2, "failed to open logfile '%s', reason: %s", LogFile, strerror(n));
-				exit(n);
+				dprintf(2, "crond: opening logfile %s failed: %s\n", LogFile, strerror(errno));
+				exit(1);
 			}
 		}
 	} else {

@@ -116,7 +116,10 @@ void reopenlogger(int sig) {
 		/* only daemon handles, children should ignore */
 		if ((fd = open(LogFile, O_WRONLY|O_CREAT|O_APPEND, 0600)) < 0) {
 			/* can't reopen log file, exit */
-			exit(errno);
+			char errmsg[] = "reopening logfile failed\n";
+			/* unclear whether the va_start/end and vsnprintf calls of dprintf are safe to call during signal handler */
+			write(2, errmsg, sizeof(errmsg)-1);
+			exit(1);
 		}
 		dup2(fd, 2);
 		close(fd);
@@ -141,7 +144,6 @@ void waitmailjob(int sig) {
 void
 initsignals (void) {
 	struct sigaction sa;
-	int n;
 
 	/* save daemon's pid globally */
 	DaemonPid = getpid();
@@ -153,16 +155,14 @@ initsignals (void) {
 	else
 		sa.sa_handler = SIG_IGN;
 	if (sigaction (SIGHUP, &sa, NULL) != 0) {
-		n = errno;
-		dprintf(2, "failed to start SIGHUP handling, reason: %s", strerror(errno));
-		exit(n);
+		dprintf(2, "failed starting SIGHUP handling: %s\n", strerror(errno));
+		exit(1);
 	}
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = waitmailjob;
 	if (sigaction (SIGCHLD, &sa, NULL) != 0) {
-		n = errno;
-		dprintf(2, "failed to start SIGCHLD handling, reason: %s", strerror(errno));
-		exit(n);
+		dprintf(2, "failed starting SIGCHLD handling: %s\n", strerror(errno));
+		exit(1);
 	}
 
 }

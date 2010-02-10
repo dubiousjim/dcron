@@ -63,7 +63,7 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 
 		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
-			printlogf(LOG_ERR, "unable to ChangeUser (user %s %s)\n",
+			printlogf(LOG_ERR, "changing to user %s for %s failed\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -73,7 +73,10 @@ RunJob(CronFile *file, CronLine *line)
 		/* from this point we are unpriviledged */
 
 		if (DebugOpt)
-			printlogf(LOG_DEBUG, "child running: %s\n", line->cl_Description);
+			printlogf(LOG_DEBUG, "running child for user %s %s\n",
+					file->cf_UserName,
+					line->cl_Description
+					);
 
 		/*
 		 * Inside child, we copy our fd 2 (which may be /dev/null) into
@@ -90,7 +93,7 @@ RunJob(CronFile *file, CronLine *line)
 			close(mailFd);
 		} else {
 			/* complain about no mailFd to log (now associated with fd 8) */
-			dprintlogf(LOG_WARNING, 8, "unable to create mail file %s: cron output for user %s %s to /dev/null\n",
+			dprintlogf(LOG_WARNING, 8, "creating mailfile %s for user %s %s failed: output to /dev/null\n",
 					mailFile,
 					file->cf_UserName,
 					line->cl_Description
@@ -111,14 +114,14 @@ RunJob(CronFile *file, CronLine *line)
 		 *
 		 * Complain to our log (now associated with fd 8)
 		 */
-		dprintlogf(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
-				file->cf_UserName,
-				line->cl_Shell
+		dprintlogf(LOG_ERR, 8, "exec /bin/sh -c '%s' for user %s failed\n",
+				line->cl_Shell,
+				file->cf_UserName
 			   );
 		/*
 		 * Also complain to stdout, which will be either the mailFile or /dev/null
 		 */
-		dprintf(1, "unable to exec: /bin/sh -c %s\n", line->cl_Shell);
+		dprintf(1, "exec /bin/sh -c '%s' failed\n", line->cl_Shell);
 		exit(0);
 
 	} else if (line->cl_Pid < 0) {
@@ -127,7 +130,7 @@ RunJob(CronFile *file, CronLine *line)
 		 *
 		 * Complain to log (with regular fd 2)
 		 */
-		printlogf(LOG_ERR, "unable to fork (user %s %s)\n",
+		printlogf(LOG_ERR, "forking for user %s %s failed\n",
 				file->cf_UserName,
 				line->cl_Description
 				);
@@ -210,7 +213,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				fclose(fi);
 			}
 			if (!succeeded)
-				printlogf(LOG_WARNING, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
+				printlogf(LOG_WARNING, "failed writing timestamp to %s for user %s %s\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
 			line->cl_NotUntil = line->cl_LastRan;
 			line->cl_NotUntil += (line->cl_Freq > 0) ? line->cl_Freq : line->cl_Delay;
 		}
@@ -296,7 +299,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 */
 
 		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
-			printlogf(LOG_ERR, "unable to ChangeUser to send mail (user %s %s)\n",
+			printlogf(LOG_ERR, "changing to user %s to mail %s output failed\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -327,9 +330,9 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			 * If using standard sendmail, note in our log (now associated with fd 8)
 			 * that we're trying to mail output
 			 */
-			dprintlogf(LOG_INFO, 8, "mailing cron output for user %s %s\n",
-					file->cf_UserName,
-					line->cl_Description
+			dprintlogf(LOG_INFO, 8, "mailing %s output for user %s\n",
+					line->cl_Description,
+					file->cf_UserName
 				 );
 			execl(SENDMAIL, SENDMAIL, SENDMAIL_ARGS, NULL);
 
@@ -349,7 +352,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 * Complain to our log (now associated with fd 8)
 		 */
 
-		dprintlogf(LOG_WARNING, 8, "unable to exec %s: cron output for user %s %s to /dev/null\n",
+		dprintlogf(LOG_WARNING, 8, "exec %s for user %s %s failed: output to /dev/null\n",
 				SendMail,
 				file->cf_UserName,
 				line->cl_Description
@@ -362,7 +365,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 *
 		 * Complain to our log (with regular fd 2)
 		 */
-		printlogf(LOG_WARNING, "unable to fork: cron output for user %s %s to /dev/null\n",
+		printlogf(LOG_WARNING, "forking for user %s %s failed: output to /dev/null\n",
 				file->cf_UserName,
 				line->cl_Description
 			);
