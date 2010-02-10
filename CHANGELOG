@@ -4,6 +4,7 @@ v4.5pre
     Given that loglevels can already be specified symbolically, I've chosen
     to just remove the ability to specify loglevels numerically.
 
+  * Internal changes: factored string calls to strsubs.c.
 
 v4.4  17-Jan-2010
 

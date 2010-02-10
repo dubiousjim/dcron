@@ -14,7 +14,7 @@
  * 2. need _XOPEN_SOURCE for strptime
  * 3. need _BSD_SOURCE || _XOPEN_SOURCE >= 600 for setenv, [v]snprintf, setre{u,g}id, strdup, gethostname, mkstemp
  * 4. need _BSD_SOURCE for mkdtemp, initgroups, strsep
- * 5. use concat.c instead of requiring asprintf / _GNU_SOURCE
+ * 5. use utils.c:concat instead of requiring asprintf / _GNU_SOURCE
  */
 
 #define _XOPEN_SOURCE 1

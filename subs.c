@@ -47,6 +47,7 @@ dprintf(int fd, const char *fmt, ...)
 	char buf[LOG_BUFFER];
 
 	va_start(va, fmt);
+	/* [v]snprintf always \0-terminate; we don't care here if result was truncated */
 	vsnprintf(buf, sizeof(buf), fmt, va);
 	write(fd, buf, strlen(buf));
 	va_end(va);
@@ -63,8 +64,7 @@ vlog(int level, int fd, const char *fmt, va_list va)
 			/*
 			 * when -d or -f, we always (and only) log to stderr
 			 * fd will be 2 except when 2 is bound to a execing subprocess, then it will be 8
-			 * [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate
-			 * we don't care here whether it truncates
+			 * [v]snprintf always \0-terminate; we don't care here if result was truncated
 			 */
 			vsnprintf(buf, sizeof(buf), fmt, va);
 			write(fd, buf, strlen(buf));
@@ -93,7 +93,6 @@ vlog(int level, int fd, const char *fmt, va_list va)
 						Hostname[sizeof(Hostname)-1] = '\0';
 					else
 						Hostname[0] = '\0';   /* gethostname() call failed */
-					/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 					/* return value >= size means result was truncated */
 					if ((hdrlen = snprintf(buf, sizeof(hdr), hdr, Hostname)) >= sizeof(hdr))
 						hdrlen = sizeof(hdr) - 1;

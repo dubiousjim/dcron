@@ -1,6 +1,6 @@
 
 /*
- * CONCAT.C
+ * UTILS.C
  *
  * Concatenates a variable number of strings.  The argument list must be
  * terminated with a NULL.  Returns a pointer to malloc(3)'ed memory with
