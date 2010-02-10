@@ -122,7 +122,7 @@ main(int ac, char **av)
 							break;
 						default:
 							dprintf(2, "-l option: unrecognized loglevel %s\n", optarg);
-							exit(1);
+							exit(EXIT_FAILURE);
 					}
 				}
 				break;
@@ -179,7 +179,7 @@ main(int ac, char **av)
 				printf("-b             run in background (default)\n");
 				printf("-f             run in foreground and log to stderr\n");
 				printf("-d             run in debugging mode\n");
-				exit(2);
+				exit(EXIT_FAILURE);
 		}
 	}
 
@@ -195,7 +195,7 @@ main(int ac, char **av)
 	i = open("/dev/null", O_RDWR);
 	if (i < 0) {
 		perror("open: /dev/null");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	dup2(i, 0);
 	dup2(i, 1);
@@ -204,16 +204,16 @@ main(int ac, char **av)
 	TempDir = strdup(TMPDIR "/cron.XXXXXX");
 	if (mkdtemp(TempDir) == NULL) {
 		perror("mkdtemp");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	if (chmod(TempDir, S_IRWXU|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)) {
 		perror("chmod");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	if (!(TempFileFmt = concat(TempDir, "/cron.%s.%d", NULL))) {
 		errno = ENOMEM;
 		perror("main");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	if (ForegroundOpt == 0) {
@@ -224,10 +224,10 @@ main(int ac, char **av)
 		if ((pid = fork()) < 0) {
 			/* fork failed */
 			perror("fork");
-			exit(1);
+			exit(EXIT_FAILURE);
 		} else if (pid > 0) {
 			/* parent */
-			exit(0);
+			exit(EXIT_SUCCESS);
 		}
 		/* child continues */
 
@@ -262,7 +262,7 @@ main(int ac, char **av)
 				dup2(fd, 2);
 			} else {
 				dprintf(2, "crond: opening logfile %s failed: %s\n", LogFile, strerror(errno));
-				exit(1);
+				exit(EXIT_FAILURE);
 			}
 		}
 	} else {
@@ -271,7 +271,7 @@ main(int ac, char **av)
 		/* stay in existing session, but start a new process group */
 		if (setpgid(0,0)) {
 			perror("setpgid");
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		/* stderr stays open, start SIGHUP ignoring, SIGCHLD handling */

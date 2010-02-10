@@ -67,7 +67,8 @@ RunJob(CronFile *file, CronLine *line)
 					file->cf_UserName,
 					line->cl_Description
 					);
-			exit(0);
+			/* we don't want crond to do any further tracking of child */
+			exit(EXIT_SUCCESS);
 		}
 
 		/* from this point we are unpriviledged */
@@ -122,7 +123,8 @@ RunJob(CronFile *file, CronLine *line)
 		 * Also complain to stdout, which will be either the mailFile or /dev/null
 		 */
 		dprintf(1, "exec /bin/sh -c '%s' failed\n", line->cl_Shell);
-		exit(0);
+		/* we don't want crond to do any further tracking of child */
+		exit(EXIT_SUCCESS);
 
 	} else if (line->cl_Pid < 0) {
 		/*
@@ -303,7 +305,8 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 					file->cf_UserName,
 					line->cl_Description
 					);
-			exit(0);
+			/* we don't want crond to do any further tracking of child */
+			exit(EXIT_SUCCESS);
 		}
 
 		/* from this point we are unpriviledged */
@@ -357,7 +360,8 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				file->cf_UserName,
 				line->cl_Description
 			   );
-		exit(0);
+		/* we don't want crond to do any further tracking of child */
+		exit(EXIT_SUCCESS);
 
 	} else if (line->cl_Pid < 0) {
 		/*

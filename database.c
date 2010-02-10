@@ -101,7 +101,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 	if (!(path = concat(dpath, "/", CRONUPDATE, NULL))) {
 		errno = ENOMEM;
 		perror("CheckUpdates");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	if ((fi = fopen(path, "r")) != NULL) {
 		remove(path);
@@ -196,7 +196,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	if (!(path = concat(dpath, "/", CRONUPDATE, NULL))) {
 		errno = ENOMEM;
 		perror("SynchronizeDir");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	remove(path);
 	free(path);
@@ -334,7 +334,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 	if (!(path = concat(dpath, "/", fileName, NULL))) {
 		errno = ENOMEM;
 		perror("SynchronizeFile");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	if ((fi = fopen(path, "r")) != NULL) {
 		struct stat sbuf;
@@ -493,7 +493,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							if (!(line.cl_Description = concat("job ", strsep(&ptr, " \t"), NULL))) {
 								errno = ENOMEM;
 								perror("SynchronizeFile");
-								exit(1);
+								exit(EXIT_FAILURE);
 							}
 							line.cl_JobName = line.cl_Description + 4;
 							if (!ptr)
@@ -624,7 +624,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					if (!(line.cl_Timestamp = concat(TSDir, "/", userName, ".", line.cl_JobName, NULL))) {
 						errno = ENOMEM;
 						perror("SynchronizeFile");
-						exit(1);
+						exit(EXIT_FAILURE);
 					}
 					line.cl_NotUntil = tnow + line.cl_Delay;
 				}

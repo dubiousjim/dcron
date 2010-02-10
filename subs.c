@@ -119,7 +119,7 @@ void reopenlogger(int sig) {
 			char errmsg[] = "reopening logfile failed\n";
 			/* unclear whether the va_start/end and vsnprintf calls of dprintf are safe to call during signal handler */
 			write(2, errmsg, sizeof(errmsg)-1);
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 		dup2(fd, 2);
 		close(fd);
@@ -156,13 +156,13 @@ initsignals (void) {
 		sa.sa_handler = SIG_IGN;
 	if (sigaction (SIGHUP, &sa, NULL) != 0) {
 		dprintf(2, "failed starting SIGHUP handling: %s\n", strerror(errno));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	sa.sa_flags = SA_RESTART;
 	sa.sa_handler = waitmailjob;
 	if (sigaction (SIGCHLD, &sa, NULL) != 0) {
 		dprintf(2, "failed starting SIGCHLD handling: %s\n", strerror(errno));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 }

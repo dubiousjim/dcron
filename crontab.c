@@ -37,13 +37,13 @@ main(int ac, char **av)
 	UserId = getuid();
 	if ((pas = getpwuid(UserId)) == NULL) {
 		perror("getpwuid");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 	/* return value >= size means result was truncated */
 	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
 		printlogf(0, "username '%s' too long\n", caller);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	opterr = 0;
@@ -76,15 +76,15 @@ main(int ac, char **av)
 						/* paranoia */
 						if ((pas = getpwuid(UserId)) == NULL) {
 							perror("getpwuid");
-							exit(1);
+							exit(EXIT_FAILURE);
 						}
 					} else {
 						printlogf(0, "failed to get uid for %s\n", optarg);
-						exit(1);
+						exit(EXIT_FAILURE);
 					}
 				} else {
 					printlogf(0, "-u option: superuser only\n");
-					exit(1);
+					exit(EXIT_FAILURE);
 				}
 				break;
 			case 'c':
@@ -93,7 +93,7 @@ main(int ac, char **av)
 					CDir = optarg;
 				} else {
 					printlogf(0, "-c option: superuser only\n");
-					exit(1);
+					exit(EXIT_FAILURE);
 				}
 				break;
 			default:
@@ -124,7 +124,7 @@ main(int ac, char **av)
 		repFd = GetReplaceStream(caller, repFile);
 		if (repFd < 0) {
 			printlogf(0, "failed reading replacement file %s\n", repFile);
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -134,7 +134,7 @@ main(int ac, char **av)
 
 	if (chdir(CDir) < 0) {
 		printlogf(0, "chdir to %s failed: %s\n", CDir, strerror(errno));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 
 	/*
@@ -183,7 +183,7 @@ main(int ac, char **av)
 					repFd = fd;
 				} else {
 					printlogf(0, "failed creating %s: %s\n", tmp, strerror(errno));
-					exit(1);
+					exit(EXIT_FAILURE);
 				}
 
 			}
@@ -247,7 +247,7 @@ main(int ac, char **av)
 			printlogf(0, "failed appending to %s/%s\n", CDir, CRONUPDATE);
 		}
 	}
-	exit(0);
+	exit(EXIT_SUCCESS);
 	/* not reached */
 }
 
@@ -279,7 +279,7 @@ Usage(void)
 	printf("crontab -e [-u user]    edit crontab\n");
 	printf("crontab -d [-u user]    delete crontab\n");
 	printf("crontab -c dir <opts>   specify crontab directory\n");
-	exit(2);
+	exit(EXIT_FAILURE);
 }
 
 int
@@ -321,19 +321,19 @@ GetReplaceStream(const char *user, const char *file)
 	close(filedes[0]);
 
 	if (ChangeUser(user, NULL) < 0)
-		exit(0);
+		exit(EXIT_SUCCESS);
 
 	fd = open(file, O_RDONLY);
 	if (fd < 0) {
 		printlogf(0, "failed opening %s: %s\n", file, strerror(errno));
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	buf[0] = 0;
 	write(filedes[1], buf, 1);
 	while ((n = read(fd, buf, sizeof(buf))) > 0) {
 		write(filedes[1], buf, n);
 	}
-	exit(0);
+	exit(EXIT_SUCCESS);
 }
 
 void
@@ -349,7 +349,7 @@ EditFile(const char *user, const char *file)
 		char visual[SMALL_BUFFER];
 
 		if (ChangeUser(user, TMPDIR) < 0)
-			exit(0);
+			exit(EXIT_SUCCESS);
 		if ((ptr = getenv("EDITOR")) == NULL || strlen(ptr) >= sizeof(visual))
 			if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) >= sizeof(visual))
 				ptr = PATH_VI;
@@ -360,14 +360,14 @@ EditFile(const char *user, const char *file)
 			execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
 
 		printlogf(0, "exec /bin/sh -c '%s' failed\n", visual);
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	if (pid < 0) {
 		/*
 		 * PARENT - failure
 		 */
 		perror("fork");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	waitpid(pid, NULL, 0);
 }
