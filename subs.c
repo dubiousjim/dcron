@@ -9,51 +9,51 @@
 
 #include "defs.h"
 
-Prototype void printlogf(int level, const char *ctl, ...);
-Prototype void dprintlogf(int level, int fd, const char *ctl, ...);
-Prototype void dprintf(int fd, const char *ctl, ...);
+Prototype void printlogf(int level, const char *fmt, ...);
+Prototype void dprintlogf(int level, int fd, const char *fmt, ...);
+Prototype void dprintf(int fd, const char *fmt, ...);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
 
-void vlog(int level, int fd, const char *ctl, va_list va);
+void vlog(int level, int fd, const char *fmt, va_list va);
 
 char Hostname[SMALL_BUFFER];
 
 
 void
-printlogf(int level, const char *ctl, ...)
+printlogf(int level, const char *fmt, ...)
 {
 	va_list va;
 
-	va_start(va, ctl);
-	vlog(level, 2, ctl, va);
+	va_start(va, fmt);
+	vlog(level, 2, fmt, va);
 	va_end(va);
 }
 
 void
-dprintlogf(int level, int fd, const char *ctl, ...)
+dprintlogf(int level, int fd, const char *fmt, ...)
 {
 	va_list va;
 
-	va_start(va, ctl);
-	vlog(level, fd, ctl, va);
+	va_start(va, fmt);
+	vlog(level, fd, fmt, va);
 	va_end(va);
 }
 
 void
-dprintf(int fd, const char *ctl, ...)
+dprintf(int fd, const char *fmt, ...)
 {
 	va_list va;
 	char buf[LOG_BUFFER];
 
-	va_start(va, ctl);
-	vsnprintf(buf, sizeof(buf), ctl, va);
+	va_start(va, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, va);
 	write(fd, buf, strlen(buf));
 	va_end(va);
 }
 
 void
-vlog(int level, int fd, const char *ctl, va_list va)
+vlog(int level, int fd, const char *fmt, va_list va)
 {
 	char buf[LOG_BUFFER];
 	static short suppressHeader = 0;
@@ -66,11 +66,11 @@ vlog(int level, int fd, const char *ctl, va_list va)
 			 * [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate
 			 * we don't care here whether it truncates
 			 */
-			vsnprintf(buf, sizeof(buf), ctl, va);
+			vsnprintf(buf, sizeof(buf), fmt, va);
 			write(fd, buf, strlen(buf));
 		} else if (SyslogOpt) {
 			/* log to syslog */
-			vsnprintf(buf, sizeof(buf), ctl, va);
+			vsnprintf(buf, sizeof(buf), fmt, va);
 			syslog(level, "%s", buf);
 
 		} else {
@@ -99,7 +99,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 						hdrlen = sizeof(hdr) - 1;
 				}
 			}
-			if ((buflen = vsnprintf(buf + hdrlen, sizeof(buf) - hdrlen, ctl, va) + hdrlen) >= sizeof(buf))
+			if ((buflen = vsnprintf(buf + hdrlen, sizeof(buf) - hdrlen, fmt, va) + hdrlen) >= sizeof(buf))
 				buflen = sizeof(buf) - 1;
 
 			write(fd, buf, buflen);

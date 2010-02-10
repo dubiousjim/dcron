@@ -13,7 +13,7 @@
 
 #include "defs.h"
 
-Prototype void printlogf(int level, const char *ctl, ...);
+Prototype void printlogf(int level, const char *fmt, ...);
 
 void Usage(void);
 int GetReplaceStream(const char *user, const char *file);
@@ -251,13 +251,13 @@ main(int ac, char **av)
 }
 
 void
-printlogf(int level, const char *ctl, ...)
+printlogf(int level, const char *fmt, ...)
 {
 	va_list va;
 	char buf[LOG_BUFFER];
 
-	va_start(va, ctl);
-	vsnprintf(buf, sizeof(buf), ctl, va);
+	va_start(va, fmt);
+	vsnprintf(buf, sizeof(buf), fmt, va);
 	write(2, buf, strlen(buf));
 	va_end(va);
 }
