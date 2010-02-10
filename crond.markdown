@@ -8,7 +8,7 @@ crond - dillon's lightweight cron daemon
 
 SYNOPSIS
 ========
-**crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] 
+**crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailhandler]
 [-S|-L file] [-l loglevel] [-b|-f|-d]**
 
 OPTIONS
@@ -27,35 +27,34 @@ executes commands on behalf of the users in question.
 	(defaults to /var/spool/cronstamps)
 
 -m user@host
-:	where should cron output be directed? (defaults to local user)
-	Some mail handlers (like msmtp) can't route mail to local users. If that's what
-	you're using, then you should supply a remote address using this
-	switch. Cron output for all users will be directed to that address.
-	Alternatively, you could supply a different mail handler using the -M switch,
-	to log or otherwise process the messages instead of mailing them.
-	Alternatively, you could just direct the stdout and stderr of your cron jobs
-	to /dev/null.
+:	where should the output of cronjobs be directed? (defaults to local user)
+	Some mail handlers (like msmtp) can't route mail to local users. If that's
+	what you're using, then you should supply a remote address using this switch.
+	Cron output for all users will be directed to that address. Alternatively, you
+	could supply a different mail handler using the -M switch, to log or otherwise
+	process the messages instead of mailing them. Alternatively, you could just
+	direct the stdout and stderr of your cron jobs to /dev/null.
 
--M mailer
-:	When cron jobs generate any stdout or stderr, it's formatted as a mail
-	message and piped to /usr/sbin/sendmail -t -oem -i. Attempts to mail cron
-	output are also logged (regardless of whether they succeed). This switch
-	permits the user to substitute a custom mail handler or script. It will be
-	called with no arguments, and with the mail headers and cron output supplied to
-	stdin. When a custom mail handler is supplied, mailing is no longer logged
-	(have your mail handler do that if you want it). When cron jobs generate no
-	stdout or stderr, nothing is sent to either sendmail or a custom mail handler.
+-M mailhandler
+:	Any output that cronjobs print to stdout or stderr gets formatted as an email
+	and piped to `/usr/sbin/sendmail -t -oem -i`. Attempts to mail this are also
+	logged. This switch permits the user to substitute a different mailhandler,
+	or a script, for sendmail. That custom mailhandler is called with no
+	arguments, and with the mail headers and cronjob output supplied to
+	stdin. When a custom mailhandler is used, mailing is no longer logged
+	(have your mailhandler do that if you want it). When cron jobs generate no
+	stdout or stderr, nothing is sent to either sendmail or a custom mailhandler.
 
 -S
-:	log events to syslog, using syslog facility LOG_CRON and identity 'crond'. (This is the default behavior.)
+:	log events to syslog, using syslog facility LOG_CRON and identity 'crond' (this is the default behavior).
 
 -L file
 :	log to specified file instead of syslog.
 
 -l loglevel
-:	log events <= this level. The default is 'notice' (level 5).
-	Valid level names are as described in logger(1) and syslog(3): alert,
-	crit, debug, emerg, err, error (deprecated synonym for err), info,
+:	log events at the specified, or more important, loglevels. The default is
+	'notice'. Valid level names are as described in logger(1) and syslog(3):
+	alert, crit, debug, emerg, err, error (deprecated synonym for err), info,
 	notice, panic (deprecated synonym for emerg), warning, warn (deprecated
 	synonym for warning).
 

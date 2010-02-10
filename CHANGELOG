@@ -1,3 +1,10 @@
+v4.5pre
+
+  * Numeric loglevels specified by 'crond -l <level>' weren't being validated.
+    Given that loglevels can already be specified symbolically, I've chosen
+    to just remove the ability to specify loglevels numerically.
+
+
 v4.4  17-Jan-2010
 
   * Finished mailjobs were being left as zombie processes. Fixed.

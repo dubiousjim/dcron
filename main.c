@@ -2,7 +2,7 @@
 /*
  * MAIN.C
  *
- * crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-S|-L [file]] [-l level] [-b|-f|-d]
+ * crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailhandler] [-S|-L [file]] [-l loglevel] [-b|-f|-d]
  * run as root, but NOT setuid root
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
@@ -121,7 +121,8 @@ main(int ac, char **av)
 							LogLevel = LOG_DEBUG;
 							break;
 						default:
-							LogLevel = atoi(optarg);
+							printf("unrecognized loglevel '-l %s'; see crond's manpage\n", optarg);
+							exit(1);
 					}
 				}
 				break;
@@ -166,18 +167,18 @@ main(int ac, char **av)
 				 * check for parse error
 				 */
 				printf("dillon's cron daemon " VERSION "\n");
-				printf("crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailer] [-S|-L [file]] [-l level] [-b|-f|-d]\n");
-				printf("-s            directory of system crontabs (defaults to %s)\n", SCRONTABS);
-				printf("-c            directory of per-user crontabs (defaults to %s)\n", CRONTABS);
-				printf("-t            directory of timestamps (defaults to %s)\n", CRONSTAMPS);
-				printf("-m user@host  where should cron output be directed? (defaults to local user)\n");
-				printf("-M mailer     (defaults to %s)\n", SENDMAIL);
-				printf("-S            log to syslog using identity '%s' (default)\n", LOG_IDENT);
-				printf("-L file       log to specified file instead of syslog\n");
-				printf("-l loglevel   log events <= this level (defaults to %s (level %d))\n", LevelAry[LOG_LEVEL], LOG_LEVEL);
-				printf("-b            run in background (default)\n");
-				printf("-f            run in foreground\n");
-				printf("-d            run in debugging mode\n");
+				printf("crond [-s dir] [-c dir] [-t dir] [-m user@host] [-M mailhandler] [-S|-L [file]] [-l loglevel] [-b|-f|-d]\n");
+				printf("-s             directory of system crontabs (defaults to %s)\n", SCRONTABS);
+				printf("-c             directory of per-user crontabs (defaults to %s)\n", CRONTABS);
+				printf("-t             directory of timestamps (defaults to %s)\n", CRONSTAMPS);
+				printf("-m user@host   where should cronjobs' output be directed? (defaults to local user)\n");
+				printf("-M mailhandler (defaults to %s)\n", SENDMAIL);
+				printf("-S             log to syslog using identity '%s' (default)\n", LOG_IDENT);
+				printf("-L file        log to specified file instead of syslog\n");
+				printf("-l loglevel    log events at specified loglevel (defaults to %s)\n", LevelAry[LOG_LEVEL]); 
+				printf("-b             run in background (default)\n");
+				printf("-f             run in foreground and log to stderr\n");
+				printf("-d             run in debugging mode\n");
 				exit(2);
 		}
 	}
