@@ -182,7 +182,7 @@ typedef struct CronWaiter {
 	/*@null@*/ /*@dependent@*/ struct CronWaiter *cw_Next;
 	/*@dependent@*/ struct CronNotifier *cw_Notifier;
 	/*@dependent@*/ struct CronLine *cw_NotifLine;
-	short cw_Flag;
+	int cw_Flag;
 	time_t cw_MaxWait;
 } CronWaiter;
 
