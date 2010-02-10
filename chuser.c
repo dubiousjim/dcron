@@ -33,24 +33,24 @@ ChangeUser(const char *user, char *dochdir)
 	 */
 
 	if (initgroups(user, pas->pw_gid) < 0) {
-		printlogf(LOG_ERR, "initgroups failed for user %s: %s\n", user, strerror(errno));
+		printlogf(LOG_ERR, "initgroups failed: %s %s\n", user, strerror(errno));
 		return(-1);
 	}
 	if (setregid(pas->pw_gid, pas->pw_gid) < 0) {
-		printlogf(LOG_ERR, "setregid failed for user %s gid %d\n", user, pas->pw_gid);
+		printlogf(LOG_ERR, "setregid failed: %s %d\n", user, pas->pw_gid);
 		return(-1);
 	}
 	if (setreuid(pas->pw_uid, pas->pw_uid) < 0) {
-		printlogf(LOG_ERR, "setreuid failed for user %s uid %d\n", user, pas->pw_uid);
+		printlogf(LOG_ERR, "setreuid failed: %s %d\n", user, pas->pw_uid);
 		return(-1);
 	}
 	if (dochdir) {
 		/* try to change to $HOME */
 		if (chdir(pas->pw_dir) < 0) {
-			printlogf(LOG_ERR, "chdir to %s failed for user %s\n", pas->pw_dir, user);
+			printlogf(LOG_ERR, "chdir failed: %s %s\n", user, pas->pw_dir);
 			/* dochdir is a backup directory, usually /tmp */
 			if (chdir(dochdir) < 0) {
-				printlogf(LOG_ERR, "chdir to %s failed for user %s\n", dochdir, user);
+				printlogf(LOG_ERR, "chdir failed: %s %s\n", user, dochdir);
 				return(-1);
 			}
 		}

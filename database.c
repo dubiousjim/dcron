@@ -118,7 +118,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 			if (user_override)
 				SynchronizeFile(dpath, fname, user_override);
 			else if (!getpwnam(fname))
-				printlogf(LOG_WARNING, "ignoring %s/%s: no such user\n", dpath, fname);
+				printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
 			else if (*ptok == 0 || *ptok == '\n') {
 				SynchronizeFile(dpath, fname, fname);
 				ReadTimestamps(fname);
@@ -131,7 +131,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 					file = file->cf_Next;
 				}
 				if (!file)
-					printlogf(LOG_WARNING, "prodding user %s failed: no crontab\n", fname);
+					printlogf(LOG_WARNING, "unable to prod for user %s: no crontab\n", fname);
 				else {
 					CronLine *line;
 					/* calling strtok(ptok...) then strtok(NULL) is equiv to calling strtok_r(NULL,..&ptok) */
@@ -151,7 +151,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 						if (line)
 							ArmJob(file, line, t1, force);
 						else {
-							printlogf(LOG_WARNING, "prodding user %s failed: unknown job %s\n", fname, job);
+							printlogf(LOG_WARNING, "unable to prod for user %s: unknown job %s\n", fname, job);
 							/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
 						}
 					}
@@ -215,14 +215,14 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 			} else if (getpwnam(den->d_name)) {
 				SynchronizeFile(dpath, den->d_name, den->d_name);
 			} else {
-				printlogf(LOG_WARNING, "ignoring %s/%s: no such user\n",
+				printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n",
 						dpath, den->d_name);
 			}
 		}
 		closedir(dir);
 	} else {
 		if (initial_scan)
-			printlogf(LOG_ERR, "failed to scan directory %s\n", dpath);
+			printlogf(LOG_ERR, "unable to scan directory %s\n", dpath);
 			/* softerror, do not exit the program */
 	}
 }
@@ -260,7 +260,7 @@ ReadTimestamps(const char *user)
 								tm.tm_sec = 0;
 								sec = mktime(&tm);
 							if (sec == (time_t)-1) {
-								printlogf(LOG_ERR, "failed parsing timestamp for user %s job %s\n", file->cf_UserName, line->cl_JobName);
+								printlogf(LOG_ERR, "unable to parse timestamp (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
 								/* we continue checking other timestamps in this CronFile */
 							} else {
 								/* sec -= sec % 60; */
@@ -277,7 +277,7 @@ ReadTimestamps(const char *user)
 						fclose(fi);
 					} else {
 						int succeeded = 0;
-						printlogf(LOG_NOTICE, "no timestamp found for user %s job %s\n", file->cf_UserName, line->cl_JobName);
+						printlogf(LOG_NOTICE, "no timestamp found (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
 						/* write a fake timestamp file so our initial NotUntil doesn't keep being reset every hour when crond does a SynchronizeDir */
 						if ((fi = fopen(line->cl_Timestamp, "w")) != NULL) {
 							if (strftime(buf, sizeof(buf), CRONSTAMP_FMT, localtime(&line->cl_NotUntil)))
@@ -287,7 +287,7 @@ ReadTimestamps(const char *user)
 							fclose(fi);
 						}
 						if (!succeeded)
-							printlogf(LOG_WARNING, "failed writing timestamp to %s for user %s %s\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
+							printlogf(LOG_WARNING, "unable to write timestamp to %s (user %s %s)\n", line->cl_Timestamp, file->cf_UserName, line->cl_Description);
 					}
 				}
 				line = line->cl_Next;
@@ -961,11 +961,11 @@ TestJobs(time_t t1, time_t t2)
 				}
 				if (ready == 2) {
 					if (DebugOpt)
-						printlogf(LOG_DEBUG, "cancelled waiting for user %s %s\n", file->cf_UserName, line->cl_Description);
+						printlogf(LOG_DEBUG, "cancelled waiting: user %s %s\n", file->cf_UserName, line->cl_Description);
 					line->cl_Pid = 0;
 				} else if (ready) {
 					if (DebugOpt)
-						printlogf(LOG_DEBUG, "finished waiting for user %s %s\n", file->cf_UserName, line->cl_Description);
+						printlogf(LOG_DEBUG, "finished waiting: user %s %s\n", file->cf_UserName, line->cl_Description);
 					nJobs += ArmJob(file, line, 0, -1);
 					/*
 					 if (line->cl_NotUntil)
@@ -1025,7 +1025,7 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 {
 	struct CronWaiter *waiter;
 	if (line->cl_Pid > 0) {
-		printlogf(LOG_NOTICE, "process %d already running for user %s %s\n",
+		printlogf(LOG_NOTICE, "process already running (%d): user %s %s\n",
 				line->cl_Pid,
 				file->cf_UserName,
 				line->cl_Description
@@ -1092,13 +1092,13 @@ ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2)
 			/* job is ready to run */
 			file->cf_Ready = 1;
 			if (DebugOpt)
-				printlogf(LOG_DEBUG, "scheduled user %s %s\n",
+				printlogf(LOG_DEBUG, "scheduled: user %s %s\n",
 						file->cf_UserName,
 						line->cl_Description
 					);
 			return 1;
 		} else if (DebugOpt)
-			printlogf(LOG_DEBUG, "waiting for user %s %s\n",
+			printlogf(LOG_DEBUG, "waiting: user %s %s\n",
 					file->cf_UserName,
 					line->cl_Description
 				);
@@ -1148,9 +1148,9 @@ TestStartupJobs(void)
 					file->cf_Ready = 1;
 					++nJobs;
 					if (DebugOpt)
-						printlogf(LOG_DEBUG, "    scheduled %s\n", line->cl_Description);
+						printlogf(LOG_DEBUG, "    scheduled: %s\n", line->cl_Description);
 				} else if (DebugOpt)
-					printlogf(LOG_DEBUG, "    waiting for %s\n", line->cl_Description);
+					printlogf(LOG_DEBUG, "    waiting: %s\n", line->cl_Description);
 
 			}
 

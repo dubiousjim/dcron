@@ -13,7 +13,7 @@
 
 #include "defs.h"
 
-Prototype void printlogf(int ignoredlevel, const char *fmt, ...);
+Prototype void printlogf(int level, const char *fmt, ...);
 
 void Usage(void);
 int GetReplaceStream(const char *user, const char *file);
@@ -69,7 +69,8 @@ main(int ac, char **av)
 			case 'u':
 				/* getopt guarantees optarg != 0 here */
 				if (*optarg != 0 && getuid() == geteuid()) {
-					if ((pas = getpwnam(optarg))) {
+					pas = getpwnam(optarg);
+					if (pas) {
 						UserId = pas->pw_uid;
 						/* paranoia */
 						if ((pas = getpwuid(UserId)) == NULL) {
@@ -77,11 +78,11 @@ main(int ac, char **av)
 							exit(1);
 						}
 					} else {
-						printlogf(0, "failed to get uid for %s\n", optarg);
+						printlogf(0, "user '%s' unknown", optarg);
 						exit(1);
 					}
 				} else {
-					printlogf(0, "-u option: superuser only\n");
+					printlogf(0, "-u option: superuser only");
 					exit(1);
 				}
 				break;
@@ -90,7 +91,7 @@ main(int ac, char **av)
 				if (*optarg != 0 && getuid() == geteuid()) {
 					CDir = optarg;
 				} else {
-					printlogf(0, "-c option: superuser only\n");
+					printlogf(0, "-c option: superuser only");
 					exit(1);
 				}
 				break;
@@ -121,7 +122,7 @@ main(int ac, char **av)
 	if (repFile) {
 		repFd = GetReplaceStream(caller, repFile);
 		if (repFd < 0) {
-			printlogf(0, "failed reading replacement file %s\n", repFile);
+			printlogf(0, "unable to read replacement file %s", repFile);
 			exit(1);
 		}
 	}
@@ -131,9 +132,8 @@ main(int ac, char **av)
 	 */
 
 	if (chdir(CDir) < 0) {
-		int saverr = errno;
-		printlogf(0, "chdir to %s failed: %s\n", CDir, strerror(saverr));
-		exit(saverr);
+		printlogf(0, "cannot change dir to %s: %s", CDir, strerror(errno));
+		exit(1);
 	}
 
 	/*
@@ -151,7 +151,7 @@ main(int ac, char **av)
 						fputs(buf, stdout);
 					fclose(fi);
 				} else {
-					printlogf(0, "no crontab for %s\n", pas->pw_name);
+					fprintf(stderr, "no crontab for %s\n", pas->pw_name);
 					/* no error code */
 				}
 			}
@@ -181,9 +181,8 @@ main(int ac, char **av)
 					lseek(fd, 0L, 0);
 					repFd = fd;
 				} else {
-					int saverr = errno;
-					printlogf(0, "failed creating %s: %s\n", tmp, strerror(saverr));
-					exit(saverr);
+					printlogf(0, "unable to create %s: %s", tmp, strerror(errno));
+					exit(1);
 				}
 
 			}
@@ -195,7 +194,7 @@ main(int ac, char **av)
 				char *path;
 				int n;
 				int fd;
-				int saverr;
+				int sav_errno;
 
 				/*
 				 * Read from repFd, write to fd for "$CDir/$USER.new"
@@ -207,19 +206,19 @@ main(int ac, char **av)
 						}
 						close(fd);
 						rename(path, pas->pw_name);
-						saverr = 0;
+						sav_errno = 0;
 					} else {
-						saverr = errno;
+						sav_errno = errno;
 					}
 					free(path);
 				} else {
-					saverr = ENOMEM;
+					sav_errno = ENOMEM;
 				}
-				if (saverr) {
-					printlogf(0, "failed creating %s/%s: %s\n",
+				if (sav_errno) {
+					fprintf(stderr, "unable to create %s/%s: %s\n",
 						CDir,
 						pas->pw_name,
-						strerror(saverr)
+						strerror(sav_errno)
 					   );
 				}
 				close(repFd);
@@ -253,7 +252,7 @@ main(int ac, char **av)
 			/* loop */
 		}
 		if (fo == NULL) {
-			printlogf(0, "failed appending to %s/%s\n", CDir, CRONUPDATE);
+			fprintf(stderr, "unable to append to %s/%s\n", CDir, CRONUPDATE);
 		}
 	}
 	exit(0);
@@ -261,12 +260,15 @@ main(int ac, char **av)
 }
 
 void
-printlogf(int ignoredlevel, const char *fmt, ...)
+printlogf(int level, const char *fmt, ...)
 {
 	va_list va;
+	char buf[LOG_BUFFER];
 
 	va_start(va, fmt);
-	vfprintf(stderr, fmt, va);
+	/* [v]snprintf always \0-terminate; we don't care here if result was truncated */
+	vsnprintf(buf, sizeof(buf), fmt, va);
+	write(2, buf, strlen(buf));
 	va_end(va);
 }
 
@@ -329,9 +331,8 @@ GetReplaceStream(const char *user, const char *file)
 
 	fd = open(file, O_RDONLY);
 	if (fd < 0) {
-		int saverr = errno;
-		printlogf(0, "failed opening %s: %s\n", file, strerror(saverr));
-		exit(saverr);
+		printlogf(0, "unable to open %s: %s", file, strerror(errno));
+		exit(1);
 	}
 	buf[0] = 0;
 	write(filedes[1], buf, 1);
@@ -362,7 +363,7 @@ EditFile(const char *user, const char *file)
 		visual = concat(ptr, " ", file, NULL);
 		execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
 
-		printlogf(0, "exec /bin/sh -c '%s' failed\n", visual);
+		printlogf(0, "couldn't exec %s", visual);
 		exit(1);
 	}
 	if (pid < 0) {
