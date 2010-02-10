@@ -26,10 +26,10 @@ INSTALL_DATA = $(INSTALL) -D -m0644 -g root
 INSTALL_DIR = $(INSTALL) -d -m0755 -g root
 CFLAGS ?= -O2
 CFLAGS += -Wall -Wstrict-prototypes
-SRCS = main.c database.c job.c subs.c strsubs.c chuser.c
-OBJS = main.o database.o job.o subs.o strsubs.o chuser.o
-TABSRCS = crontab.c strsubs.c chuser.c
-TABOBJS = crontab.o strsubs.o chuser.o
+SRCS = main.c subs.c database.c job.c concat.c chuser.c
+OBJS = main.o subs.o database.o job.o concat.o chuser.o
+TABSRCS = crontab.c chuser.c
+TABOBJS = crontab.o chuser.o
 PROTOS = protos.h
 LIBS =
 DEFS =  -DVERSION='"$(VERSION)"' \

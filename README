@@ -200,7 +200,7 @@ in regard to making the mechanism work with other platforms.
 CREDITS
 -------
 
-We use `concat`, a lightweight replacement for `asprintf`, in order to be more
+We use concat.c, a lightweight replacement for asprintf, in order to be more
 portable. This was written by Solar Designer and is in the public domain. See
 <http://www.openwall.com/popa3d/>.
 

@@ -13,7 +13,7 @@
 
 #include "defs.h"
 
-Prototype void printlogf(int level, const char *fmt, ...);
+Prototype void printlogf(int level, const char *ctl, ...);
 
 void Usage(void);
 int GetReplaceStream(const char *user, const char *file);
@@ -31,17 +31,17 @@ main(int ac, char **av)
 	char *repFile = NULL;
 	int repFd = 0;
 	int i;
-	char *caller;		/* user that ran program */
+	char caller[SMALL_BUFFER];		/* user that ran program */
 
 	UserId = getuid();
 	if ((pas = getpwuid(UserId)) == NULL) {
 		perror("getpwuid");
 		exit(1);
 	}
-
-	if (!(caller = strdup(pas->pw_name))) {
-		errno = ENOMEM;
-		perror("caller");
+	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
+	/* return value >= size means result was truncated */
+	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
+		printlogf(0, "username '%s' too long", caller);
 		exit(1);
 	}
 
@@ -191,35 +191,26 @@ main(int ac, char **av)
 		case REPLACE:
 			{
 				char buf[RW_BUFFER];
-				char *path;
-				int n;
+				char path[SMALL_BUFFER];
 				int fd;
-				int sav_errno;
+				int n;
 
 				/*
 				 * Read from repFd, write to fd for "$CDir/$USER.new"
 				 */
-				if ((path = concat(pas->pw_name, ".new", NULL))) {
-					if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
-						while ((n = read(repFd, buf, sizeof(buf))) > 0) {
-							write(fd, buf, n);
-						}
-						close(fd);
-						rename(path, pas->pw_name);
-						sav_errno = 0;
-					} else {
-						sav_errno = errno;
+				snprintf(path, sizeof(path), "%s.new", pas->pw_name);
+				if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
+					while ((n = read(repFd, buf, sizeof(buf))) > 0) {
+						write(fd, buf, n);
 					}
-					free(path);
+					close(fd);
+					rename(path, pas->pw_name);
 				} else {
-					sav_errno = ENOMEM;
-				}
-				if (sav_errno) {
 					fprintf(stderr, "unable to create %s/%s: %s\n",
-						CDir,
-						pas->pw_name,
-						strerror(sav_errno)
-					   );
+							CDir,
+							path,
+							strerror(errno)
+						   );
 				}
 				close(repFd);
 			}
@@ -260,14 +251,13 @@ main(int ac, char **av)
 }
 
 void
-printlogf(int level, const char *fmt, ...)
+printlogf(int level, const char *ctl, ...)
 {
 	va_list va;
 	char buf[LOG_BUFFER];
 
-	va_start(va, fmt);
-	/* [v]snprintf always \0-terminate; we don't care here if result was truncated */
-	vsnprintf(buf, sizeof(buf), fmt, va);
+	va_start(va, ctl);
+	vsnprintf(buf, sizeof(buf), ctl, va);
 	write(2, buf, strlen(buf));
 	va_end(va);
 }
@@ -352,17 +342,18 @@ EditFile(const char *user, const char *file)
 		 * CHILD - change user and run editor on "$file"
 		 */
 		const char *ptr;
-		char *visual;
+		char visual[SMALL_BUFFER];
 
 		if (ChangeUser(user, TMPDIR) < 0)
 			exit(0);
-		if ((ptr = getenv("EDITOR")) == NULL)
-			if ((ptr = getenv("VISUAL")) == NULL)
+		if ((ptr = getenv("EDITOR")) == NULL || strlen(ptr) >= sizeof(visual))
+			if ((ptr = getenv("VISUAL")) == NULL || strlen(ptr) >= sizeof(visual))
 				ptr = PATH_VI;
 
-		visual = concat(ptr, " ", file, NULL);
-		execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
-
+		/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
+		/* return value >= size means result was truncated */
+		if (snprintf(visual, sizeof(visual), "%s %s", ptr, file) < sizeof(visual))
+			execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
 		printlogf(0, "couldn't exec %s", visual);
 		exit(1);
 	}

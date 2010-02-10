@@ -1,12 +1,3 @@
-v4.5pre
-
-  * Internal changes: factored out string calls to strsubs.c, continued
-    portability improvements.
-
-  * Doc changes.
-
-  * Thanks to Juergen Daubert and Rogutės Sparnuotos for suggestions.
-
 v4.4  17-Jan-2010
 
   * Finished mailjobs were being left as zombie processes. Fixed.
