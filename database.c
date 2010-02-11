@@ -693,6 +693,10 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 		(void)fclose(fi);
 	}
 	free(path);
+
+	/*@-compmempass@*/
+	return;
+	/*@=compmempass@*/
 }
 
 char *
