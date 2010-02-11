@@ -570,8 +570,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 										pjob = &file->cf_LineBase;
 										while ((job = *pjob) != NULL) {
 											if (job->cl_JobName && strcmp(job->cl_JobName, name) == 0) {
-												CronWaiter *waiter = malloc(sizeof(CronWaiter));
-												CronNotifier *notif = malloc(sizeof(CronNotifier));
+												CronWaiter *waiter = xmalloc(sizeof(CronWaiter));
+												CronNotifier *notif = xmalloc(sizeof(CronNotifier));
+												assert(waiter!=NULL && notif != NULL);
 												waiter->cw_Flag = -1;
 												waiter->cw_MaxWait = waitfor;
 												waiter->cw_NotifLine = job;
@@ -647,7 +648,8 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 						printlogf(LOG_DEBUG, "    Command %s\n", line.cl_Shell);
 				}
 
-				*pline = calloc(1, sizeof(CronLine));
+				*pline = xmalloc(sizeof(CronLine));
+				assert(*pline!=NULL);
 				/* copy working CronLine to newly allocated one */
 				**pline = line;
 
