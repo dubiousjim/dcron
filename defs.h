@@ -175,6 +175,9 @@ typedef struct CronLine {
 	short cl_Dow[7];	/* 0-6, beginning sunday */
 } CronLine;
 
+typedef /*@null@*/ /*@owned@*/ CronFile *CronFile_p;
+typedef /*@null@*/ /*@owned@*/ CronLine *CronLine_p;
+
 typedef struct CronWaiter {
 	/*@null@*/ /*@dependent@*/ struct CronWaiter *cw_Next;
 	/*@dependent@*/ struct CronNotifier *cw_Notifier;

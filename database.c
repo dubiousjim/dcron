@@ -19,7 +19,7 @@ Prototype void RunJobs(void);
 Prototype int CheckJobs(void);
 
 static void SynchronizeFile(const char *dpath, const char *fileName, const char *userName);
-static void DeleteFile(CronFile **pfile);
+static void DeleteFile(CronFile_p *pfile) /*@requires notnull *pfile@*/;
 static /*@null@*/ char *ParseInterval(time_t *interval, /*@returned@*/ char *ptr);
 static /*@null@*/ char *ParseField(char *user, short *ary, int modvalue, int off, int onvalue, /*@null@*/ const char **names, /*@null@*/ /*@returned@*/ char *ptr);
 static void FixDayDow(CronLine *line);
@@ -169,7 +169,7 @@ CheckUpdates(const char *dpath, STRING user_override, time_t t1, time_t t2)
 void
 SynchronizeDir(const char *dpath, STRING user_override, int initial_scan)
 {
-	CronFile **pfile;
+	CronFile_p *pfile;
 	CronFile *file;
 	struct dirent *den;
 	DIR *dir;
@@ -333,7 +333,7 @@ ZeroCronLine(CronLine /*@out@*/ *line) /*@modifies *line@*/ /*@ensures isnull li
 void
 SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 {
-	CronFile **pfile;
+	CronFile_p *pfile;
 	CronFile *file;
 	int maxEntries;
 	int maxLines;
@@ -375,7 +375,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 		struct stat sbuf;
 
 		if (fstat(fileno(fi), &sbuf) == 0 && sbuf.st_uid == DaemonUid) {
-			CronLine **pline;
+			CronLine_p *pline;
 			time_t tnow = time(NULL);
 			tnow -= tnow % 60;
 
@@ -556,7 +556,8 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							char *name;
 							ptr += strlen(WAIT_TAG);
 							do {
-								CronLine *job, **pjob;
+								CronLine_p *pjob;
+								CronLine *job;
 								if (strcspn(ptr,",") < strcspn(ptr," \t"))
 									name = strsep(&ptr, ",");
 								else {
@@ -893,10 +894,10 @@ FixDayDow(CronLine *line)
  *  on success.
  */
 void
-DeleteFile(CronFile **pfile)
+DeleteFile(CronFile_p *pfile)
 {
 	CronFile *file = *pfile;
-	CronLine **pline = &file->cf_LineBase;
+	CronLine_p *pline = &file->cf_LineBase;
 	CronLine *line;
 	CronWaiter **pwaiters, *waiters;
 	CronNotifier **pnotifs, *notifs;
