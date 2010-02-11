@@ -706,6 +706,7 @@ ParseInterval(time_t *interval, char *ptr)
 				n = 0;
 		}
 	if (n > 0) {
+		assert(ptr!=NULL);
 		*interval = n;
 		return ptr+1;
 	} else
@@ -844,6 +845,7 @@ FixDayDow(CronLine *line)
 	bool weekUsed = FALSE;
 	bool daysUsed = FALSE;
 
+	assert(line!=NULL);
 	for (i = 0; i < arysize(line->cl_Dow); ++i) {
 		if (line->cl_Dow[i] == 0) {
 			weekUsed = TRUE;
