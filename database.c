@@ -658,7 +658,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 
 				if (line.cl_JobName) {
 					if (DebugOpt)
+						/*@-ownedtrans@*/
 						printlogf(LOG_DEBUG, "    Command %s Job %s\n", line.cl_Shell, line.cl_JobName);
+						/*@=ownedtrans@*/
 				} else {
 					/* when cl_JobName is NULL, we point cl_Description to cl_Shell */
 					line.cl_Description = line.cl_Shell;
