@@ -995,10 +995,10 @@ TestJobs(time_t t1, time_t t2)
 	CronFile *file;
 	CronLine *line;
 
-	for (file = FileBase; file; file = file->cf_Next) {
+	for (file = FileBase; file!=NULL; file = file->cf_Next) {
 		if (file->cf_Deleted)
 			continue;
-		for (line = file->cf_LineBase; line; line = line->cl_Next) {
+		for (line = file->cf_LineBase; line!=NULL; line = line->cl_Next) {
 			struct CronWaiter *waiter;
 
 			if (line->cl_Pid == -2) {
@@ -1047,10 +1047,10 @@ TestJobs(time_t t1, time_t t2)
 					n_wday |= 16;	/* last dow in month is always recognized as 5th */
 			}
 
-			for (file = FileBase; file; file = file->cf_Next) {
+			for (file = FileBase; file!=NULL; file = file->cf_Next) {
 				if (file->cf_Deleted)
 					continue;
-				for (line = file->cf_LineBase; line; line = line->cl_Next) {
+				for (line = file->cf_LineBase; line!=NULL; line = line->cl_Next) {
 					if ((line->cl_Pid == -2 || line->cl_Pid == 0) && (line->cl_Freq == 0 || (line->cl_Freq > 0 && t2 >= line->cl_NotUntil))) {
 						/* (re)schedule job? */
 						if (line->cl_Mins[tp->tm_min] &&
@@ -1170,11 +1170,11 @@ TestStartupJobs(void)
 
 	t1 = t1 - t1 % 60 + 60;
 
-	for (file = FileBase; file; file = file->cf_Next) {
+	for (file = FileBase; file!=NULL; file = file->cf_Next) {
 		if (DebugOpt)
 			printlogf(LOG_DEBUG, "TestStartup for FILE %s/%s USER %s:\n",
 				file->cf_DPath, file->cf_FileName, file->cf_UserName);
-		for (line = file->cf_LineBase; line; line = line->cl_Next) {
+		for (line = file->cf_LineBase; line!=NULL; line = line->cl_Next) {
 			struct CronWaiter *waiter;
 			if (DebugOpt) {
 				if (line->cl_JobName)
@@ -1218,11 +1218,11 @@ RunJobs(void)
 	CronFile *file;
 	CronLine *line;
 
-	for (file = FileBase; file; file = file->cf_Next) {
+	for (file = FileBase; file!=NULL; file = file->cf_Next) {
 		if (file->cf_Ready) {
 			file->cf_Ready = FALSE;
 
-			for (line = file->cf_LineBase; line; line = line->cl_Next) {
+			for (line = file->cf_LineBase; line!=NULL; line = line->cl_Next) {
 				if (line->cl_Pid == -1) {
 
 					RunJob(file, line);
@@ -1259,11 +1259,11 @@ CheckJobs(void)
 	CronLine *line;
 	int nStillRunning = 0;
 
-	for (file = FileBase; file; file = file->cf_Next) {
+	for (file = FileBase; file!=NULL; file = file->cf_Next) {
 		if (file->cf_Running) {
 			file->cf_Running = FALSE;
 
-			for (line = file->cf_LineBase; line; line = line->cl_Next) {
+			for (line = file->cf_LineBase; line!=NULL; line = line->cl_Next) {
 				if (line->cl_Pid > 0) {
 					int status;
 					pid_t r = waitpid(line->cl_Pid, &status, WNOHANG);
