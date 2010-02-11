@@ -299,6 +299,22 @@ ReadTimestamps(STRING user)
 	}
 }
 
+static CronFile *
+NewCronFile(const char *userName, const char *fileName, const char *dpath)
+{
+	CronFile *file = (CronFile *)xmalloc(sizeof(CronFile));
+	assert(file!=NULL);
+	file->cf_Next = NULL;
+	file->cf_LineBase = NULL;
+	file->cf_DPath = stringdup(dpath, PATH_MAX);
+	file->cf_FileName = stringdup(fileName, SMALL_BUFFER);
+	file->cf_UserName = stringdup(userName, SMALL_BUFFER);
+	file->cf_Ready = FALSE;
+	file->cf_Running = FALSE;
+	file->cf_Deleted = FALSE;
+	return file;
+}
+
 void
 SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 {
@@ -348,10 +364,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 			time_t tnow = time(NULL);
 			tnow -= tnow % 60;
 
-			file = calloc(1, sizeof(CronFile));
-			file->cf_UserName = stringdup(userName, SMALL_BUFFER);
-			file->cf_FileName = stringdup(fileName, SMALL_BUFFER);
-			file->cf_DPath = stringdup(dpath, PATH_MAX);
+			file = NewCronFile(userName, fileName, dpath);
 			pline = &file->cf_LineBase;
 
 			/* fgets reads at most size-1 chars until \n or EOF, then adds a\0; \n if present is stored in buf */
