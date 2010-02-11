@@ -191,7 +191,7 @@ stringcpy(char *dst, const char *src, size_t dstsize) /*@requires maxSet(dst) >=
  */
 /*@-incondefs@*/
 size_t
-vstringprintf(char *dst, size_t dstsize, const char *fmt, va_list va) /*@requires maxSet(dst) >= ( dstsize - 1); @*/
+vstringprintf(char *dst, size_t dstsize, const char *fmt, va_list va) /*@requires maxSet(dst) >= ( dstsize - 1); @*/ /*@modifies *dst@*/
 /*@=incondefs@*/
 {
 	int k;
@@ -232,7 +232,7 @@ vstringprintf(char *dst, size_t dstsize, const char *fmt, va_list va) /*@require
 
 /*@-incondefs@*/
 size_t
-stringprintf(char *dst, size_t dstsize, const char *fmt, ...) /*@requires maxSet(dst) >= ( dstsize - 1); @*/
+stringprintf(char *dst, size_t dstsize, const char *fmt, ...) /*@requires maxSet(dst) >= ( dstsize - 1); @*/ /*@modifies *dst@*/
 /*@=incondefs@*/
 {
 	size_t k;
