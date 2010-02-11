@@ -499,7 +499,9 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					 * is *, the other is set to 0, and vise-versa
 					 */
 
+					/*@-compmempass@*/
 					FixDayDow(&line);
+					/*@=compmempass@*/
 				}
 
 				/* check for ID=... and AFTER=... and FREQ=... */
