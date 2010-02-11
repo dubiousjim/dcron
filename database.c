@@ -907,12 +907,15 @@ DeleteFile(CronFile_p *pfile)
 	file->cf_Running = FALSE;
 	file->cf_Deleted = TRUE;
 
+	/*@-branchstate@*/
 	while ((line = *pline) != NULL) {
 		if (line->cl_Pid > 0) {
 			file->cf_Running = TRUE;
 			pline = &line->cl_Next;
 		} else {
+			/*@-dependenttrans@*/
 			*pline = line->cl_Next;
+			/*@=dependenttrans@*/
 			free(line->cl_Shell);
 
 			if (line->cl_JobName)
@@ -941,16 +944,26 @@ DeleteFile(CronFile_p *pfile)
 				free(waiters);
 			}
 
+			/*@-compdestroy@*/
 			free(line);
+			/*@=compdestroy@*/
 		}
 	}
+	/*@=branchstate@*/
 	if (!file->cf_Running) {
+		/*@-dependenttrans@*/
 		*pfile = file->cf_Next;
+		/*@=dependenttrans@*/
 		free(file->cf_DPath);
 		free(file->cf_FileName);
 		free(file->cf_UserName);
 		free(file);
 	}
+	/*@-usereleased@*/
+	/*@-compdef@*/
+	return;
+	/*@=compdef@*/
+	/*@=usereleased@*/
 }
 
 
