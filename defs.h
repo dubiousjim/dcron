@@ -155,9 +155,9 @@ typedef struct CronFile {
 
 typedef struct CronLine {
 	/*@null@*/ /*@dependent@*/ struct CronLine *cl_Next;
-	/*@null@*/ char *cl_Shell;			/* shell command */
-	/*@null@*/ char *cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
-	/*@null@*/ char *cl_JobName;		/* job name, if any */
+	/*@reldef@*/ char *cl_Shell;			/* shell command */
+	/*@reldef@*/ char *cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
+	/*@reldef@*/ char *cl_JobName;	/* job name, if any */
 	/*@null@*/ char *cl_Timestamp;		/* path to timestamp file, if cl_Freq defined */
 	/*@null@*/ /*@owned@*/ struct CronWaiter *cl_Waiters;
 	/*@null@*/ /*@owned@*/ struct CronNotifier *cl_Notifs;
