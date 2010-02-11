@@ -315,6 +315,21 @@ NewCronFile(const char *userName, const char *fileName, const char *dpath)
 	return file;
 }
 
+static void
+ZeroCronLine(CronLine /*@out@*/ *line) /*@modifies *line@*/ /*@ensures isnull line->cl_Next,line->cl_Timestamp,line->cl_Waiters,line->cl_Notifs@*/
+{
+	memset(line, 0, sizeof(CronLine));
+	/*@-mustfreeonly@*/
+	line->cl_Next = NULL;
+	//line->cl_Shell = shellCmd;
+	//line->cl_Description = desc;
+	//line->cl_JobName = NULL;
+	line->cl_Timestamp = NULL;
+	line->cl_Waiters = NULL;
+	line->cl_Notifs = NULL;
+	/*@=mustfreeonly@*/
+}
+
 void
 SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 {
@@ -386,7 +401,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				if (--maxEntries == 0)
 					break;
 
-				memset(&line, 0, sizeof(line));
+				ZeroCronLine(&line);
 
 				if (DebugOpt)
 					printlogf(LOG_DEBUG, "User %s Entry %s\n", userName, buf);
