@@ -24,7 +24,7 @@ static /*@null@*/ char *ParseInterval(time_t *interval, /*@returned@*/ char *ptr
 static /*@null@*/ char *ParseField(char *user, short *ary, int modvalue, int off, int onvalue, /*@null@*/ const char **names, /*@null@*/ /*@returned@*/ char *ptr);
 static void FixDayDow(CronLine *line);
 
-static /*@null@*/ CronFile *FileBase = NULL;
+static /*@null@*/ /*@owned@*/ CronFile *FileBase = NULL;
 
 static /*@observer@*/ STRING DowAry[] = {
 	"sun",
@@ -356,7 +356,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 
 			/* fgets reads at most size-1 chars until \n or EOF, then adds a\0; \n if present is stored in buf */
 			while (fgets(buf, sizeof(buf), fi) != NULL && --maxLines) {
-				CronLine line;
+				/*@owned@*/ CronLine line;
 				char *ptr = buf;
 				size_t len;
 
