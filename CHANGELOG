@@ -1,10 +1,20 @@
 v4.5pre
 
-  * Numeric loglevels specified by 'crond -l <level>' weren't being validated.
-    Given that loglevels can already be specified symbolically, I've chosen
-    to just remove the ability to specify loglevels numerically.
+  * @monthly was wrongly being parsed the same as @yearly; fixed.
 
-  * Internal changes: factored string calls to strsubs.c.
+  * Numeric loglevels specified by 'crond -l <level>' weren't being validated.
+    Now we no longer accept numeric loglevels; they must be specified symbolically.
+
+  * Continued portability improvements. Makefile now uses -lbsd-compat.
+    Factored allocation and string calls to utils.c.
+
+  * Many internal changes and annotations to pass splint review.
+
+  * Updated manpages to refer to default install paths for crontabs and timestamps.
+    Miscellaneous other changes to docs and messages.
+
+  * Thanks to Juergen Daubert, Rogutės Sparnuotos, ataraxia, Spider.007,
+    Chlump Chatkupt, Feifei Jia, Igor Zakharoff, and Edward Hades.
 
 v4.4  17-Jan-2010
 
