@@ -167,7 +167,7 @@ stringcat(const char *first, ...)
  */
 /*@-incondefs@*/
 size_t
-stringcpy(char *dst, const char *src, size_t dstsize) /*@requires maxSet(dst) >= ( dstsize - 1 ); @*/ /*@ensures maxRead (dst) <= maxRead(src) /\ maxRead (dst) <= dstsize; @*/
+stringcpy(char *dst, const char *src, size_t dstsize) /*@requires maxSet(dst) >= ( dstsize - 1 ); @*/ /*@ensures maxRead (dst) <= maxRead(src) /\ maxRead (dst) <= dstsize; @*/ /*@modifies *dst@*/
 /*@=incondefs@*/
 {
 	size_t k = strlen(src);
