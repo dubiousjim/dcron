@@ -463,7 +463,6 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					/*
 					 * check failure
 					 */
-
 					if (ptr == NULL)
 						continue;
 

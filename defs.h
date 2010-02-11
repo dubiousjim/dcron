@@ -88,7 +88,7 @@
 #define SENDMAIL_ARGS	"-t", "-oem", "-i"
 #endif
 #ifndef PATH_VI
-#define PATH_VI		"/usr/bin/vi"	/* location of vi	*/
+#define PATH_VI		"/usr/bin/vi"	/* location of vi */
 #endif
 
 #ifndef ID_TAG
@@ -103,7 +103,7 @@
 
 #define HOURLY_FREQ		60 * 60
 #define DAILY_FREQ		24 * HOURLY_FREQ
-#define	WEEKLY_FREQ		7 * DAILY_FREQ
+#define WEEKLY_FREQ		7 * DAILY_FREQ
 #define MONTHLY_FREQ	30 * DAILY_FREQ
 #define YEARLY_FREQ		365 * DAILY_FREQ
 
@@ -111,11 +111,11 @@
 #define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ": "
 
 /* limits */
-#define FD_MAX		256		/* close fds < this limit */
+#define FD_MAX			256		/* close fds < this limit */
 #define LINES_MAX		256		/* max lines in non-root crontabs */
 #define SMALL_BUFFER	256
 #define RW_BUFFER		1024
-#define LOG_BUFFER		2048 	/* max size of log line */
+#define LOG_BUFFER		2048	/* max size of log line */
 
 
 /* types */
@@ -143,49 +143,49 @@ typedef /*@null@*/ const char *STRING;
 
 
 typedef struct CronFile {
-    /*@null@*/ struct CronFile *cf_Next;
-    /*@null@*/ struct CronLine *cf_LineBase;
-    char	*cf_DPath;	/* Directory path to cronfile */
-    char	*cf_FileName;	/* Name of cronfile */
-    char	*cf_UserName;	/* username to execute jobs as */
-    bool	cf_Ready;		/* bool: one or more jobs ready	*/
-    bool	cf_Running;		/* bool: one or more jobs running */
-    bool	cf_Deleted;		/* marked for deletion, ignore	*/
+	/*@null@*/ struct CronFile *cf_Next;
+	/*@null@*/ struct CronLine *cf_LineBase;
+	char *cf_DPath;		/* directory path to cronfile */
+	char *cf_FileName;	/* name of cronfile */
+	char *cf_UserName;	/* username to execute jobs as */
+	bool cf_Ready;		/* one or more jobs ready */
+	bool cf_Running;	/* one or more jobs running */
+	bool cf_Deleted;	/* marked for deletion, ignore */
 } CronFile;
 
 typedef struct CronLine {
-    /*@null@*/ struct CronLine *cl_Next;
-    /*@null@*/ char	*cl_Shell;		/* shell command				*/
-	/*@null@*/ char	*cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
-	/*@null@*/ char	*cl_JobName;	/* job name, if any				*/
-	/*@null@*/ char	*cl_Timestamp;	/* path to timestamp file, if cl_Freq defined */
-	/*@null@*/ struct	CronWaiter *cl_Waiters;
-	/*@null@*/ struct	CronNotifier *cl_Notifs;
-	time_t	cl_Freq;		/* 0 (use arrays),  minutes, -1 (noauto), -2 (reboot)	*/
-	time_t	cl_Delay;		/* defaults to cl_Freq or hourly	*/
-	time_t	cl_LastRan;
-	time_t	cl_NotUntil;
-	pid_t	cl_Pid;			/* running pid, 0, or armed (-1), or waiting (-2) */
-    bool	cl_MailFlag;	/* running pid is for mail		*/
-    off_t	cl_MailPos;	/* 'empty file' size			*/
-    short	cl_Mins[60];	/* 0-59				*/
-    short	cl_Hrs[24];	/* 0-23					*/
-    short	cl_Days[32];	/* 1-31					*/
-    short	cl_Mons[12];	/* 0-11				*/
-    short	cl_Dow[7];	/* 0-6, beginning sunday		*/
+	/*@null@*/ struct CronLine *cl_Next;
+	/*@null@*/ char *cl_Shell;			/* shell command */
+	/*@null@*/ char *cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
+	/*@null@*/ char *cl_JobName;		/* job name, if any */
+	/*@null@*/ char *cl_Timestamp;		/* path to timestamp file, if cl_Freq defined */
+	/*@null@*/ struct CronWaiter *cl_Waiters;
+	/*@null@*/ struct CronNotifier *cl_Notifs;
+	time_t cl_Freq;		/* 0=use arrays, >0 minutes, noauto, reboot */
+	time_t cl_Delay;	/* defaults to cl_Freq or hourly */
+	time_t cl_LastRan;
+	time_t cl_NotUntil;
+	pid_t cl_Pid;		/* running pid, 0, or armed (-1), or waiting (-2) */
+	bool cl_MailFlag;	/* running pid is for mail */
+	off_t cl_MailPos;	/* 'empty file' size */
+	short cl_Mins[60];	/* 0-59 */
+	short cl_Hrs[24];	/* 0-23 */
+	short cl_Days[32];	/* 1-31 */
+	short cl_Mons[12];	/* 0-11 */
+	short cl_Dow[7];	/* 0-6, beginning sunday */
 } CronLine;
 
 typedef struct CronWaiter {
-	/*@null@*/ struct	CronWaiter *cw_Next;
-	/*@null@*/ struct	CronNotifier *cw_Notifier;
-	/*@null@*/ struct	CronLine *cw_NotifLine;
-	short	cw_Flag;
-	time_t	cw_MaxWait;
+	/*@null@*/ struct CronWaiter *cw_Next;
+	/*@null@*/ struct CronNotifier *cw_Notifier;
+	/*@null@*/ struct CronLine *cw_NotifLine;
+	short cw_Flag;
+	time_t cw_MaxWait;
 } CronWaiter;
 
 typedef struct CronNotifier {
-	/*@null@*/ struct	CronNotifier *cn_Next;
-	/*@null@*/ struct	CronWaiter *cn_Waiter;
+	/*@null@*/ struct CronNotifier *cn_Next;
+	/*@null@*/ struct CronWaiter *cn_Waiter;
 } CronNotifier;
 
 #include "protos.h"
