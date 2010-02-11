@@ -170,13 +170,13 @@ size_t
 stringcpy(char *dst, const char *src, size_t dstsize) /*@requires maxSet(dst) >= ( dstsize - 1 ); @*/ /*@ensures maxRead (dst) <= maxRead(src) /\ maxRead (dst) <= dstsize; @*/ /*@modifies *dst@*/
 /*@=incondefs@*/
 {
+	/*@-mustdefine@*/
 	size_t k = strlen(src);
 	if (k < dstsize) {
 		/*@-boundswrite@*/
 		strcpy(dst, src);
 		/*@=boundswrite@*/
 	}
-	/*@-mustdefine@*/
 	return k;
 	/*@=mustdefine@*/
 }
