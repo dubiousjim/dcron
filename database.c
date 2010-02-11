@@ -668,15 +668,21 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 						printlogf(LOG_DEBUG, "    Command %s\n", line.cl_Shell);
 				}
 
+				/*@-mustfreeonly@*/
 				*pline = xmalloc(sizeof(CronLine));
+				/*@=mustfreeonly@*/
 				assert(*pline!=NULL);
 				/* copy working CronLine to newly allocated one */
+				/*@-nullret@*/
 				**pline = line;
+				/*@=nullret@*/
 
 				pline = &((*pline)->cl_Next);
 			}
 
+			/*@-mustfreeonly@*/
 			*pline = NULL;
+			/*@=mustfreeonly@*/
 
 			file->cf_Next = FileBase;
 			FileBase = file;
