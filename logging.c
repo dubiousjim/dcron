@@ -154,9 +154,10 @@ initsignals (void) {
 
 	/* restart any system calls that were interrupted by signal */
 	sa.sa_flags = SA_RESTART;
-	if (!ForegroundOpt && !SyslogOpt)
+	if (!ForegroundOpt && !SyslogOpt) {
+		assert(LogFile != NULL);
 		sa.sa_handler = reopenlogger;
-	else
+	} else
 		sa.sa_handler = SIG_IGN;
 	if ( /*@-compdef@*/
 		sigaction (SIGHUP, &sa, NULL) != 0
