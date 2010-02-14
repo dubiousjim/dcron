@@ -45,10 +45,10 @@ ChangeUser(const char *user, STRING dochdir)
 		return((uid_t)-1);
 	}
 	if (dochdir) {
-		/* try to change to $HOME */
+		/* first try to cd $HOME */
 		if (chdir(pas->pw_dir) < 0) {
 			printlogf(LOG_ERR, "chdir to %s failed for user %s\n", pas->pw_dir, user);
-			/* dochdir is a backup directory, usually /tmp */
+			/* if that fails, cd to the backup dochdir, usually /tmp */
 			if (chdir(dochdir) < 0) {
 				printlogf(LOG_ERR, "chdir to %s failed for user %s\n", dochdir, user);
 				return((uid_t)-1);
