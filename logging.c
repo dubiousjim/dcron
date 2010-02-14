@@ -103,7 +103,7 @@ vlogger(int level, int fd, const char *fmt, va_list va)
 
 			(void)write(fd, buf, buflen);
 			/* if previous write wasn't \n-terminated, we suppress header on next write */
-			suppressHeader = (buf[buflen-1] != '\n');
+			suppressHeader = buflen>0 && (buf[buflen-1] != '\n');
 
 		}
 	}
