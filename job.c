@@ -65,7 +65,7 @@ RunJob(CronFile *file, CronLine *line)
 		 */
 
 		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
-			printlogf(LOG_ERR, "changing to user %s for %s failed\n",
+			logger(LOG_ERR, "changing to user %s for %s failed\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -76,7 +76,7 @@ RunJob(CronFile *file, CronLine *line)
 		/* from this point we are unpriviledged */
 
 		if (DebugOpt)
-			printlogf(LOG_DEBUG, "running child for user %s %s\n",
+			logger(LOG_DEBUG, "running child for user %s %s\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -96,7 +96,7 @@ RunJob(CronFile *file, CronLine *line)
 			(void)close(mailFd);
 		} else {
 			/* complain about no mailFd to log (now associated with fd 8) */
-			dprintlogf(LOG_WARNING, 8, "creating mailfile %s for user %s %s failed: output to /dev/null\n",
+			dlogger(LOG_WARNING, 8, "creating mailfile %s for user %s %s failed: output to /dev/null\n",
 					mailFile,
 					file->cf_UserName,
 					line->cl_Description
@@ -117,7 +117,7 @@ RunJob(CronFile *file, CronLine *line)
 		 *
 		 * Complain to our log (now associated with fd 8)
 		 */
-		dprintlogf(LOG_ERR, 8, "exec /bin/sh -c '%s' for user %s failed\n",
+		dlogger(LOG_ERR, 8, "exec /bin/sh -c '%s' for user %s failed\n",
 				line->cl_Shell,
 				file->cf_UserName
 			   );
@@ -134,7 +134,7 @@ RunJob(CronFile *file, CronLine *line)
 		 *
 		 * Complain to log (with regular fd 2)
 		 */
-		printlogf(LOG_ERR, "forking for user %s %s failed\n",
+		logger(LOG_ERR, "forking for user %s %s failed\n",
 				file->cf_UserName,
 				line->cl_Description
 				);
@@ -221,7 +221,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 				(void)fclose(fi);
 			}
 			if (!succeeded)
-				printlogf(LOG_WARNING, "failed writing timestamp to %s for user %s %s\n",
+				logger(LOG_WARNING, "failed writing timestamp to %s for user %s %s\n",
 						line->cl_Timestamp,
 						file->cf_UserName,
 						line->cl_Description
@@ -247,7 +247,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			/*
 			 * log non-zero exit_status
 			 */
-			printlogf(LOG_NOTICE, "exit status %d from user %s %s\n",
+			logger(LOG_NOTICE, "exit status %d from user %s %s\n",
 					exit_status,
 					file->cf_UserName,
 					line->cl_Description
@@ -257,7 +257,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 	}
 	if (!exit_status || exit_status == EAGAIN)
 		if (DebugOpt)
-			printlogf(LOG_DEBUG, "exit status %d from user %s %s\n",
+			logger(LOG_DEBUG, "exit status %d from user %s %s\n",
 						exit_status,
 						file->cf_UserName,
 						line->cl_Description
@@ -314,7 +314,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 */
 
 		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
-			printlogf(LOG_ERR, "changing to user %s to mail %s output failed\n",
+			logger(LOG_ERR, "changing to user %s to mail %s output failed\n",
 					file->cf_UserName,
 					line->cl_Description
 					);
@@ -346,7 +346,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			 * If using standard sendmail, note in our log (now associated with fd 8)
 			 * that we're trying to mail output
 			 */
-			dprintlogf(LOG_INFO, 8, "mailing %s output for user %s\n",
+			dlogger(LOG_INFO, 8, "mailing %s output for user %s\n",
 					line->cl_Description,
 					file->cf_UserName
 				 );
@@ -368,7 +368,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 * Complain to our log (now associated with fd 8)
 		 */
 
-		dprintlogf(LOG_WARNING, 8, "exec %s for user %s %s failed: output to /dev/null\n",
+		dlogger(LOG_WARNING, 8, "exec %s for user %s %s failed: output to /dev/null\n",
 				SendMail,
 				file->cf_UserName,
 				line->cl_Description
@@ -382,7 +382,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 *
 		 * Complain to our log (with regular fd 2)
 		 */
-		printlogf(LOG_WARNING, "forking for user %s %s failed: output to /dev/null\n",
+		logger(LOG_WARNING, "forking for user %s %s failed: output to /dev/null\n",
 				file->cf_UserName,
 				line->cl_Description
 			);

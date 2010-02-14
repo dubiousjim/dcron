@@ -9,34 +9,34 @@
 
 #include "defs.h"
 
-Prototype void printlogf(int level, const char *fmt, ...);
-Prototype void dprintlogf(int level, int fd, const char *fmt, ...);
+Prototype void logger(int level, const char *fmt, ...);
+Prototype void dlogger(int level, int fd, const char *fmt, ...);
 Prototype void dprintf(int fd, const char *fmt, ...);
 Prototype void initsignals(void);
 Prototype char Hostname[HOST_NAME_MAX];
 
-static void vlog(int level, int fd, const char *fmt, va_list va);
+static void vlogger(int level, int fd, const char *fmt, va_list va);
 
 char Hostname[HOST_NAME_MAX];
 
 
 void
-printlogf(int level, const char *fmt, ...)
+logger(int level, const char *fmt, ...)
 {
 	va_list va;
 
 	va_start(va, fmt);
-	vlog(level, 2, fmt, va);
+	vlogger(level, 2, fmt, va);
 	va_end(va);
 }
 
 void
-dprintlogf(int level, int fd, const char *fmt, ...)
+dlogger(int level, int fd, const char *fmt, ...)
 {
 	va_list va;
 
 	va_start(va, fmt);
-	vlog(level, fd, fmt, va);
+	vlogger(level, fd, fmt, va);
 	va_end(va);
 }
 
@@ -54,7 +54,7 @@ dprintf(int fd, const char *fmt, ...)
 }
 
 void
-vlog(int level, int fd, const char *fmt, va_list va)
+vlogger(int level, int fd, const char *fmt, va_list va)
 {
 	char buf[LINE_BUF];
 	static bool suppressHeader = FALSE;

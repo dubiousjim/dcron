@@ -14,7 +14,7 @@
 #include "defs.h"
 
 /* needed by chuser.c */
-Prototype void printlogf(/*@unused@*/ int level, const char *fmt, ...);
+Prototype void logger(/*@unused@*/ int level, const char *fmt, ...);
 
 static void Usage(void);
 static int GetReplaceStream(const char *user, const char *file);
@@ -44,7 +44,7 @@ main(int ac, char **av)
 	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 	/* return value >= size means result was truncated */
 	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
-		printlogf(0, "username '%s' too long\n", caller);
+		logger(0, "username '%s' too long\n", caller);
 		exit(EXIT_FAILURE);
 	}
 	/*
@@ -88,11 +88,11 @@ main(int ac, char **av)
 							exit(EXIT_FAILURE);
 						}
 					} else {
-						printlogf(0, "failed to get uid for %s\n", optarg);
+						logger(0, "failed to get uid for %s\n", optarg);
 						exit(EXIT_FAILURE);
 					}
 				} else {
-					printlogf(0, "-u option: superuser only\n");
+					logger(0, "-u option: superuser only\n");
 					exit(EXIT_FAILURE);
 				}
 				break;
@@ -101,7 +101,7 @@ main(int ac, char **av)
 				if (*optarg != '\0' && getuid() == geteuid()) {
 					CDir = optarg;
 				} else {
-					printlogf(0, "-c option: superuser only\n");
+					logger(0, "-c option: superuser only\n");
 					exit(EXIT_FAILURE);
 				}
 				break;
@@ -132,7 +132,7 @@ main(int ac, char **av)
 	if (repFile) {
 		repFd = GetReplaceStream(caller, repFile);
 		if (repFd < 0) {
-			printlogf(0, "failed reading replacement file %s\n", repFile);
+			logger(0, "failed reading replacement file %s\n", repFile);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -142,7 +142,7 @@ main(int ac, char **av)
 	 */
 
 	if (chdir(CDir) < 0) {
-		printlogf(0, "chdir to %s failed: %s\n", CDir, strerror(errno));
+		logger(0, "chdir to %s failed: %s\n", CDir, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 
@@ -161,7 +161,7 @@ main(int ac, char **av)
 						(void)fputs(buf, stdout);
 					(void)fclose(fi);
 				} else {
-					printlogf(0, "no crontab for %s\n", pas->pw_name);
+					logger(0, "no crontab for %s\n", pas->pw_name);
 					/* no error code */
 				}
 			}
@@ -191,7 +191,7 @@ main(int ac, char **av)
 					(void)lseek(fd, 0L, 0);
 					repFd = fd;
 				} else {
-					printlogf(0, "failed creating %s: %s\n", tmp, strerror(errno));
+					logger(0, "failed creating %s: %s\n", tmp, strerror(errno));
 					exit(EXIT_FAILURE);
 				}
 
@@ -225,7 +225,7 @@ main(int ac, char **av)
 					}
 				}
 				if (saverr) {
-					printlogf(0, "failed creating %s/%s: %s\n",
+					logger(0, "failed creating %s/%s: %s\n",
 							CDir,
 							pas->pw_name,
 							strerror(saverr)
@@ -262,7 +262,7 @@ main(int ac, char **av)
 			/* loop */
 		}
 		if (fo == NULL) {
-			printlogf(0, "failed appending to %s/%s\n", CDir, CRONUPDATE);
+			logger(0, "failed appending to %s/%s\n", CDir, CRONUPDATE);
 		}
 	}
 	exit(EXIT_SUCCESS);
@@ -270,7 +270,7 @@ main(int ac, char **av)
 }
 
 void
-printlogf(/*@unused@*/ int level, const char *fmt, ...)
+logger(/*@unused@*/ int level, const char *fmt, ...)
 {
 	va_list va;
 	/* char buf[LINE_BUF]; */
@@ -343,7 +343,7 @@ GetReplaceStream(const char *user, const char *file)
 
 	fd = open(file, O_RDONLY);
 	if (fd < 0) {
-		printlogf(0, "failed opening %s: %s\n", file, strerror(errno));
+		logger(0, "failed opening %s: %s\n", file, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	buf[0] = '\0';
@@ -375,7 +375,7 @@ EditFile(const char *user, const char *file)
 		visual = stringcat(ptr, " ", file, (char *)NULL);
 		(void)execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
 
-		printlogf(0, "exec /bin/sh -c '%s' failed\n", visual);
+		logger(0, "exec /bin/sh -c '%s' failed\n", visual);
 		exit(EXIT_FAILURE);
 	}
 	if (pid < 0) {
