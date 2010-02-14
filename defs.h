@@ -113,9 +113,8 @@
 /* limits */
 #define FD_MAX			256		/* close fds < this limit */
 #define LINES_MAX		256		/* max lines in non-root crontabs */
-#define SMALL_BUFFER	256
-#define RW_BUFFER		1024
-#define LOG_BUFFER		2048	/* max size of log line */
+#define SMALL_BUF		256
+#define LINE_BUF		1024	/* max size of log and crontab lines */
 
 
 /* types */

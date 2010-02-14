@@ -32,7 +32,7 @@ main(int ac, char **av)
 	char *repFile = NULL;
 	int repFd = 0;
 	int i;
-	char caller[SMALL_BUFFER];		/* user that ran program */
+	char caller[LOGIN_NAME_MAX];		/* user that ran program */
 
 	UserId = getuid();
 	if ((pas = getpwuid(UserId)) == NULL) {
@@ -154,7 +154,7 @@ main(int ac, char **av)
 		case LIST:
 			{
 				FILE *fi;
-				char buf[RW_BUFFER];
+				char buf[PIPE_BUF];
 
 				if ((fi = fopen(pas->pw_name, "r"))) {
 					while (fgets(buf, sizeof(buf), fi) != NULL)
@@ -172,7 +172,7 @@ main(int ac, char **av)
 				int fd;
 				size_t n;
 				char tmp[] = TMPDIR "/crontab.XXXXXX";
-				char buf[RW_BUFFER];
+				char buf[PIPE_BUF];
 
 				/*
 				 * Create temp file with perm 0600 and O_EXCL flag, ensuring that this call creates the file
@@ -200,8 +200,8 @@ main(int ac, char **av)
 			/*@fallthrough@*/
 		case REPLACE:
 			{
-				char buf[RW_BUFFER];
-				char path[PATH_MAX];
+				char buf[PIPE_BUF];
+				char path[NAME_MAX];
 				size_t k;
 				ssize_t n;
 				int fd;
@@ -273,7 +273,7 @@ void
 printlogf(/*@unused@*/ int level, const char *fmt, ...)
 {
 	va_list va;
-	/* char buf[LOG_BUFFER]; */
+	/* char buf[LINE_BUF]; */
 
 	va_start(va, fmt);
 	/*
@@ -307,7 +307,7 @@ GetReplaceStream(const char *user, const char *file)
 	pid_t pid;
 	int fd;
 	ssize_t n;
-	char buf[RW_BUFFER];
+	char buf[PIPE_BUF];
 
 	if (pipe(filedes) < 0) {
 		perror("pipe");

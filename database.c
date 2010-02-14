@@ -94,7 +94,7 @@ void
 CheckUpdates(const char *dpath, STRING user_override, time_t t1, time_t t2)
 {
 	FILE *fi;
-	char buf[SMALL_BUFFER];
+	char buf[SMALL_BUF];
 	char *fname, *ptok, *job;
 	char *path;
 
@@ -234,7 +234,7 @@ ReadTimestamps(STRING user)
 	CronFile *file;
 	CronLine *line;
 	FILE *fi;
-	char buf[SMALL_BUFFER];
+	char buf[SMALL_BUF];
 	char *ptr;
 	struct tm tm = {0,0,0,0,0,0,0,0,0}; /* stop valgrind complaining */
 	time_t sec, freq;
@@ -307,8 +307,8 @@ NewCronFile(const char *userName, const char *fileName, const char *dpath)
 	file->cf_Next = NULL;
 	file->cf_LineBase = NULL;
 	file->cf_DPath = stringdup(dpath, PATH_MAX);
-	file->cf_FileName = stringdup(fileName, SMALL_BUFFER);
-	file->cf_UserName = stringdup(userName, SMALL_BUFFER);
+	file->cf_FileName = stringdup(fileName, NAME_MAX);
+	file->cf_UserName = stringdup(userName, LOGIN_NAME_MAX);
 	file->cf_Ready = FALSE;
 	file->cf_Running = FALSE;
 	file->cf_Deleted = FALSE;
@@ -337,7 +337,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 	CronFile *file;
 	int maxEntries;
 	int maxLines;
-	char buf[RW_BUFFER]; /* max length for crontab lines */
+	char buf[LINE_BUF]; /* max length for crontab lines */
 	char *path;
 	FILE *fi;
 
@@ -649,7 +649,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				/*
 				 * copy command string
 				 */
-				line.cl_Shell = stringdup(ptr, RW_BUFFER);
+				line.cl_Shell = stringdup(ptr, LINE_BUF);
 
 				if (line.cl_Delay > 0) {
 					line.cl_Timestamp = stringcat(TSDir, "/", userName, ".", line.cl_JobName, (char *)NULL);

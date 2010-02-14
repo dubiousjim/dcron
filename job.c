@@ -206,7 +206,7 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 			 * mark as having run and update timestamp
 			 */
 			FILE *fi;
-			char buf[SMALL_BUFFER];
+			char buf[SMALL_BUF];
 			int succeeded = 0;
 			/*
 			 * we base off the time the job was scheduled/started waiting, not the time it finished

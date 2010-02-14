@@ -13,11 +13,11 @@ Prototype void printlogf(int level, const char *fmt, ...);
 Prototype void dprintlogf(int level, int fd, const char *fmt, ...);
 Prototype void dprintf(int fd, const char *fmt, ...);
 Prototype void initsignals(void);
-Prototype char Hostname[SMALL_BUFFER];
+Prototype char Hostname[HOST_NAME_MAX];
 
 static void vlog(int level, int fd, const char *fmt, va_list va);
 
-char Hostname[SMALL_BUFFER];
+char Hostname[HOST_NAME_MAX];
 
 
 void
@@ -44,7 +44,7 @@ void
 dprintf(int fd, const char *fmt, ...)
 {
 	va_list va;
-	char buf[LOG_BUFFER];
+	char buf[PIPE_BUF];
 
 	va_start(va, fmt);
 	/* [v]snprintf always \0-terminate; we don't care here if result was truncated */
@@ -56,7 +56,7 @@ dprintf(int fd, const char *fmt, ...)
 void
 vlog(int level, int fd, const char *fmt, va_list va)
 {
-	char buf[LOG_BUFFER];
+	char buf[LINE_BUF];
 	static bool suppressHeader = FALSE;
 
 	if (level <= LogLevel) {
@@ -84,7 +84,7 @@ vlog(int level, int fd, const char *fmt, va_list va)
 				/*
 				 * run LogHeader through strftime --> [yields hdr] plug in Hostname --> [yields buf]
 				 */
-				char hdr[SMALL_BUFFER];
+				char hdr[SMALL_BUF];
 				/* strftime returns strlen of result, provided that result plus a \0 fit into buf of size */
 				if (strftime(hdr, sizeof(hdr), LogHeader, tp)) {
 					if (gethostname(Hostname, sizeof(Hostname))==0)
