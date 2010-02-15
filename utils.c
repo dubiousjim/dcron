@@ -18,6 +18,8 @@ Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xrealloc(/*@only@*/ void *ptr, s
 Prototype /*@maynotreturn@*/ /*@only@*/ char *stringdup(const char *src, size_t maxlen);
 Prototype /*@maynotreturn@*/ /*@only@*/ char *stringdupmany(const char *first, ...);
 Prototype size_t stringcpy(/*@unique@*/ /*@out@*/ char *dst, const char *src, size_t dstsize) /*@modifies *dst@*/;
+Prototype size_t stringcat(/*@unique@*/ /*@out@*/ char *dst, const char *src, size_t dstsize, size_t dstlen) /*@modifies *dst@*/;
+
 Prototype size_t vstringf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, va_list va) /*@modifies *dst@*/;
 Prototype size_t stringf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, ...) /*@modifies *dst@*/;
 
@@ -200,26 +202,46 @@ stringdupmany(const char *first, ...)
 }
 
 /*
- * if src and its terminating \0 fit into dstsize, copy them to dst and return strlen(src)
- * if too long to fit, copy nothing and return strlen that would be needed
- * improves upon strncpy by returning needed strlen if dst too small (rather than doing unterminated copy); and by not filling rest of dst with additional \0s
- * equivalent to stringf(dst, dstsize, "%s", src);
+ * Copy src into dst, truncating and terminating if necessary.
+ * Return actual strlen(src). We needed to truncate when strlen(src) >= dstsize.
+ * Improves upon strncpy by returning needed strlen if dst too small (rather than doing unterminated copy); and by not filling rest of dst with additional \0s.
+ * Equivalent to stringf(dst, dstsize, "%s", src).
  */
 /*@-incondefs@*/
 size_t
 stringcpy(char *dst, const char *src, size_t dstsize) /*@requires maxSet(dst) >= ( dstsize - 1 ); @*/ /*@ensures maxRead (dst) <= maxRead(src) /\ maxRead (dst) <= dstsize; @*/ /*@modifies *dst@*/
 /*@=incondefs@*/
 {
-	/*@-mustdefine@*/
+	return stringcat(dst, src, dstsize, 0);
+}
+
+/*
+ * Copy src into dst after existing dstlen chars, truncating and terminating if necessary
+ * Return actual strlen needed to hold previous plus new strings.
+ * We needed to truncate when returned strlen >= dstdize.
+ * Unlike strncat, src must be \0 terminated; and we return the needed strlen if dst is too small, rather than another ptr to dst.
+ */
+/*@-incondefs@*/
+size_t
+stringcat(char *dst, const char *src, size_t dstsize, size_t dstlen) /*@requires maxSet(dst) >= ( dstsize - 1 ); @*/ /*@ensures maxRead (dst) <= ( dstlen + maxRead(src) ) /\ maxRead (dst) <= dstsize; @*/ /*@modifies *dst@*/
+/*@=incondefs@*/
+{
 	size_t k = strlen(src);
-	if (k < dstsize) {
-		/*@-boundswrite@*/
-		strcpy(dst, src);
-		/*@=boundswrite@*/
+	if (dstlen < dstsize) {
+		/*@-mayaliasunique@*/
+		if (dstlen + k < dstsize) {
+			memcpy(dst + dstlen, src, k + 1);
+		} else {
+			memcpy(dst + dstlen, src, dstsize - dstlen - 1);
+			dst[dstsize - 1] = '\0';
+		}
+		/*@=mayaliasunique@*/
 	}
-	return k;
+	/*@-mustdefine@*/
+	return dstlen + k;
 	/*@=mustdefine@*/
 }
+
 
 /*
  * portability wrapper around [v]sprintf to ensure C99-ish behavior
