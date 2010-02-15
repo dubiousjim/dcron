@@ -19,6 +19,7 @@ Prototype size_t stringcpy(/*@unique@*/ /*@out@*/ char *dst, const char *src, si
 Prototype size_t vstringf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, va_list va) /*@modifies *dst@*/;
 Prototype size_t stringf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, ...) /*@modifies *dst@*/;
 
+Prototype hash_t hash(const unsigned char *key, unsigned short extra);
 
 /*
  * Write "dcron: ${msg}\n" >&2, and exit(1)
@@ -242,3 +243,37 @@ stringf(char *dst, size_t dstsize, const char *fmt, ...) /*@requires maxSet(dst)
 	va_end(va);
 	return k;
 }
+
+
+/*
+ * sdbm hash function = hash(i-1) * 65599 + str[i]
+ */
+hash_t
+hash(const unsigned char *key, unsigned short extra)
+{
+	hash_t h = extra;
+	/*
+	if (extra) {
+		hash_t hi = (hash_t)extra & 0xff;
+		h = (hi<<8) + (hi>>2) - (hi>>8) + extra - hi;
+	}
+	*/
+	while ((int)*key)
+		h = (h<<16) + (h<<6) - h + (int)*key++;
+	return h;
+}
+
+/*
+ * bernstein hash function = hash(i - 1)*33 xor str[i]
+ *
+hash_t
+bernstein_hash(const unsigned char *key)
+{
+	hash_t h=0;
+	while ((int)*key)
+		h = h*33 ^ (int)*key++;
+	return h;
+}
+ *
+ */
+

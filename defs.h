@@ -133,6 +133,7 @@ typedef int bool;
 #endif
 
 typedef /*@null@*/ const char *STRING;
+typedef unsigned long hash_t;
 
 #define FREQ_NOAUTO (-1)
 #define FREQ_REBOOT (-2)
