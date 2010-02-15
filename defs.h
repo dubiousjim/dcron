@@ -17,7 +17,7 @@
  * 5. use stringcat in utils.c instead of requiring asprintf / _GNU_SOURCE
  * 6. use stringdup in utils.c instead of requiring strndup / _GNU_SOURCE
  * 7. use stringcpy in utils.c as more useful strncpy
- * 8. use [v]stringprintf in utils.c to ensure C99-ish behavior for [v]sprintf
+ * 8. use [v]stringf in utils.c to ensure C99-ish behavior for [v]sprintf
  */
 
 #define _XOPEN_SOURCE 1

@@ -16,8 +16,8 @@ Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xrealloc(/*@only@*/ void *ptr, s
 Prototype /*@maynotreturn@*/ /*@only@*/ char *stringdup(const char *src, size_t maxlen);
 Prototype /*@maynotreturn@*/ /*@only@*/ char *stringcat(const char *first, ...);
 Prototype size_t stringcpy(/*@unique@*/ /*@out@*/ char *dst, const char *src, size_t dstsize) /*@modifies *dst@*/;
-Prototype size_t vstringprintf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, va_list va) /*@modifies *dst@*/;
-Prototype size_t stringprintf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, ...) /*@modifies *dst@*/;
+Prototype size_t vstringf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, va_list va) /*@modifies *dst@*/;
+Prototype size_t stringf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, ...) /*@modifies *dst@*/;
 
 
 /*
@@ -163,7 +163,7 @@ stringcat(const char *first, ...)
  * if src and its terminating \0 fit into dstsize, copy them to dst and return strlen(src)
  * if too long to fit, copy nothing and return strlen that would be needed
  * improves upon strncpy by returning needed strlen if dst too small (rather than doing unterminated copy); and by not filling rest of dst with additional \0s
- * equivalent to stringprintf(dst, dstsize, "%s", src);
+ * equivalent to stringf(dst, dstsize, "%s", src);
  */
 /*@-incondefs@*/
 size_t
@@ -191,7 +191,7 @@ stringcpy(char *dst, const char *src, size_t dstsize) /*@requires maxSet(dst) >=
  */
 /*@-incondefs@*/
 size_t
-vstringprintf(char *dst, size_t dstsize, const char *fmt, va_list va) /*@requires maxSet(dst) >= ( dstsize - 1); @*/ /*@modifies *dst@*/
+vstringf(char *dst, size_t dstsize, const char *fmt, va_list va) /*@requires maxSet(dst) >= ( dstsize - 1); @*/ /*@modifies *dst@*/
 /*@=incondefs@*/
 {
 	int k;
@@ -232,13 +232,13 @@ vstringprintf(char *dst, size_t dstsize, const char *fmt, va_list va) /*@require
 
 /*@-incondefs@*/
 size_t
-stringprintf(char *dst, size_t dstsize, const char *fmt, ...) /*@requires maxSet(dst) >= ( dstsize - 1); @*/ /*@modifies *dst@*/
+stringf(char *dst, size_t dstsize, const char *fmt, ...) /*@requires maxSet(dst) >= ( dstsize - 1); @*/ /*@modifies *dst@*/
 /*@=incondefs@*/
 {
 	size_t k;
 	va_list va;
 	va_start(va, fmt);
-	k = vstringprintf(dst, dstsize, fmt, va);
+	k = vstringf(dst, dstsize, fmt, va);
 	va_end(va);
 	return k;
 }
