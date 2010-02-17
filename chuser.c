@@ -40,9 +40,12 @@ ChangeUser(const char *user, STRING dochdir, const char *when, const char *desc)
 	if ((pas = getpwnam(user)) == NULL)
 		ChangeUserFailed("could not change to unknown", NULL, user, when, desc);
 
-	(void)setenv("USER", pas->pw_name, 1);
-	(void)setenv("HOME", pas->pw_dir, 1);
-	(void)setenv("SHELL", "/bin/sh", 1);
+	if (setenv("USER", pas->pw_name, (int)TRUE))
+		ChangeUserFailed("could not set USER for", NULL, user, when, desc);
+	if (setenv("HOME", pas->pw_dir, (int)TRUE))
+		ChangeUserFailed("could not set HOME for", NULL, user, when, desc);
+	if (setenv("SHELL", "/bin/sh", (int)TRUE))
+		ChangeUserFailed("could not set SHELL for", NULL, user, when, desc);
 
 	/*
 	 * Change running state to the user in question
