@@ -275,15 +275,21 @@ void
 logger(/*@unused@*/ int level, const char *fmt, ...)
 {
 	va_list va;
-	/* char buf[LINE_BUF]; */
+	size_t k;
+	bool eoln;
 
-	va_start(va, fmt);
-	/*
-	(void)vsnprintf(buf, sizeof(buf), fmt, va);
-	(void)write(2, buf, strlen(buf));
-	*/
-	(void)vfprintf(stderr, fmt, va);
-	va_end(va);
+	k = strlen(fmt);
+	eoln = (k > 0 && fmt[k - 1] == '\n');
+
+	/* write "progname: " to stderr */
+	if (fprintf(stderr, "%s: ", progname) > 0) {
+		/* write formatted message, appending \n if necessary */
+		va_start(va, fmt);
+		if (vfprintf(stderr, fmt, va) >= 0 && !eoln)
+			(void)fputc('\n', stderr);
+		va_end(va);
+	}
+
 }
 
 void
