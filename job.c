@@ -64,14 +64,10 @@ RunJob(CronFile *file, CronLine *line)
 		 * Change running state to the user in question
 		 */
 
-		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
-			logger(LOG_ERR, "changing to user %s for %s failed\n",
-					file->cf_UserName,
-					line->cl_Description
-					);
-			/* we don't want crond to do any further tracking of child */
-			exit(EXIT_SUCCESS);
-		}
+		(void)ChangeUser(file->cf_UserName, TempDir,
+				" for %s",
+				line->cl_Description
+				);
 
 		/* from this point we are unpriviledged */
 
@@ -313,14 +309,10 @@ EndJob(CronFile *file, CronLine *line, int exit_status)
 		 * by the mailing and we already verified the mail file.
 		 */
 
-		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
-			logger(LOG_ERR, "changing to user %s to mail %s output failed\n",
-					file->cf_UserName,
-					line->cl_Description
-					);
-			/* we don't want crond to do any further tracking of child */
-			exit(EXIT_SUCCESS);
-		}
+		(void)ChangeUser(file->cf_UserName, TempDir,
+				" to mail %s output",
+				line->cl_Description
+				);
 
 		/* from this point we are unpriviledged */
 

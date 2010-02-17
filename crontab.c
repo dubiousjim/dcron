@@ -307,8 +307,7 @@ GetReplaceStream(const char *user, const char *pathrep)
 
 		(void)close(filedes[0]);
 
-		if (ChangeUser(user, NULL) < 0)
-			exit(EXIT_SUCCESS);
+		(void)ChangeUser(user, NULL, " to write crontab", "");
 
 		fin = open(pathrep, O_RDONLY);
 		if (fin < 0)
@@ -352,8 +351,8 @@ EditFile(const char *user, const char *pathtmp)
 		const char *pathvi;
 		const char *cmdvi;
 
-		if (ChangeUser(user, TMPDIR) < 0)
-			exit(EXIT_SUCCESS);
+		(void)ChangeUser(user, TMPDIR, " to edit crontab", "");
+
 		if ((pathvi = getenv("EDITOR")) == NULL)
 			if ((pathvi = getenv("VISUAL")) == NULL)
 				pathvi = PATH_VI;
