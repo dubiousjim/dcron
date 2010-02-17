@@ -27,6 +27,7 @@ Prototype /*@observer@*/ STRING SendMail;
 Prototype STRING Mailto;
 Prototype char *TempDir;
 Prototype char *TempFileFmt;
+Prototype /*@observer@*/ const char progname[];
 
 bool DebugOpt = FALSE;
 int LogLevel = LOG_LEVEL;
@@ -41,6 +42,7 @@ STRING LogFile = NULL; 	/* opened with mode 0600 */
 STRING Mailto = NULL;
 char *TempDir;
 char *TempFileFmt;
+/*@observer@*/ const char progname[] = "crond";
 
 uid_t DaemonUid;
 pid_t DaemonPid;
@@ -127,7 +129,7 @@ main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0
 							LogLevel = LOG_DEBUG;
 							break;
 						default:
-							dprintf(2, "-l option: unrecognized loglevel %s\n", optarg);
+							(void)dprintf(2, "-l option: unrecognized loglevel %s\n", optarg);
 							exit(EXIT_FAILURE);
 					}
 				}
@@ -264,7 +266,7 @@ main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0
 				(void)fclose(stderr);
 				(void)dup2(fd, 2);
 			} else {
-				dprintf(2, "crond: opening logfile %s failed: %s\n", LogFile, strerror(errno));
+				(void)dprintf(2, "crond: opening logfile %s failed: %s\n", LogFile, strerror(errno));
 				exit(EXIT_FAILURE);
 			}
 		}

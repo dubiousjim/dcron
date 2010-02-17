@@ -1,6 +1,6 @@
 
 /*
- * SUBS.C
+ * LOGGING.C
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
  * Copyright 2009-2010 James Pryor <profjim@jimpryor.net>
@@ -11,7 +11,6 @@
 
 Prototype void logger(int level, const char *fmt, ...);
 Prototype void dlogger(int level, int fd, const char *fmt, ...);
-Prototype void dprintf(int fd, const char *fmt, ...);
 Prototype void initsignals(void);
 Prototype char Hostname[HOST_NAME_MAX];
 
@@ -37,19 +36,6 @@ dlogger(int level, int fd, const char *fmt, ...)
 
 	va_start(va, fmt);
 	vlogger(level, fd, fmt, va);
-	va_end(va);
-}
-
-void
-dprintf(int fd, const char *fmt, ...)
-{
-	va_list va;
-	char buf[PIPE_BUF];
-
-	va_start(va, fmt);
-	/* [v]snprintf always \0-terminate; we don't care here if result was truncated */
-	(void)vsnprintf(buf, sizeof(buf), fmt, va);
-	(void)write(fd, buf, strlen(buf));
 	va_end(va);
 }
 
@@ -162,7 +148,7 @@ initsignals (void) {
 	if ( /*@-compdef@*/
 		sigaction (SIGHUP, &sa, NULL) != 0
 		/*@=compdef@*/) {
-		dprintf(2, "failed starting SIGHUP handling: %s\n", strerror(errno));
+		(void)dprintf(2, "failed starting SIGHUP handling: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 	sa.sa_flags = SA_RESTART;
@@ -170,7 +156,7 @@ initsignals (void) {
 	if ( /*@-compdef@*/
 		sigaction (SIGCHLD, &sa, NULL) != 0
 		/*@=compdef@*/) {
-		dprintf(2, "failed starting SIGCHLD handling: %s\n", strerror(errno));
+		(void)dprintf(2, "failed starting SIGCHLD handling: %s\n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 

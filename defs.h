@@ -12,7 +12,7 @@
  * 0. gcc defaults to _BSD_SOURCE and _POSIX_SOURCE
  * 1. need _POSIX_SOURCE or _XOPEN_SOURCE for getopt, fileno, sigaction
  * 2. need _XOPEN_SOURCE for strptime
- * 3. need _BSD_SOURCE || _XOPEN_SOURCE >= 600 for setenv, [v]snprintf, setre{u,g}id, strdup, gethostname, mkstemp
+ * 3. need _BSD_SOURCE || _XOPEN_SOURCE >= 600 for setenv, [v]snprintf, setre{u,g}id, strdup, gethostname, mkstemp, fsync
  * 4. need _BSD_SOURCE for mkdtemp, initgroups, strsep
  * 5. use stringcat in utils.c instead of requiring asprintf / _GNU_SOURCE
  * 6. use stringdup in utils.c instead of requiring strndup / _GNU_SOURCE

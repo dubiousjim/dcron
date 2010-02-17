@@ -39,7 +39,7 @@ RunJob(CronFile *file, CronLine *line)
 		/* if we didn't specify a -m Mailto, use the local user */
 		if (!value)
 			value = file->cf_UserName;
-		dprintf(mailFd, "To: %s\nSubject: cron for user %s %s\n\n",
+		(void)dprintf(mailFd, "To: %s\nSubject: cron for user %s %s\n\n",
 				value,
 				file->cf_UserName,
 				line->cl_Description
@@ -124,7 +124,7 @@ RunJob(CronFile *file, CronLine *line)
 		/*
 		 * Also complain to stdout, which will be either the mailFile or /dev/null
 		 */
-		dprintf(1, "exec /bin/sh -c '%s' failed\n", line->cl_Shell);
+		(void)dprintf(1, "exec /bin/sh -c '%s' failed\n", line->cl_Shell);
 		/* we don't want crond to do any further tracking of child */
 		exit(EXIT_SUCCESS);
 

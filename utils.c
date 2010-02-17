@@ -7,7 +7,9 @@
 #include "defs.h"
 
 
-Prototype /*@noreturn@*/ void fatal(/*@observer@*/ const char *msg);
+Prototype int dprintf(int fd, const char *fmt, ...);
+Prototype int vdprintf(int fd, const char *fmt, va_list va);
+Prototype /*@noreturn@*/ void fatal(/*@observer@*/ const char *fmt, ...);
 
 Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xmalloc(size_t size);
 Prototype /*@only@*/ /*@null@*/ void *xcalloc(size_t n, size_t size);
@@ -21,20 +23,55 @@ Prototype size_t stringf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const
 
 Prototype hash_t hash(const unsigned char *key, unsigned short extra);
 
+Prototype /*@observer@*/ const char progname[];
+
+
+
+
+int dprintf(int fd, const char *fmt, ...) {
+	va_list va;
+	int n;
+	va_start(va, fmt);
+	n = vdprintf(fd, fmt, va);
+	va_end(va);
+	return n;
+}
+
+int vdprintf(int fd, const char *fmt, va_list va) {
+	char buf[LINE_BUF];
+	size_t k;
+	if ((k=vstringf(buf, sizeof(buf), fmt, va)) >= sizeof(buf))
+		/* output was truncated */
+		k = sizeof(buf) - 1;
+	return (int)write(fd, buf, k);
+}
+
+
 /*
- * Write "dcron: ${msg}\n" >&2, and exit(1)
+ * Write "progname: ...\n" >&2, and exit(1)
  */
 void
-fatal(const char *msg)
+fatal(const char *fmt, ...)
 {
-	/* in general, we should first flush stdout */
-	const char progname[8] = "dcron: ";
-	size_t k = strlen(msg);
-	/* FIXME perhaps write to syslog? */
-	(void) write(2, progname, sizeof(progname)-1);
-	(void) write(2, msg, k);
-	if (k > 0 && msg[k-1] != '\n')
-		(void) write(2, "\n", 1);
+	char buf[LINE_BUF];
+	size_t k;
+	va_list va;
+
+	/* first flush stdout */
+	(void)fsync(1);
+
+	/* write "progname: " to stderr */
+	if (dprintf(2, "%s: ", progname) > 0) {
+		va_start(va, fmt);
+		if ((k=vstringf(buf, sizeof(buf), fmt, va)) >= sizeof(buf))
+			/* output was truncated */
+			k = sizeof(buf) - 1;
+		va_end(va);
+
+		/* write errmsg to stderr */
+		if (write(2, buf, k) == k && k > 0 && buf[k-1] != '\n')
+			(void)write(2, "\n", 1);
+	}
 	exit(EXIT_FAILURE);
 }
 

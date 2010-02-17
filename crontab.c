@@ -15,11 +15,13 @@
 
 /* needed by chuser.c */
 Prototype void logger(/*@unused@*/ int level, const char *fmt, ...);
+Prototype const char progname[];
 
 static void Usage(void);
 static int GetReplaceStream(const char *user, const char *file);
 static void EditFile(const char *user, const char *file);
 
+/*@observer@*/ const char progname[] = "crontab";
 const char *CDir = CRONTABS;
 static uid_t   UserId;
 
