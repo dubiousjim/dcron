@@ -18,8 +18,8 @@ Prototype void logger(/*@unused@*/ int level, const char *fmt, ...);
 Prototype const char progname[];
 
 static void Usage(void);
-static int GetReplaceStream(const char *user, const char *file);
-static void EditFile(const char *user, const char *file);
+static int GetReplaceStream(const char *user, const char *pathrep);
+static void EditFile(const char *user, const char *pathtmp);
 
 /*@observer@*/ const char progname[] = "crontab";
 const char *CDir = CRONTABS;
@@ -31,8 +31,8 @@ main(int ac, char **av)
 {
 	enum { NONE, EDIT, LIST, REPLACE, DELETE } option = NONE;
 	struct passwd *pas;
-	char *repFile = NULL;
-	int repFd = 0;
+	char *pathrep = NULL;
+	int frep = 0;
 	int i;
 	char caller[LOGIN_NAME_MAX];		/* user that ran program */
 
@@ -106,7 +106,7 @@ main(int ac, char **av)
 	if (option == NONE && optind == ac - 1) {
 		if (av[optind][0] != '-') {
 			option = REPLACE;
-			repFile = av[optind];
+			pathrep = av[optind];
 			optind++;
 		} else if (av[optind][1] == '\0') {
 			option = REPLACE;
@@ -121,9 +121,9 @@ main(int ac, char **av)
 	 * If there is a replacement file, obtain a secure descriptor to it.
 	 */
 
-	if (repFile) {
-		if ((repFd = GetReplaceStream(caller, repFile)) < 0)
-			fatal("failed reading replacement file %s (%s)", repFile, strerror(errno));
+	if (pathrep) {
+		if ((frep = GetReplaceStream(caller, pathrep)) < 0)
+			fatal("failed reading replacement file %s (%s)", pathrep, strerror(errno));
 	}
 
 	/*
@@ -140,43 +140,43 @@ main(int ac, char **av)
 	switch(option) {
 		case LIST:
 			{
-				FILE *fi;
+				FILE *fin;
 				char buf[PIPE_BUF];
 
-				if ((fi = fopen(pas->pw_name, "r"))) {
-					while (fgets(buf, sizeof(buf), fi) != NULL)
+				if ((fin = fopen(pas->pw_name, "r"))) {
+					while (fgets(buf, sizeof(buf), fin) != NULL)
 						(void)fputs(buf, stdout);
-					(void)fclose(fi);
+					(void)fclose(fin);
 				} else
 					fatal("no crontab for %s", pas->pw_name);
 			}
 			break;
 		case EDIT:
 			{
-				FILE *fi;
-				int fd;
-				size_t n;
-				char tmp[] = TMPDIR "/crontab.XXXXXX";
+				FILE *fin;
+				int ftmp;
 				char buf[PIPE_BUF];
+				size_t n;
+				char pathtmp[] = TMPDIR "/crontab.XXXXXX";
 
 				/*
 				 * Create temp file with perm 0600 and O_EXCL flag, ensuring that this call creates the file
-				 * Read from fi for "$CDir/$USER", write to fd for temp file
+				 * Read from fin for "$CDir/$USER", write to ftmp for temp file
 				 * EditFile changes user if necessary, and runs editor on temp file
-				 * Then we delete the temp file, keeping its fd as repFd
+				 * Then we delete the temp file, keeping its ftmp as frep
 				 */
-				if ((fd = mkstemp(tmp)) >= 0) {
-					(void)chown(tmp, getuid(), getgid());
-					if ((fi = fopen(pas->pw_name, "r"))) {
-						while ((n = fread(buf, 1, sizeof(buf), fi)) > 0)
-							(void)write(fd, buf, n);
+				if ((ftmp = mkstemp(pathtmp)) >= 0) {
+					(void)chown(pathtmp, getuid(), getgid());
+					if ((fin = fopen(pas->pw_name, "r"))) {
+						while ((n = fread(buf, 1, sizeof(buf), fin)) > 0)
+							(void)write(ftmp, buf, n);
 					}
-					EditFile(caller, tmp);
-					(void)remove(tmp);
-					(void)lseek(fd, 0L, 0);
-					repFd = fd;
+					EditFile(caller, pathtmp);
+					(void)remove(pathtmp);
+					(void)lseek(ftmp, 0L, 0);
+					frep = ftmp;
 				} else
-					fatal("failed creating %s (%s)", tmp, strerror(errno));
+					fatal("failed creating %s (%s)", pathtmp, strerror(errno));
 
 			}
 			option = REPLACE;
@@ -184,32 +184,32 @@ main(int ac, char **av)
 		case REPLACE:
 			{
 				char buf[PIPE_BUF];
-				char path[NAME_MAX];
+				char pathnew[NAME_MAX];
 				size_t k;
 				ssize_t n;
-				int fd;
+				int fnew;
 				int saverr = 0;
 
 				/*
-				 * Read from repFd, write to fd for "$CDir/$USER.new"
+				 * Read from frep, write to fnew for "$CDir/$USER.new"
 				 */
-				if ((k = stringcpy(path, pas->pw_name, sizeof(path)-4)) >= sizeof(path)-4) {
+				if ((k = stringcpy(pathnew, pas->pw_name, sizeof(pathnew)-4)) >= sizeof(pathnew)-4) {
 					saverr = ENAMETOOLONG;
 				} else {
-					strcat(path + k, ".new");
-					if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
-						while ((n = read(repFd, buf, sizeof(buf))) > 0) {
-							(void)write(fd, buf, (size_t)n);
+					strcat(pathnew + k, ".new");
+					if ((fnew = open(pathnew, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
+						while ((n = read(frep, buf, sizeof(buf))) > 0) {
+							(void)write(fnew, buf, (size_t)n);
 						}
-						(void)close(fd);
-						(void)rename(path, pas->pw_name);
+						(void)close(fnew);
+						(void)rename(pathnew, pas->pw_name);
 					} else {
 						saverr = errno;
 					}
 				}
 				if (saverr)
 					logger(0, "failed creating %s/%s (%s)", CDir, pas->pw_name, strerror(saverr));
-				(void)close(repFd);
+				(void)close(frep);
 			}
 			break;
 		case DELETE:
@@ -226,20 +226,20 @@ main(int ac, char **av)
 	 */
 
 	if (option == REPLACE || option == DELETE) {
-		FILE *fo;
+		FILE *fup;
 		struct stat st;
 
-		while ((fo = fopen(CRONUPDATE, "a"))) {
-			fprintf(fo, "%s\n", pas->pw_name);
-			(void)fflush(fo);
-			if (fstat(fileno(fo), &st) != 0 || st.st_nlink != 0) {
-				(void)fclose(fo);
+		while ((fup = fopen(CRONUPDATE, "a"))) {
+			fprintf(fup, "%s\n", pas->pw_name);
+			(void)fflush(fup);
+			if (fstat(fileno(fup), &st) != 0 || st.st_nlink != 0) {
+				(void)fclose(fup);
 				break;
 			}
-			(void)fclose(fo);
+			(void)fclose(fup);
 			/* loop */
 		}
-		if (fo == NULL)
+		if (fup == NULL)
 			fatal("failed appending to %s/%s (%s)", CDir, CRONUPDATE, strerror(errno));
 	}
 	exit(EXIT_SUCCESS);
@@ -284,12 +284,10 @@ Usage(void)
 }
 
 int
-GetReplaceStream(const char *user, const char *file)
+GetReplaceStream(const char *user, const char *pathrep)
 {
 	int filedes[2];
 	pid_t pid;
-	int fd;
-	ssize_t n;
 	char buf[PIPE_BUF];
 
 	if (pipe(filedes) < 0) {
@@ -316,7 +314,7 @@ GetReplaceStream(const char *user, const char *file)
 
 	/*
 	 * CHILD
-	 * Read from fd for "$file", write to pipe[1]
+	 * Read from fin for "$pathrep", write to pipe[1]
 	 */
 
 	(void)close(filedes[0]);
@@ -324,39 +322,40 @@ GetReplaceStream(const char *user, const char *file)
 	if (ChangeUser(user, NULL) < 0)
 		exit(EXIT_SUCCESS);
 
-	fd = open(file, O_RDONLY);
-	if (fd < 0)
-		fatal("failed opening %s (%s)", file, strerror(errno));
+	fin = open(pathrep, O_RDONLY);
+	if (fin < 0)
+		fatal("failed opening %s (%s)", pathrep, strerror(errno));
 	buf[0] = '\0';
 	(void)write(filedes[1], buf, 1);
-	while ((n = read(fd, buf, sizeof(buf))) > 0) {
+	while ((n = read(fin, buf, sizeof(buf))) > 0) {
 		(void)write(filedes[1], buf, (size_t)n);
 	}
 	exit(EXIT_SUCCESS);
+
 }
 
 void
-EditFile(const char *user, const char *file)
+EditFile(const char *user, const char *pathtmp)
 {
 	pid_t pid;
 
 	if ((pid = fork()) == 0) {
 		/*
-		 * CHILD - change user and run editor on "$file"
+		 * CHILD - change user and run editor on "$pathtmp"
 		 */
-		const char *ptr;
-		char *visual;
+		const char *pathvi;
+		const char *cmdvi;
 
 		if (ChangeUser(user, TMPDIR) < 0)
 			exit(EXIT_SUCCESS);
-		if ((ptr = getenv("EDITOR")) == NULL)
-			if ((ptr = getenv("VISUAL")) == NULL)
-				ptr = PATH_VI;
+		if ((pathvi = getenv("EDITOR")) == NULL)
+			if ((pathvi = getenv("VISUAL")) == NULL)
+				pathvi = PATH_VI;
 
-		visual = stringdupmany(ptr, " ", file, (char *)NULL);
-		(void)execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
+		cmdvi = stringdupmany(pathvi, " ", pathtmp, (char *)NULL);
+		(void)execl("/bin/sh", "/bin/sh", "-c", cmdvi, NULL);
 
-		fatal("exec /bin/sh -c '%s' failed", visual);
+		fatal("exec /bin/sh -c '%s' failed", cmdvi);
 	}
 	if (pid < 0) {
 		/*
