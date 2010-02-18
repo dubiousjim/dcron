@@ -143,12 +143,13 @@ main(int ac, char **av)
 				FILE *fin;
 				char buf[PIPE_BUF];
 
-				if ((fin = fopen(pas->pw_name, "r"))) {
-					while (fgets(buf, sizeof(buf), fin) != NULL)
-						(void)fputs(buf, stdout);
-					(void)fclose(fin);
-				} else
+				if ((fin = fopen(pas->pw_name, "r")) == NULL)
 					fatal("no crontab for %s", pas->pw_name);
+
+				while (fgets(buf, sizeof(buf), fin) != NULL) {
+					(void)fputs(buf, stdout);
+				}
+				(void)fclose(fin);
 			}
 			break;
 		case EDIT:
@@ -165,29 +166,32 @@ main(int ac, char **av)
 				 * EditFile changes user if necessary, and runs editor on temp file
 				 * Then we delete the temp file, keeping its ftmp as frep
 				 */
-				if ((ftmp = mkstemp(pathtmp)) >= 0) {
-					(void)chown(pathtmp, getuid(), getgid());
-					if ((fin = fopen(pas->pw_name, "r"))) {
-						while ((n = fread(buf, 1, sizeof(buf), fin)) > 0)
-							(void)write(ftmp, buf, n);
-					}
-					EditFile(caller, pathtmp);
-					(void)remove(pathtmp);
-					(void)lseek(ftmp, 0L, 0);
-					frep = ftmp;
-				} else
+				if ((ftmp = mkstemp(pathtmp)) < 0)
 					fatal("failed creating %s (%s)", pathtmp, strerror(errno));
+
+				(void)chown(pathtmp, getuid(), getgid());
+
+				if ((fin = fopen(pas->pw_name, "r"))) {
+					while ((n = fread(buf, 1, sizeof(buf), fin)) > 0) {
+						(void)write(ftmp, buf, n);
+					}
+				}
+
+				EditFile(caller, pathtmp);
+				(void)remove(pathtmp);
+				(void)lseek(ftmp, 0L, 0);
+				frep = ftmp;
 
 			}
 			option = REPLACE;
 			/*@fallthrough@*/
 		case REPLACE:
 			{
+				int fnew;
 				char buf[PIPE_BUF];
 				char pathnew[NAME_MAX];
-				size_t k;
 				ssize_t n;
-				int fnew;
+				size_t k;
 				int saverr = 0;
 
 				/*
@@ -207,9 +211,9 @@ main(int ac, char **av)
 						saverr = errno;
 					}
 				}
-				if (saverr)
-					logger(0, "failed creating %s/%s (%s)", CDir, pas->pw_name, strerror(saverr));
 				(void)close(frep);
+				if (saverr)
+					fatal("failed creating %s/%s (%s)", CDir, pas->pw_name, strerror(saverr));
 			}
 			break;
 		case DELETE:
@@ -290,10 +294,8 @@ GetReplaceStream(const char *user, const char *pathrep)
 	pid_t pid;
 	char buf[PIPE_BUF];
 
-	if (pipe(filedes) < 0) {
-		perror("pipe");
+	if (pipe(filedes) < 0)
 		return -1;
-	}
 
 	if ((pid = fork()) == 0) {
 		/*
@@ -322,7 +324,6 @@ GetReplaceStream(const char *user, const char *pathrep)
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		perror("fork");
 		return -1;
 	} else {
 		/*
@@ -365,8 +366,7 @@ EditFile(const char *user, const char *pathtmp)
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		perror("fork");
-		exit(EXIT_FAILURE);
+		fatal("failed to fork to edit crontab");
 	} else {
 		/*
 		 * PARENT, FORK SUCCESS
