@@ -215,7 +215,7 @@ main(int ac, char **av)
 				if ((k = stringcpy(path, pas->pw_name, sizeof(path)-4)) >= sizeof(path)-4) {
 					saverr = ENAMETOOLONG;
 				} else {
-					(void)strcat(path + k, ".new");
+					strcat(path + k, ".new");
 					if ((fd = open(path, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
 						while ((n = read(repFd, buf, sizeof(buf))) > 0) {
 							(void)write(fd, buf, (size_t)n);
