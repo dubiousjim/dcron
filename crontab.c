@@ -138,24 +138,30 @@ main(int ac, char **av)
 	switch(option) {
 		case LIST:
 			{
-				FILE *fin;
+				int fin;
+				int saverr;
 				char buf[PIPE_BUF];
+				ssize_t n;
 
-				if ((fin = fopen(pas->pw_name, "r")) == NULL)
+				if ((fin = open(pas->pw_name, O_RDONLY)) < 0)
 					fatal("no crontab for %s", pas->pw_name);
 
-				while (fgets(buf, sizeof(buf), fin) != NULL) {
-					(void)fputs(buf, stdout);
+				while ((n = read(fin, buf, sizeof(buf))) > 0) {
+					if (write(1, buf, (size_t)n) < 0)
+						/*@loopbreak@*/
+						break;
 				}
-				(void)fclose(fin);
+				saverr = errno;
+				(void)close(fin);
+				if (n != 0)
+					fatal("%s", strerror(saverr));
 			}
 			break;
 		case EDIT:
 			{
-				FILE *fin;
-				int ftmp;
+				int fin, ftmp;
 				char buf[PIPE_BUF];
-				size_t n;
+				ssize_t n;
 				char pathtmp[] = TMPDIR "/crontab.XXXXXX";
 
 				/*
@@ -169,10 +175,11 @@ main(int ac, char **av)
 
 				(void)chown(pathtmp, getuid(), getgid());
 
-				if ((fin = fopen(pas->pw_name, "r"))) {
-					while ((n = fread(buf, 1, sizeof(buf), fin)) > 0) {
-						(void)write(ftmp, buf, n);
+				if ((fin = open(pas->pw_name, O_RDONLY)) >= 0) {
+					while ((n = read(fin, buf, sizeof(buf))) > 0) {
+						(void)write(ftmp, buf, (size_t)n);
 					}
+					(void)close(fin);
 				}
 
 				EditFile(caller, pathtmp);
@@ -198,6 +205,7 @@ main(int ac, char **av)
 				if ((k = stringcpy(pathnew, pas->pw_name, sizeof(pathnew)-4)) >= sizeof(pathnew)-4) {
 					saverr = ENAMETOOLONG;
 				} else {
+					/* FIXME */
 					strcat(pathnew + k, ".new");
 					if ((fnew = open(pathnew, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
 						while ((n = read(frep, buf, sizeof(buf))) > 0) {
@@ -228,20 +236,23 @@ main(int ac, char **av)
 	 */
 
 	if (option == REPLACE || option == DELETE) {
-		FILE *fup;
+		int fup;
 		struct stat st;
+		size_t k = strlen(pas->pw_name);
+		int j;
 
-		while ((fup = fopen(CRONUPDATE, "a"))) {
-			fprintf(fup, "%s\n", pas->pw_name);
-			(void)fflush(fup);
-			if (fstat(fileno(fup), &st) != 0 || st.st_nlink != 0) {
-				(void)fclose(fup);
-				break;
-			}
-			(void)fclose(fup);
+		for (j=0; j < 2 && (fup = open(CRONUPDATE, O_WRONLY | O_APPEND)) >= 0; j++) {
+			if (write(fup, pas->pw_name, k) == k
+				&& write(fup, "\n", 1) == 1
+				&& fsync(fup) == 0
+				&& fstat(fup, &st) == 0
+				&& st.st_nlink != 0
+				&& close(fup) == 0
+			) break;
+			(void)close(fup);
 			/* loop */
 		}
-		if (fup == NULL)
+		if (j == 2 || fup < 0)
 			fatal("could not append to %s/%s (%s)", CDir, CRONUPDATE, strerror(errno));
 	}
 	exit(EXIT_SUCCESS);
