@@ -294,16 +294,41 @@ GetReplaceStream(const char *user, const char *pathrep)
 		perror("pipe");
 		return -1;
 	}
-	if ((pid = fork()) < 0) {
+
+	if ((pid = fork()) == 0) {
+		/*
+		 * CHILD, FORK OK
+		 * Read from fin for "$pathrep", write to pipe[1]
+		 */
+		int fin;
+		ssize_t n;
+
+		(void)close(filedes[0]);
+
+		if (ChangeUser(user, NULL) < 0)
+			exit(EXIT_SUCCESS);
+
+		fin = open(pathrep, O_RDONLY);
+		if (fin < 0)
+			fatal("failed opening %s (%s)", pathrep, strerror(errno));
+		buf[0] = '\0';
+		(void)write(filedes[1], buf, 1);
+		while ((n = read(fin, buf, sizeof(buf))) > 0) {
+			(void)write(filedes[1], buf, (size_t)n);
+		}
+		exit(EXIT_SUCCESS);
+
+	} else if (pid < 0) {
+		/*
+		 * PARENT, FORK FAILED
+		 */
 		perror("fork");
 		return -1;
-	}
-	if (pid > 0) {
+	} else {
 		/*
-		 * PARENT
+		 * PARENT, FORK SUCCESS
 		 * Read from pipe[0], return it (or -1 if it's empty)
 		 */
-
 		(void)close(filedes[1]);
 		if (read(filedes[0], buf, 1) != 1) {
 			(void)close(filedes[0]);
@@ -311,26 +336,6 @@ GetReplaceStream(const char *user, const char *pathrep)
 		}
 		return filedes[0];
 	}
-
-	/*
-	 * CHILD
-	 * Read from fin for "$pathrep", write to pipe[1]
-	 */
-
-	(void)close(filedes[0]);
-
-	if (ChangeUser(user, NULL) < 0)
-		exit(EXIT_SUCCESS);
-
-	fin = open(pathrep, O_RDONLY);
-	if (fin < 0)
-		fatal("failed opening %s (%s)", pathrep, strerror(errno));
-	buf[0] = '\0';
-	(void)write(filedes[1], buf, 1);
-	while ((n = read(fin, buf, sizeof(buf))) > 0) {
-		(void)write(filedes[1], buf, (size_t)n);
-	}
-	exit(EXIT_SUCCESS);
 
 }
 
@@ -356,14 +361,17 @@ EditFile(const char *user, const char *pathtmp)
 		(void)execl("/bin/sh", "/bin/sh", "-c", cmdvi, NULL);
 
 		fatal("exec /bin/sh -c '%s' failed", cmdvi);
-	}
-	if (pid < 0) {
+	} else if (pid < 0) {
 		/*
-		 * PARENT - failure
+		 * PARENT, FORK FAILED
 		 */
 		perror("fork");
 		exit(EXIT_FAILURE);
+	} else {
+		/*
+		 * PARENT, FORK SUCCESS
+		 */
+		(void)waitpid(pid, NULL, 0);
 	}
-	(void)waitpid(pid, NULL, 0);
 }
 
