@@ -38,7 +38,7 @@ main(int ac, char **av)
 
 	UserId = getuid();
 	if ((pas = getpwuid(UserId)) == NULL)
-		fatal("getpwuid failed for uid %d (%s)", UserId, strerror(errno));
+		fatal("could not get passwd entry for uid %d (%s)", UserId, strerror(errno));
 
 	/* FIXME
 	 * ---------------------------------
@@ -85,11 +85,11 @@ main(int ac, char **av)
 				if (*optarg == '\0' || getuid() != geteuid())
 					fatal("-u option for superuser only");
 				else if ((pas = getpwnam(optarg))==NULL)
-					fatal("username '%s' unknown", optarg);
+					fatal("unknown user %s", optarg);
 				UserId = pas->pw_uid;
 				/* paranoia */
 				if ((pas = getpwuid(UserId)) == NULL)
-					fatal("getpwuid failed for uid %d (%s)", UserId, strerror(errno));
+					fatal("could not get passwd entry for uid %d (%s)", UserId, strerror(errno));
 				break;
 			case 'c':
 				/* getopt guarantees optarg != NULL here */
@@ -121,17 +121,15 @@ main(int ac, char **av)
 	 * If there is a replacement file, obtain a secure descriptor to it.
 	 */
 
-	if (pathrep) {
-		if ((frep = GetReplaceStream(caller, pathrep)) < 0)
-			fatal("failed reading replacement file %s (%s)", pathrep, strerror(errno));
-	}
+	if (pathrep)
+		frep = GetReplaceStream(caller, pathrep);
 
 	/*
 	 * Change directory to our crontab directory
 	 */
 
 	if (chdir(CDir) < 0)
-		fatal("chdir to %s failed (%s)", CDir, strerror(errno));
+		fatal("could not chdir to %s (%s)", CDir, strerror(errno));
 
 	/*
 	 * Handle options as appropriate
@@ -167,7 +165,7 @@ main(int ac, char **av)
 				 * Then we delete the temp file, keeping its ftmp as frep
 				 */
 				if ((ftmp = mkstemp(pathtmp)) < 0)
-					fatal("failed creating %s (%s)", pathtmp, strerror(errno));
+					fatal("could not create %s (%s)", pathtmp, strerror(errno));
 
 				(void)chown(pathtmp, getuid(), getgid());
 
@@ -213,7 +211,7 @@ main(int ac, char **av)
 				}
 				(void)close(frep);
 				if (saverr)
-					fatal("failed creating %s/%s (%s)", CDir, pas->pw_name, strerror(saverr));
+					fatal("could not write to %s/%s (%s)", CDir, pas->pw_name, strerror(saverr));
 			}
 			break;
 		case DELETE:
@@ -244,7 +242,7 @@ main(int ac, char **av)
 			/* loop */
 		}
 		if (fup == NULL)
-			fatal("failed appending to %s/%s (%s)", CDir, CRONUPDATE, strerror(errno));
+			fatal("could not append to %s/%s (%s)", CDir, CRONUPDATE, strerror(errno));
 	}
 	exit(EXIT_SUCCESS);
 	/* not reached */
@@ -295,7 +293,7 @@ GetReplaceStream(const char *user, const char *pathrep)
 	char buf[PIPE_BUF];
 
 	if (pipe(filedes) < 0)
-		return -1;
+		fatal("could not create pipe");
 
 	if ((pid = fork()) == 0) {
 		/*
@@ -307,11 +305,11 @@ GetReplaceStream(const char *user, const char *pathrep)
 
 		(void)close(filedes[0]);
 
-		(void)ChangeUser(user, NULL, " to write crontab", "");
+		(void)ChangeUser(user, NULL, "", "");
 
 		fin = open(pathrep, O_RDONLY);
 		if (fin < 0)
-			fatal("failed opening %s (%s)", pathrep, strerror(errno));
+			fatal("could not read %s (%s)", pathrep, strerror(errno));
 		buf[0] = '\0';
 		(void)write(filedes[1], buf, 1);
 		while ((n = read(fin, buf, sizeof(buf))) > 0) {
@@ -323,7 +321,7 @@ GetReplaceStream(const char *user, const char *pathrep)
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		return -1;
+		fatal("could not read %s (%s)", pathrep, strerror(errno));
 	} else {
 		/*
 		 * PARENT, FORK SUCCESS
@@ -351,7 +349,7 @@ EditFile(const char *user, const char *pathtmp)
 		const char *pathvi;
 		const char *cmdvi;
 
-		(void)ChangeUser(user, TMPDIR, " to edit crontab", "");
+		(void)ChangeUser(user, TMPDIR, "", "");
 
 		if ((pathvi = getenv("EDITOR")) == NULL)
 			if ((pathvi = getenv("VISUAL")) == NULL)
@@ -360,12 +358,12 @@ EditFile(const char *user, const char *pathtmp)
 		cmdvi = stringdupmany(pathvi, " ", pathtmp, (char *)NULL);
 		(void)execl("/bin/sh", "/bin/sh", "-c", cmdvi, NULL);
 
-		fatal("exec /bin/sh -c '%s' failed", cmdvi);
+		fatal("could not exec '%s'", cmdvi);
 	} else if (pid < 0) {
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		fatal("failed to fork to edit crontab");
+		fatal("could not edit crontab (%s)", strerror(errno));
 	} else {
 		/*
 		 * PARENT, FORK SUCCESS
