@@ -374,7 +374,7 @@ EditFile(const char *user, const char *file)
 			if ((ptr = getenv("VISUAL")) == NULL)
 				ptr = PATH_VI;
 
-		visual = stringcat(ptr, " ", file, (char *)NULL);
+		visual = stringdupmany(ptr, " ", file, (char *)NULL);
 		(void)execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
 
 		logger(0, "exec /bin/sh -c '%s' failed\n", visual);

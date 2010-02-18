@@ -98,7 +98,7 @@ CheckUpdates(const char *dpath, STRING user_override, time_t t1, time_t t2)
 	char *fname, *ptok, *job;
 	char *path;
 
-	path = stringcat(dpath, "/", CRONUPDATE, (char *)NULL);
+	path = stringdupmany(dpath, "/", CRONUPDATE, (char *)NULL);
 	if ((fi = fopen(path, "r")) != NULL) {
 		(void)remove(path);
 		logger(LOG_INFO, "reading %s/%s\n", dpath, CRONUPDATE);
@@ -196,7 +196,7 @@ SynchronizeDir(const char *dpath, STRING user_override, int initial_scan)
 	 * Since we are resynchronizing the entire directory, remove the
 	 * the CRONUPDATE file.
 	 */
-	path = stringcat(dpath, "/", CRONUPDATE, (char *)NULL);
+	path = stringdupmany(dpath, "/", CRONUPDATE, (char *)NULL);
 	(void)remove(path);
 	free(path);
 
@@ -370,7 +370,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 		}
 	}
 
-	path = stringcat(dpath, "/", fileName, (char *)NULL);
+	path = stringdupmany(dpath, "/", fileName, (char *)NULL);
 	if ((fi = fopen(path, "r")) != NULL) {
 		struct stat sbuf;
 
@@ -518,7 +518,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							 * return name = ptr, and if ptr contains sep chars, overwrite first with 0 and point ptr to next char
 							 *                    else set ptr=NULL
 							 */
-							line.cl_Description = stringcat("job ",
+							line.cl_Description = stringdupmany("job ",
 									/*@-unrecog@*/
 								   strsep(&ptr, " \t"),
 									/*@=unrecog@*/
@@ -652,7 +652,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 				line.cl_Shell = stringdup(ptr, LINE_BUF);
 
 				if (line.cl_Delay > 0) {
-					line.cl_Timestamp = stringcat(TSDir, "/", userName, ".", line.cl_JobName, (char *)NULL);
+					line.cl_Timestamp = stringdupmany(TSDir, "/", userName, ".", line.cl_JobName, (char *)NULL);
 					line.cl_NotUntil = tnow + line.cl_Delay;
 				}
 

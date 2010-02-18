@@ -16,7 +16,7 @@ Prototype /*@only@*/ /*@null@*/ void *xcalloc(size_t n, size_t size);
 Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xrealloc(/*@only@*/ void *ptr, size_t size);
 
 Prototype /*@maynotreturn@*/ /*@only@*/ char *stringdup(const char *src, size_t maxlen);
-Prototype /*@maynotreturn@*/ /*@only@*/ char *stringcat(const char *first, ...);
+Prototype /*@maynotreturn@*/ /*@only@*/ char *stringdupmany(const char *first, ...);
 Prototype size_t stringcpy(/*@unique@*/ /*@out@*/ char *dst, const char *src, size_t dstsize) /*@modifies *dst@*/;
 Prototype size_t vstringf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, va_list va) /*@modifies *dst@*/;
 Prototype size_t stringf(/*@unique@*/ /*@out@*/ char *dst, size_t dstsize, const char *fmt, ...) /*@modifies *dst@*/;
@@ -147,7 +147,7 @@ stringdup(const char *src, size_t maxlen)
  */
 
 char *
-stringcat(const char *first, ...)
+stringdupmany(const char *first, ...)
 {
 	va_list va;
 	char *s, *p;

@@ -216,7 +216,7 @@ main(int ac, char **av) /*@requires maxRead(av) >= ( ac - 1) /\ maxRead(av) >= 0
 		perror("chmod");
 		exit(EXIT_FAILURE);
 	}
-	TempFileFmt = stringcat(TempDir, "/cron.%s.%d", (char *)NULL);
+	TempFileFmt = stringdupmany(TempDir, "/cron.%s.%d", (char *)NULL);
 
 	if (!ForegroundOpt) {
 
