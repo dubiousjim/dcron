@@ -58,17 +58,13 @@ ChangeUser(const char *user, STRING dochdir, const char *when, const char *desc)
 	}
 	if (setregid(pas->pw_gid, pas->pw_gid) < 0) {
 		char buf[SMALL_BUF];
-		size_t k;
-		(void)snprintf(buf, sizeof(buf), " gid %d", pas->pw_gid);
-		k = strlen(buf);
-		ChangeUserFailed("could not setregid for", NULL, user, strncat(buf + k, when, sizeof(buf) - k - 1), desc);
+		(void)snprintf(buf, sizeof(buf), " gid %d%s", pas->pw_gid, when);
+		ChangeUserFailed("could not setregid for", NULL, user, buf, desc);
 	}
 	if (setreuid(pas->pw_uid, pas->pw_uid) < 0) {
 		char buf[SMALL_BUF];
-		size_t k;
-		(void)snprintf(buf, sizeof(buf), " uid %d", pas->pw_uid);
-		k = strlen(buf);
-		ChangeUserFailed("could not setreuid for", NULL, user, strncat(buf + k, when, sizeof(buf) - k - 1), desc);
+		(void)snprintf(buf, sizeof(buf), " uid %d%s", pas->pw_uid, when);
+		ChangeUserFailed("could not setreuid for", NULL, user, buf, desc);
 	}
 	if (dochdir) {
 		/* first try to cd $HOME */
