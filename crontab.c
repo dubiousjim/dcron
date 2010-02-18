@@ -34,31 +34,14 @@ main(int ac, char **av)
 	char *pathrep = NULL;
 	int frep = 0;
 	int i;
-	char caller[LOGIN_NAME_MAX];		/* user that ran program */
+	const char *caller;		/* user that ran program */
 	pid_t pidrep = 0;
 
 	UserId = getuid();
 	if ((pas = getpwuid(UserId)) == NULL)
 		fatal("could not get passwd entry for uid %d (%s)", UserId, strerror(errno));
 
-	/* FIXME
-	 * ---------------------------------
-	 * */
-	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
-	/* return value >= size means result was truncated */
-	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
-		logger(0, "username '%s' too long\n", caller);
-		exit(EXIT_FAILURE);
-	}
-	/*
-	char *caller;		// user that ran program
-	if (!(caller = strdup(pas->pw_name))) {
-		errno = ENOMEM;
-		perror("caller");
-		exit(EXIT_FAILURE);
-	}
-	----------------------------------
-	*/
+	caller = stringdup(pas->pw_name, LOGIN_NAME_MAX);
 
 	opterr = 0;
 	while ((i=getopt(ac,av,"ledu:c:")) != -1) {
