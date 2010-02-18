@@ -48,30 +48,32 @@ int vdprintf(int fd, const char *fmt, va_list va) {
 
 
 /*
- * Write "progname: ...\n" >&2, and exit(1)
+ * Write "progname: ...\n" > stderr, and exit(1).
+ * Does not rely on [v]snprintf or [v]dprintf.
+ * Writes will fail if stderr has been fclosed(), even if fd 2 is open.
  */
 void
 fatal(const char *fmt, ...)
 {
-	char buf[LINE_BUF];
-	size_t k;
 	va_list va;
+	size_t k;
+	bool eoln;
 
-	/* first flush stdout */
+	/* flush (the fd for) stdout, ignoring errors */
 	(void)fsync(1);
 
-	/* write "progname: " to stderr */
-	if (dprintf(2, "%s: ", progname) > 0) {
-		va_start(va, fmt);
-		if ((k=vstringf(buf, sizeof(buf), fmt, va)) >= sizeof(buf))
-			/* output was truncated */
-			k = sizeof(buf) - 1;
-		va_end(va);
+	k = strlen(fmt);
+	eoln = (k > 0 && fmt[k - 1] == '\n');
 
-		/* write errmsg to stderr */
-		if (write(2, buf, k) == k && k > 0 && buf[k-1] != '\n')
-			(void)write(2, "\n", 1);
+	/* write "progname: " to stderr */
+	if (fprintf(stderr, "%s: ", progname) > 0) {
+		/* write formatted message, appending \n if necessary */
+		va_start(va, fmt);
+		if (vfprintf(stderr, fmt, va) >= 0 && !eoln)
+			(void)fputc('\n', stderr);
+		va_end(va);
 	}
+
 	exit(EXIT_FAILURE);
 }
 
