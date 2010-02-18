@@ -37,12 +37,12 @@ main(int ac, char **av)
 	char caller[LOGIN_NAME_MAX];		/* user that ran program */
 
 	UserId = getuid();
-	if ((pas = getpwuid(UserId)) == NULL) {
-		perror("getpwuid");
-		exit(EXIT_FAILURE);
-	}
+	if ((pas = getpwuid(UserId)) == NULL)
+		fatal("getpwuid failed for uid %d (%s)", UserId, strerror(errno));
 
-	/* FIXME */
+	/* FIXME
+	 * ---------------------------------
+	 * */
 	/* [v]snprintf write at most size including \0; they'll null-terminate, even when they truncate */
 	/* return value >= size means result was truncated */
 	if (snprintf(caller, sizeof(caller), "%s", pas->pw_name) >= sizeof(caller)) {
@@ -56,6 +56,7 @@ main(int ac, char **av)
 		perror("caller");
 		exit(EXIT_FAILURE);
 	}
+	----------------------------------
 	*/
 
 	opterr = 0;
@@ -80,32 +81,21 @@ main(int ac, char **av)
 					option = DELETE;
 				break;
 			case 'u':
-				/* getopt guarantees optarg != 0 here */
-				if (*optarg != '\0' && getuid() == geteuid()) {
-					if ((pas = getpwnam(optarg))) {
-						UserId = pas->pw_uid;
-						/* paranoia */
-						if ((pas = getpwuid(UserId)) == NULL) {
-							perror("getpwuid");
-							exit(EXIT_FAILURE);
-						}
-					} else {
-						logger(0, "failed to get uid for %s\n", optarg);
-						exit(EXIT_FAILURE);
-					}
-				} else {
-					logger(0, "-u option: superuser only\n");
-					exit(EXIT_FAILURE);
-				}
+				/* getopt guarantees optarg != NULL here */
+				if (*optarg == '\0' || getuid() != geteuid())
+					fatal("-u option for superuser only");
+				else if ((pas = getpwnam(optarg))==NULL)
+					fatal("username '%s' unknown", optarg);
+				UserId = pas->pw_uid;
+				/* paranoia */
+				if ((pas = getpwuid(UserId)) == NULL)
+					fatal("getpwuid failed for uid %d (%s)", UserId, strerror(errno));
 				break;
 			case 'c':
-				/* getopt guarantees optarg != 0 here */
-				if (*optarg != '\0' && getuid() == geteuid()) {
-					CDir = optarg;
-				} else {
-					logger(0, "-c option: superuser only\n");
-					exit(EXIT_FAILURE);
-				}
+				/* getopt guarantees optarg != NULL here */
+				if (*optarg == '\0' || getuid() != geteuid())
+					fatal("-c option for superuser only");
+				CDir = optarg;
 				break;
 			default:
 				/* unrecognized -X */
@@ -132,21 +122,16 @@ main(int ac, char **av)
 	 */
 
 	if (repFile) {
-		repFd = GetReplaceStream(caller, repFile);
-		if (repFd < 0) {
-			logger(0, "failed reading replacement file %s\n", repFile);
-			exit(EXIT_FAILURE);
-		}
+		if ((repFd = GetReplaceStream(caller, repFile)) < 0)
+			fatal("failed reading replacement file %s (%s)", repFile, strerror(errno));
 	}
 
 	/*
 	 * Change directory to our crontab directory
 	 */
 
-	if (chdir(CDir) < 0) {
-		logger(0, "chdir to %s failed: %s\n", CDir, strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	if (chdir(CDir) < 0)
+		fatal("chdir to %s failed (%s)", CDir, strerror(errno));
 
 	/*
 	 * Handle options as appropriate
@@ -162,10 +147,8 @@ main(int ac, char **av)
 					while (fgets(buf, sizeof(buf), fi) != NULL)
 						(void)fputs(buf, stdout);
 					(void)fclose(fi);
-				} else {
-					logger(0, "no crontab for %s\n", pas->pw_name);
-					/* no error code */
-				}
+				} else
+					fatal("no crontab for %s", pas->pw_name);
 			}
 			break;
 		case EDIT:
@@ -192,10 +175,8 @@ main(int ac, char **av)
 					(void)remove(tmp);
 					(void)lseek(fd, 0L, 0);
 					repFd = fd;
-				} else {
-					logger(0, "failed creating %s: %s\n", tmp, strerror(errno));
-					exit(EXIT_FAILURE);
-				}
+				} else
+					fatal("failed creating %s (%s)", tmp, strerror(errno));
 
 			}
 			option = REPLACE;
@@ -226,13 +207,8 @@ main(int ac, char **av)
 						saverr = errno;
 					}
 				}
-				if (saverr) {
-					logger(0, "failed creating %s/%s: %s\n",
-							CDir,
-							pas->pw_name,
-							strerror(saverr)
-						   );
-				}
+				if (saverr)
+					logger(0, "failed creating %s/%s (%s)", CDir, pas->pw_name, strerror(saverr));
 				(void)close(repFd);
 			}
 			break;
@@ -263,9 +239,8 @@ main(int ac, char **av)
 			(void)fclose(fo);
 			/* loop */
 		}
-		if (fo == NULL) {
-			logger(0, "failed appending to %s/%s\n", CDir, CRONUPDATE);
-		}
+		if (fo == NULL)
+			fatal("failed appending to %s/%s (%s)", CDir, CRONUPDATE, strerror(errno));
 	}
 	exit(EXIT_SUCCESS);
 	/* not reached */
@@ -350,10 +325,8 @@ GetReplaceStream(const char *user, const char *file)
 		exit(EXIT_SUCCESS);
 
 	fd = open(file, O_RDONLY);
-	if (fd < 0) {
-		logger(0, "failed opening %s: %s\n", file, strerror(errno));
-		exit(EXIT_FAILURE);
-	}
+	if (fd < 0)
+		fatal("failed opening %s (%s)", file, strerror(errno));
 	buf[0] = '\0';
 	(void)write(filedes[1], buf, 1);
 	while ((n = read(fd, buf, sizeof(buf))) > 0) {
@@ -383,8 +356,7 @@ EditFile(const char *user, const char *file)
 		visual = stringdupmany(ptr, " ", file, (char *)NULL);
 		(void)execl("/bin/sh", "/bin/sh", "-c", visual, NULL);
 
-		logger(0, "exec /bin/sh -c '%s' failed\n", visual);
-		exit(EXIT_FAILURE);
+		fatal("exec /bin/sh -c '%s' failed", visual);
 	}
 	if (pid < 0) {
 		/*
