@@ -202,20 +202,18 @@ main(int ac, char **av)
 				/*
 				 * Read from frep, write to fnew for "$CDir/$USER.new"
 				 */
-				if ((k = stringcpy(pathnew, pas->pw_name, sizeof(pathnew)-4)) >= sizeof(pathnew)-4) {
+
+				k = stringcpy(pathnew, pas->pw_name, sizeof(pathnew));
+				if (stringcat(pathnew, ".new", sizeof(pathnew), k) >= sizeof(pathnew)) {
 					saverr = ENAMETOOLONG;
+				} else if ((fnew = open(pathnew, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) < 0) {
+					saverr = errno;
 				} else {
-					/* FIXME */
-					strcat(pathnew + k, ".new");
-					if ((fnew = open(pathnew, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) >= 0) {
-						while ((n = read(frep, buf, sizeof(buf))) > 0) {
-							(void)write(fnew, buf, (size_t)n);
-						}
-						(void)close(fnew);
-						(void)rename(pathnew, pas->pw_name);
-					} else {
-						saverr = errno;
+					while ((n = read(frep, buf, sizeof(buf))) > 0) {
+						(void)write(fnew, buf, (size_t)n);
 					}
+					(void)close(fnew);
+					(void)rename(pathnew, pas->pw_name);
 				}
 				(void)close(frep);
 				if (saverr)
@@ -318,14 +316,18 @@ GetReplaceStream(const char *user, const char *pathrep)
 
 		(void)ChangeUser(user, NULL, "", "");
 
-		fin = open(pathrep, O_RDONLY);
+		n = 1;
+		if ((fin = open(pathrep, O_RDONLY)) >= 0) {
+			buf[0] = '\0';
+			do {
+				(void)write(filedes[1], buf, (size_t)n);
+			} while ((n = read(fin, buf, sizeof(buf))) > 0);
+			(void)close(fin);
+		}
+
 		if (fin < 0)
 			fatal("could not read %s (%s)", pathrep, strerror(errno));
-		buf[0] = '\0';
-		(void)write(filedes[1], buf, 1);
-		while ((n = read(fin, buf, sizeof(buf))) > 0) {
-			(void)write(filedes[1], buf, (size_t)n);
-		}
+
 		exit(EXIT_SUCCESS);
 
 	} else if (pid < 0) {
