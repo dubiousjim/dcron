@@ -189,7 +189,7 @@ main(int ac, char **av)
 				const char *pathnew;
 				ssize_t n;
 				size_t k;
-				int saverr = 0;
+				int saverr;
 				int status;
 
 				/*
@@ -202,14 +202,16 @@ main(int ac, char **av)
 				} else {
 					while ((n = read(frep, buf, sizeof(buf))) > 0) {
 						if (write(fnew, buf, (size_t)n) < n) {
-							saverr = errno;
 							/*@loopbreak@*/
 							break;
 						}
 					}
+					saverr = errno;
 					(void)close(fnew);
-					if (!saverr)
+					if (n == 0) {
 						(void)rename(pathnew, pas->pw_name);
+						saverr = 0;
+					}
 				}
 				free(pathnew);
 				(void)close(frep);
