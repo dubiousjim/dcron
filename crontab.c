@@ -147,7 +147,7 @@ main(int ac, char **av)
 					fatal("no crontab for %s", pas->pw_name);
 
 				while ((n = read(fin, buf, sizeof(buf))) > 0) {
-					if (write(1, buf, (size_t)n) < 0)
+					if (write(1, buf, (size_t)n) < n)
 						/*@loopbreak@*/
 						break;
 				}
@@ -160,6 +160,7 @@ main(int ac, char **av)
 		case EDIT:
 			{
 				int fin, ftmp;
+				int saverr;
 				char buf[PIPE_BUF];
 				ssize_t n;
 				char pathtmp[] = TMPDIR "/crontab.XXXXXX";
@@ -173,13 +174,19 @@ main(int ac, char **av)
 				if ((ftmp = mkstemp(pathtmp)) < 0)
 					fatal("could not create %s (%s)", pathtmp, strerror(errno));
 
-				(void)chown(pathtmp, getuid(), getgid());
+				if (chown(pathtmp, getuid(), getgid()))
+					fatal("could not set ownership of %s", pathtmp);
 
 				if ((fin = open(pas->pw_name, O_RDONLY)) >= 0) {
 					while ((n = read(fin, buf, sizeof(buf))) > 0) {
-						(void)write(ftmp, buf, (size_t)n);
+						if (write(ftmp, buf, (size_t)n) < n)
+							/*@loopbreak@*/
+							break;
 					}
+					saverr = errno;
 					(void)close(fin);
+					if (n != 0)
+						fatal("could not copy %s/%s to %s (%s)", CDir, pas->pw_name, pathtmp, strerror(saverr));
 				}
 
 				EditFile(caller, pathtmp);
@@ -210,10 +217,15 @@ main(int ac, char **av)
 					saverr = errno;
 				} else {
 					while ((n = read(frep, buf, sizeof(buf))) > 0) {
-						(void)write(fnew, buf, (size_t)n);
+						if (write(fnew, buf, (size_t)n) < n) {
+							saverr = errno;
+							/*@loopbreak@*/
+							break;
+						}
 					}
 					(void)close(fnew);
-					(void)rename(pathnew, pas->pw_name);
+					if (!saverr)
+						(void)rename(pathnew, pas->pw_name);
 				}
 				(void)close(frep);
 				if (saverr)
@@ -300,6 +312,7 @@ GetReplaceStream(const char *user, const char *pathrep)
 	int filedes[2];
 	pid_t pid;
 	char buf[PIPE_BUF];
+	int saverr = 0;
 
 	if (pipe(filedes) < 0)
 		fatal("could not create pipe");
@@ -320,34 +333,38 @@ GetReplaceStream(const char *user, const char *pathrep)
 		if ((fin = open(pathrep, O_RDONLY)) >= 0) {
 			buf[0] = '\0';
 			do {
-				(void)write(filedes[1], buf, (size_t)n);
+				if (write(filedes[1], buf, (size_t)n) < n)
+					break;
 			} while ((n = read(fin, buf, sizeof(buf))) > 0);
 			(void)close(fin);
 		}
 
-		if (fin < 0)
-			fatal("could not read %s (%s)", pathrep, strerror(errno));
-
-		exit(EXIT_SUCCESS);
+		if (n != 0)
+			exit(EXIT_FAILURE);
+		else
+			exit(EXIT_SUCCESS);
 
 	} else if (pid < 0) {
 		/*
 		 * PARENT, FORK FAILED
 		 */
-		fatal("could not read %s (%s)", pathrep, strerror(errno));
+		saverr = errno;
 	} else {
 		/*
 		 * PARENT, FORK SUCCESS
 		 * Read from pipe[0], return it (or -1 if it's empty)
 		 */
 		(void)close(filedes[1]);
-		if (read(filedes[0], buf, 1) != 1) {
-			(void)close(filedes[0]);
-			filedes[0] = -1;
-		}
-		return filedes[0];
-	}
+		if (read(filedes[0], buf, 1) == 1)
+			return filedes[0];
 
+		saverr = errno;
+		(void)close(filedes[0]);
+	}
+	fatal("could not read %s (%s)", pathrep, strerror(saverr));
+	/*@-unreachable@*/
+	return -1; /* to stop gcc warning */
+	/*@=unreachable@*/
 }
 
 void
