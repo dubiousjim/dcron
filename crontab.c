@@ -18,7 +18,7 @@ Prototype void logger(/*@unused@*/ int level, const char *fmt, ...);
 Prototype const char progname[];
 
 static void Usage(void);
-static int GetReplaceStream(const char *user, const char *pathrep);
+static int GetReplaceStream(const char *user, const char *pathrep, pid_t *pidrep_p) /*@modifies *pidrep_p@*/;
 static void EditFile(const char *user, const char *pathtmp);
 
 /*@observer@*/ const char progname[] = "crontab";
@@ -35,6 +35,7 @@ main(int ac, char **av)
 	int frep = 0;
 	int i;
 	char caller[LOGIN_NAME_MAX];		/* user that ran program */
+	pid_t pidrep = 0;
 
 	UserId = getuid();
 	if ((pas = getpwuid(UserId)) == NULL)
@@ -122,7 +123,7 @@ main(int ac, char **av)
 	 */
 
 	if (pathrep)
-		frep = GetReplaceStream(caller, pathrep);
+		frep = GetReplaceStream(caller, pathrep, &pidrep);
 
 	/*
 	 * Change directory to our crontab directory
@@ -205,6 +206,7 @@ main(int ac, char **av)
 				ssize_t n;
 				size_t k;
 				int saverr = 0;
+				int status;
 
 				/*
 				 * Read from frep, write to fnew for "$CDir/$USER.new"
@@ -228,6 +230,14 @@ main(int ac, char **av)
 						(void)rename(pathnew, pas->pw_name);
 				}
 				(void)close(frep);
+
+				if (pidrep != 0) {
+					assert(pathrep != NULL);
+					(void)waitpid(pidrep, &status, 0);
+					if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+						fatal("could not read %s", pathrep);
+				}
+
 				if (saverr)
 					fatal("could not write to %s/%s (%s)", CDir, pas->pw_name, strerror(saverr));
 			}
@@ -307,17 +317,16 @@ Usage(void)
 }
 
 int
-GetReplaceStream(const char *user, const char *pathrep)
+GetReplaceStream(const char *user, const char *pathrep, pid_t *pidrep_p)
 {
 	int filedes[2];
-	pid_t pid;
 	char buf[PIPE_BUF];
 	int saverr = 0;
 
 	if (pipe(filedes) < 0)
 		fatal("could not create pipe");
 
-	if ((pid = fork()) == 0) {
+	if ((*pidrep_p = fork()) == 0) {
 		/*
 		 * CHILD, FORK OK
 		 * Read from fin for "$pathrep", write to pipe[1]
@@ -344,7 +353,7 @@ GetReplaceStream(const char *user, const char *pathrep)
 		else
 			exit(EXIT_SUCCESS);
 
-	} else if (pid < 0) {
+	} else if (*pidrep_p < 0) {
 		/*
 		 * PARENT, FORK FAILED
 		 */
@@ -398,7 +407,11 @@ EditFile(const char *user, const char *pathtmp)
 		/*
 		 * PARENT, FORK SUCCESS
 		 */
-		(void)waitpid(pid, NULL, 0);
+		int status;
+
+		(void)waitpid(pid, &status, 0);
+		if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+			exit(EXIT_FAILURE);
 	}
 }
 
