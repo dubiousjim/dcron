@@ -23,7 +23,6 @@ static void EditFile(const char *user, const char *pathtmp);
 
 /*@observer@*/ const char progname[] = "crontab";
 const char *CDir = CRONTABS;
-static uid_t   UserId;
 
 
 int
@@ -35,6 +34,7 @@ main(int ac, char **av)
 	int frep = 0;
 	int i;
 	const char *caller;		/* user that ran program */
+	uid_t   UserId;
 	pid_t pidrep = 0;
 
 	UserId = getuid();
