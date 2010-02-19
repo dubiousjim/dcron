@@ -73,9 +73,9 @@ xrealloc(void *ptr, size_t size) /*@ensures maxSet(ptr) == (size-1); @*/
 }
 
 /*
- * returned ptr may be up to maxlen+1 bytes, will always be terminated
- * improves upon strndup by fail()ing if out of memory, instead of returning NULL
- * also strndup requires _GNU_SOURCE
+ * Returned ptr may be up to maxlen+1 bytes, will always be terminated.
+ * Improves upon strndup by fail()ing if out of memory, instead of returning NULL;
+ * also strndup requires _GNU_SOURCE.
  */
 char *
 stringdup(const char *src, size_t maxlen)
@@ -101,8 +101,8 @@ stringdup(const char *src, size_t maxlen)
  * Written by Solar Designer <solar at openwall.com>  and placed in the
  * public domain.
  *
- * retrieved from http://cvsweb.openwall.com/cgi/cvsweb.cgi/Owl/packages/popa3d/popa3d/misc.c
- * see also http://seclists.org/bugtraq/2006/Nov/594
+ * Retrieved from http://cvsweb.openwall.com/cgi/cvsweb.cgi/Owl/packages/popa3d/popa3d/misc.c
+ * See also http://seclists.org/bugtraq/2006/Nov/594
  *
  */
 
@@ -129,6 +129,7 @@ stringcat(const char *first, ...)
 	dst = xmalloc(m + 1);
 	assert(dst!=NULL);
 
+	/* annotation shouldn't be necessary, but... */
 	/*@-mayaliasunique@*/
 	memcpy(p = dst, first, n);
 	/*@=mayaliasunique@*/
