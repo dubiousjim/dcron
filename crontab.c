@@ -186,7 +186,7 @@ main(int ac, char **av)
 			{
 				int fnew;
 				char buf[PIPE_BUF];
-				char pathnew[NAME_MAX];
+				const char *pathnew;
 				ssize_t n;
 				size_t k;
 				int saverr = 0;
@@ -196,10 +196,8 @@ main(int ac, char **av)
 				 * Read from frep, write to fnew for "$CDir/$USER.new"
 				 */
 
-				k = stringcpy(pathnew, pas->pw_name, sizeof(pathnew));
-				if (stringcat(pathnew, ".new", sizeof(pathnew), k) >= sizeof(pathnew)) {
-					saverr = ENAMETOOLONG;
-				} else if ((fnew = open(pathnew, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) < 0) {
+				pathnew = stringdupmany(pas->pw_name, ".new", (char *)NULL);
+				if ((fnew = open(pathnew, O_CREAT|O_TRUNC|O_EXCL|O_APPEND|O_WRONLY, 0600)) < 0) {
 					saverr = errno;
 				} else {
 					while ((n = read(frep, buf, sizeof(buf))) > 0) {
@@ -213,6 +211,7 @@ main(int ac, char **av)
 					if (!saverr)
 						(void)rename(pathnew, pas->pw_name);
 				}
+				free(pathnew);
 				(void)close(frep);
 
 				if (pidrep != 0) {
