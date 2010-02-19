@@ -177,6 +177,7 @@ main(int ac, char **av)
 				(void)remove(pathtmp);
 				(void)lseek(ftmp, 0L, 0);
 				frep = ftmp;
+				assert(pidrep == 0);
 
 			}
 			option = REPLACE;
