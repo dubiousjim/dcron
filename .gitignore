@@ -1,2 +1,12 @@
+*~
+*.o
 *.swp
 protos.h
+/config
+/crond
+/crontab
+
+*.diff
+*.patch
+*.orig
+*.rej
