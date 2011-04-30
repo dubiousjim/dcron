@@ -270,6 +270,7 @@ logger(/*@unused@*/ int level, const char *fmt, ...)
 	va_list va;
 	size_t k;
 	bool eoln;
+	UNUSED(level);
 
 	k = strlen(fmt);
 	eoln = (k > 0 && fmt[k - 1] == '\n');
