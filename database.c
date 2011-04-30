@@ -236,7 +236,9 @@ ReadTimestamps(STRING user)
 	FILE *fi;
 	char buf[SMALL_BUF];
 	char *ptr;
+	/*@-fullinitblock@*/
 	struct tm tm = {0};
+	/*@=fullinitblock@*/
 	time_t sec, freq;
 
 	file = FileBase;
