@@ -236,7 +236,7 @@ ReadTimestamps(STRING user)
 	FILE *fi;
 	char buf[SMALL_BUF];
 	char *ptr;
-	struct tm tm = {0,0,0,0,0,0,0,0,0}; /* stop valgrind complaining */
+	struct tm tm = {0};
 	time_t sec, freq;
 
 	file = FileBase;
