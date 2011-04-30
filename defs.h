@@ -120,7 +120,9 @@
 #define UNUSED(x) /*@-noeffect@*/ (void)x /*@=noeffect@*/
 
 #ifndef __GNUC__
+#ifndef S_SPLINT_S
 #define __attribute__(attrlist) /*nothing*/
+#endif
 #endif
 
 /* types */
