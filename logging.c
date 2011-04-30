@@ -99,6 +99,8 @@ static void reopenlogger(/*@unused@*/ int sig)
 {
 	int fd;
 	int saverr = errno;
+	UNUSED(sig);
+
 	if (getpid() == DaemonPid) {
 		/* only daemon handles, children should ignore */
 		assert(LogFile!=NULL);
@@ -123,6 +125,8 @@ static void waitmailjob(/*@unused@*/ int sig)
 	 */
 	pid_t child;
 	int saverr = errno;
+	UNUSED(sig);
+
 	do {
 		child = waitpid(-DaemonPid, NULL, WNOHANG);
 		/* call was interrupted, try again: won't happen because we use SA_RESTART */
