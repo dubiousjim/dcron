@@ -8,6 +8,9 @@ v4.5  30-Apr-2011
   * @monthly was wrongly being parsed the same as @yearly (fixes Arch
     FS#19123). Thanks to Peter Johnson, Paul Gideon Dann, and Tilman Sauerbeck.
 
+  * extra/crond.rc: now uses $CROND_ARGS from /etc/conf.d/crond; sample included
+    as extra/crond.conf. Suggested by Eric Bélanger.
+
   * Also set LOGNAME environment variable in cronjobs. Requested by Michael
     Trunner; fixes Arch FS#18338.
 

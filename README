@@ -144,6 +144,10 @@ crond.rc
 :	This is an example rc script to start and stop crond. It could be placed in
 /etc/rc.d or /etc/init.d in suitable systems.
 
+crond.conf
+:	This contains user-modifiable settings for crond.rc. The sample crond.rc
+expects to source this file from /etc/conf.d/crond.
+
 run-cron
 :	This simple shell script is a bare-bones alternative to Debian's run-parts.
 
