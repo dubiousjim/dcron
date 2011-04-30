@@ -323,9 +323,11 @@ ZeroCronLine(CronLine /*@out@*/ *line) /*@modifies *line@*/ /*@ensures isnull li
 	memset(line, 0, sizeof(CronLine));
 	/*@-mustfreeonly@*/
 	line->cl_Next = NULL;
+	/*
 	//line->cl_Shell = shellCmd;
 	//line->cl_Description = desc;
 	//line->cl_JobName = NULL;
+	*/
 	line->cl_Timestamp = NULL;
 	line->cl_Waiters = NULL;
 	line->cl_Notifs = NULL;
