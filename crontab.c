@@ -188,7 +188,6 @@ main(int ac, char **av)
 				char buf[PIPE_BUF];
 				const char *pathnew;
 				ssize_t n;
-				size_t k;
 				int saverr;
 				int status;
 
@@ -213,7 +212,7 @@ main(int ac, char **av)
 						saverr = 0;
 					}
 				}
-				free(pathnew);
+				free((void *)pathnew);
 				(void)close(frep);
 
 				if (pidrep != 0) {
@@ -247,7 +246,7 @@ main(int ac, char **av)
 		int j;
 
 		for (j=0; j < 2 && (fup = open(CRONUPDATE, O_WRONLY | O_APPEND)) >= 0; j++) {
-			if (write(fup, pas->pw_name, k) == k
+			if (write(fup, pas->pw_name, k) == (ssize_t)k
 				&& write(fup, "\n", 1) == 1
 				&& fsync(fup) == 0
 				&& fstat(fup, &st) == 0
