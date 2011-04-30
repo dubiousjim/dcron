@@ -20,6 +20,7 @@
  * 8. use [v]stringf in utils.c to ensure C99-ish behavior for [v]sprintf
  */
 
+/* see /usr/include/features.h */
 #define _XOPEN_SOURCE 1
 #define _BSD_SOURCE 1
 
@@ -116,6 +117,11 @@
 #define SMALL_BUF		256
 #define LINE_BUF		1024	/* max size of log and crontab lines */
 
+#define UNUSED(x) /*@-noeffect@*/ (void)x /*@=noeffect@*/
+
+#ifndef __GNUC__
+#define __attribute__(attrlist) /*nothing*/
+#endif
 
 /* types */
 
