@@ -95,7 +95,8 @@ vlogger(int level, int fd, const char *fmt, va_list va)
 	}
 }
 
-static void reopenlogger(/*@unused@*/ int sig) {
+static void reopenlogger(/*@unused@*/ int sig)
+{
 	int fd;
 	int saverr = errno;
 	if (getpid() == DaemonPid) {
@@ -114,7 +115,8 @@ static void reopenlogger(/*@unused@*/ int sig) {
 	errno =  saverr;
 }
 
-static void waitmailjob(/*@unused@*/ int sig) {
+static void waitmailjob(/*@unused@*/ int sig)
+{
 	/*
 	 * Wait for any children in our process group.
 	 * These will all be mailjobs.
@@ -132,7 +134,8 @@ static void waitmailjob(/*@unused@*/ int sig) {
 }
 
 void
-initsignals (void) {
+initsignals (void)
+{
 	struct sigaction sa;
 
 	/* save daemon's pid globally */
