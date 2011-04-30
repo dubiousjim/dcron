@@ -59,13 +59,13 @@ fatal(const char *fmt, ...)
 {
 	va_list va;
 	size_t k;
-	bool eoln;
+	int eoln;
 
-	/* flush (the fd for) stdout, ignoring errors */
-	(void)fsync(1);
+	/* flush stdout, ignoring errors */
+	(void)fflush(stdout);
 
 	k = strlen(fmt);
-	eoln = (k > 0 && fmt[k - 1] == '\n');
+	eoln = (int)(k > 0 && fmt[k - 1] == '\n');
 
 	/* write "progname: " to stderr */
 	if (fprintf(stderr, "%s: ", progname) > 0) {
