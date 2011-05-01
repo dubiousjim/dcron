@@ -5,6 +5,9 @@ v4.5  30-Apr-2011
     Gideon Dann for identifying the second issue; and Tilman Sauerbeck for
     identifying the third.)
 
+  * @monthly was wrongly being parsed the same as @yearly (fixes Arch
+    FS#19123). Thanks to Peter Johnson, Paul Gideon Dann, and Tilman Sauerbeck.
+
   * Thanks for testing and feedback: Feifei Jia, Spider.007, Ray Kohler,
     Igor Zakharoff, Edward Hades, and Joe Lightning.
 
