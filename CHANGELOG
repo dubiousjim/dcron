@@ -37,6 +37,10 @@ v4.5  30-Apr-2011
   * extra/prune-cronstamps now only deletes files, and is formatted as a
     @weekly crontab. Thanks to Alec Moskvin <alecm@gmx.com>.
 
+  * extra/crontab.vim works around an issue where vim's writebackup would
+    interfere with crontab's security model (addresses Arch FS#18352).
+	Thanks to Armadillo and Simon Williams.
+
   * Makefile uses $LDFLAGS (fixes Arch FS#23784). Thanks to Kristoffer Tidemann
     and Mike Frysinger.
 
