@@ -40,6 +40,11 @@ v4.5  30-Apr-2011
   * Makefile uses $LDFLAGS (fixes Arch FS#23784). Thanks to Kristoffer Tidemann
     and Mike Frysinger.
 
+  * defs.h sets default locations for CRONTABS and CRONSTAMPS beneath /var/spool/cron/,
+    as in earlier versions of dcron.
+
+  * Documentation updates.
+
   * Thanks to Juergen Daubert, Rogutės Sparnuotos, ataraxia, Spider.007,
     Chlump Chatkupt, Feifei Jia, Igor Zakharoff, Edward Hades. ???
 
