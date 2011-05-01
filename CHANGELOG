@@ -19,12 +19,12 @@ git
 
   * Documentation and error message updates.
 
-v4.5  30-Apr-2011
+v4.5  1-May-2011
   * Some cron jobs were running multiple times. Now we make sure not to
     ArmJobs that are already running; and not to resynchronize while jobs are
-    running; and to poll the DST setting. (Fixes Arch FS#18681; thanks to Paul
-    Gideon Dann for identifying the second issue; and Tilman Sauerbeck for
-    identifying the third.)
+    running; and to poll the DST setting. (Fixes Arch FS#18681; thanks to Vincent
+    Cappe and Paul Gideon Dann for identifying the second issue; and Tilman
+    Sauerbeck for identifying the third.)
 
   * @monthly was wrongly being parsed the same as @yearly (fixes Arch
     FS#19123). Thanks to Peter Johnson, Paul Gideon Dann, and Tilman Sauerbeck.
