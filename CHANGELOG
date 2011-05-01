@@ -1,3 +1,13 @@
+v4.5  30-Apr-2011
+  * Some cron jobs were running multiple times. Now we make sure not to
+    ArmJobs that are already running; and not to resynchronize while jobs are
+    running; and to poll the DST setting. (Fixes Arch FS#18681; thanks to Paul
+    Gideon Dann for identifying the second issue; and Tilman Sauerbeck for
+    identifying the third.)
+
+  * Thanks for testing and feedback: Feifei Jia, Spider.007, Ray Kohler,
+    Igor Zakharoff, Edward Hades, and Joe Lightning.
+
 v4.4  17-Jan-2010
   * Finished mailjobs were being left as zombie processes. Fixed.
 
