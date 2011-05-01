@@ -1,5 +1,9 @@
 v4.5pre
 
+  * crond.logrotate now correctly gets pid from /var/run/crond.pid (reported by revel on AUR)
+
+  * Makefile uses LDFLAGS (fixes Arch FS#23784)
+
   * @monthly was wrongly being parsed the same as @yearly; fixed.
 
   * Numeric loglevels specified by 'crond -l <level>' weren't being validated.

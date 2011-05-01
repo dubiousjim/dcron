@@ -3,6 +3,6 @@
    copytruncate
    missingok
    postrotate
-	   kill -HUP `cat /var/run/cron.pid`
+	   kill -HUP `cat /var/run/crond.pid`
    endscript
 }
