@@ -1,29 +1,39 @@
-v4.5pre
-
-  * crond.logrotate now correctly gets pid from /var/run/crond.pid.
-
-  * Makefile uses LDFLAGS (fixes Arch FS#23784).
-
-  * @monthly was wrongly being parsed the same as @yearly (fixes Arch FS#19123).
-
+v4.6pre
   * Numeric loglevels specified by 'crond -l <level>' weren't being validated.
-    Now we no longer accept numeric loglevels; they must be specified symbolically.
+    Now we no longer accept numeric loglevels; they must be specified
+    symbolically.
 
   * Continued portability improvements. Makefile now uses -lbsd-compat.
     Factored allocation and string calls to utils.c.
 
   * Many internal changes and annotations to pass splint review.
 
-  * Updated manpages to refer to default install paths for crontabs and timestamps.
-    Miscellaneous other changes to docs and messages.
+  * Updated manpages to refer to default install paths for crontabs and
+    timestamps. Miscellaneous other changes to docs and messages.
+
+v4.5  30-Apr-2011
+  * Some cron jobs were running multiple times. Now we make sure not to
+    ArmJobs that are already running; and not to resynchronize while jobs are
+    running; and to poll the DST setting. (Fixes Arch FS#18681; thanks to Paul
+    Gideon Dann for identifying the second issue; and Tilman Sauerbeck for
+    identifying the third.)
+
+  * @monthly was wrongly being parsed the same as @yearly (fixes Arch
+    FS#19123). Thanks to Peter Johnson, Paul Gideon Dann, and Tilman Sauerbeck.
+
+  * crond.rc: now uses $CROND_ARGS from /etc/conf.d/crond
+
+  * Running `/etc/rc.d/crond start` after startup could leak unwanted
+    environment into cronjobs; now we force crond to start in empty env
+    (fixes Arch FS#22085). Thanks to Mantas.
+
+  * crond.logrotate now correctly gets pid from /var/run/crond.pid
+    (fixes Arch FS#18039). Thanks to Kay Abendroth and revel.
 
   * Thanks to Juergen Daubert, Rogutės Sparnuotos, ataraxia, Spider.007,
-    Chlump Chatkupt, Feifei Jia, Igor Zakharoff, Edward Hades, Mantas,
-	Kristoffer Tidemann, revel, Paul Gideon Dann, and Peter Johnson.
-
+    Chlump Chatkupt, Feifei Jia, Igor Zakharoff, Edward Hades. ???
 
 v4.4  17-Jan-2010
-
   * Finished mailjobs were being left as zombie processes. Fixed.
 
   * When using crond with logging-to-file, user jobs could only log some
@@ -46,7 +56,6 @@ v4.4  17-Jan-2010
   * Thanks to Juergen Daubert for testing and suggestions.
 
 v4.3  11-Jan-2010
-
   * Internal refactoring to make buffer overflow checks
     clearer and portability issues more explicit.
 
@@ -57,7 +66,6 @@ v4.3  11-Jan-2010
     Renamed TIMESTAMPS -> CRONSTAMPS.
 
 v4.2  11-Jan-2010
-
   * Makefile tweaks; moved more constants to #defines.
 
 v4.1  10-Jan-2010
@@ -120,7 +128,6 @@ v2.7
     in all major clib's )
 
 v2.4-2.6
-
     ( changes lost )
 
 v2.3
