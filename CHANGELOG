@@ -1,3 +1,24 @@
+todo
+  * add timestamps to -d output
+
+  * manual cron.update prodding doesn't affect cl_NotUntil
+
+  * Use hash when ID=... is supplied. FS#18292.
+
+  * FS#18352: Another thing: when moving the original file to the backup name, and the edited version is written in it's place, the file is written without preserving the same permissions as the original, so if you have a umask that prevents others from reading your stuff, crontab won't be able to load the new file.
+
+git
+  * Numeric loglevels specified by 'crond -l <level>' weren't being validated.
+    Now we no longer accept numeric loglevels; they must be specified
+    symbolically. Thanks to Rogutės Sparnuotos.
+
+  * Continued portability improvements. Makefile now uses -lbsd-compat.
+    Factored allocation and string calls to utils.c.
+
+  * Many internal changes and annotations to pass splint review.
+
+  * Documentation and error message updates.
+
 v4.5  30-Apr-2011
   * Some cron jobs were running multiple times. Now we make sure not to
     ArmJobs that are already running; and not to resynchronize while jobs are
