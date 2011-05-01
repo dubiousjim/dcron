@@ -115,7 +115,7 @@ are normally in /var/spool/cron/cronstamps. These directories normally have perm
 
 Here is the superuser's crontab, created using `sudo crontab -e`:
 
-	-rw-------  0 root   root      513 Jan  6 18:58 /var/spool/cron/root
+	-rw-------  0 root   root      513 Jan  6 18:58 /var/spool/cron/crontabs/root
 
 TESTING
 -------
