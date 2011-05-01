@@ -1,6 +1,6 @@
 % CRONTAB(1)
 % 
-% 17 Jan 2010
+% 1 May 2011
 
 NAME
 ====
@@ -95,7 +95,7 @@ The following formats are also recognized:
 	@reboot date
 
 	# schedule this job whenever crond is running, and sees that at least one
-	# hour has elapsed since it last ran successfully
+	# hour has elapsed since it last ran
 	@hourly ID=job1 date
 
 The formats @hourly, @daily, @weekly, @monthly, and @yearly need to update
@@ -116,7 +116,7 @@ There's also this esoteric option, whose usefulness will be explained later:
 There's also a format available for finer-grained control of frequencies:
 
 	# run whenever it's between 2-4 am, and at least one day (1d)
-	# has elapsed since this job ran successfully
+	# has elapsed since this job ran
 	* 2-4 * * * ID=job2 FREQ=1d date
 
 	# as before, but re-try every 10 minutes (10m) if my_command

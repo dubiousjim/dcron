@@ -34,6 +34,8 @@ v4.5  30-Apr-2011
   * defs.h sets default locations for CRONTABS and CRONSTAMPS beneath /var/spool/cron/,
     as in earlier versions of dcron.
 
+  * Documentation updates.
+
   * Thanks for testing and feedback: Feifei Jia, Spider.007, Ray Kohler,
     Igor Zakharoff, Edward Hades, and Joe Lightning.
 
