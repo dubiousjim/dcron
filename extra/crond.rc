@@ -12,7 +12,7 @@ start)
 	# defaults to using syslog, and sendmail-ing cron output to local user
 	# to mail output to remote address instead, add "-m user@host"
 	# to CROND_ARGS in /etc/conf.d/crond
-	if [[ -z $PID ]] && /usr/sbin/crond $CROND_ARGS; then
+	if [[ -z $PID ]] && env -i PATH="/sbin:/usr/sbin:/bin:/usr/bin" /usr/sbin/crond $CROND_ARGS; then
 
 		PID=$(pidof -o %PPID /usr/sbin/crond)
 		echo "$PID" > /var/run/crond.pid
