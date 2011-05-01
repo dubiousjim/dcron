@@ -1,5 +1,5 @@
 # Makefile for Dillon's crond and crontab
-VERSION = 4.4
+VERSION = 4.5
 
 # these variables can be configured by e.g. `make SCRONTABS=/different/path`
 PREFIX = /usr/local
