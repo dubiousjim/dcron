@@ -9,14 +9,14 @@
 
 Prototype int dprintf(int fd, const char *fmt, ...);
 Prototype int vdprintf(int fd, const char *fmt, va_list va);
-Prototype /*@noreturn@*/ void fatal(/*@observer@*/ const char *fmt, ...);
+Prototype /*@noreturn@*/ void fatal(/*@observer@*/ const char *fmt, ...) __attribute__((noreturn));
 
-Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xmalloc(size_t size);
-Prototype /*@only@*/ /*@null@*/ void *xcalloc(size_t n, size_t size);
-Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xrealloc(/*@only@*/ void *ptr, size_t size);
+Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xmalloc(size_t size) __attribute__((malloc));
+Prototype /*@only@*/ /*@null@*/ void *xcalloc(size_t n, size_t size) __attribute__((malloc));
+Prototype /*@only@*/ /*@out@*/ /*@null@*/ void *xrealloc(/*@only@*/ void *ptr, size_t size) __attribute__((malloc));
 
 Prototype /*@maynotreturn@*/ /*@only@*/ char *stringdup(const char *src, size_t maxlen);
-Prototype /*@maynotreturn@*/ /*@only@*/ char *stringdupmany(const char *first, ...);
+Prototype /*@maynotreturn@*/ /*@only@*/ char *stringdupmany(const char *first, ...) __attribute__((sentinel));
 Prototype size_t stringcpy(/*@unique@*/ /*@out@*/ char *dst, const char *src, size_t dstsize) /*@modifies *dst@*/;
 Prototype size_t stringcat(/*@unique@*/ /*@out@*/ char *dst, const char *src, size_t dstsize, size_t dstlen) /*@modifies *dst@*/;
 

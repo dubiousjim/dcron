@@ -15,6 +15,7 @@ Prototype void initsignals(void);
 Prototype char Hostname[HOST_NAME_MAX];
 
 static void vlogger(int level, int fd, const char *fmt, va_list va);
+static void reopenlogger(/*@unused@*/ int sig) __attribute__((signal));
 
 char Hostname[HOST_NAME_MAX];
 
