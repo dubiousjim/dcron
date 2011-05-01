@@ -1,10 +1,10 @@
 v4.5pre
 
-  * crond.logrotate now correctly gets pid from /var/run/crond.pid (reported by revel on AUR)
+  * crond.logrotate now correctly gets pid from /var/run/crond.pid.
 
-  * Makefile uses LDFLAGS (fixes Arch FS#23784)
+  * Makefile uses LDFLAGS (fixes Arch FS#23784).
 
-  * @monthly was wrongly being parsed the same as @yearly; fixed.
+  * @monthly was wrongly being parsed the same as @yearly (fixes Arch FS#19123).
 
   * Numeric loglevels specified by 'crond -l <level>' weren't being validated.
     Now we no longer accept numeric loglevels; they must be specified symbolically.
@@ -18,7 +18,9 @@ v4.5pre
     Miscellaneous other changes to docs and messages.
 
   * Thanks to Juergen Daubert, Rogutės Sparnuotos, ataraxia, Spider.007,
-    Chlump Chatkupt, Feifei Jia, Igor Zakharoff, and Edward Hades.
+    Chlump Chatkupt, Feifei Jia, Igor Zakharoff, Edward Hades, Mantas,
+	Kristoffer Tidemann, revel, Paul Gideon Dann, and Peter Johnson.
+
 
 v4.4  17-Jan-2010
 
