@@ -28,6 +28,9 @@ v4.5  30-Apr-2011
     environment into cronjobs; now we force crond to start in empty env
     (fixes Arch FS#22085). Thanks to Mantas.
 
+  * Also set LOGNAME environment variable in cronjobs. Requested by Michael
+    Trunner; fixes Arch FS#18338.
+
   * extra/crond.logrotate now correctly gets pid from /var/run/crond.pid
     (fixes Arch FS#18039). Thanks to Kay Abendroth and revel.
 

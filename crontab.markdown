@@ -54,7 +54,7 @@ files written in any shell you like.)
 
 Nor does it do any special environment handling. A shell script is
 better-suited to doing that than a cron daemon. This cron daemon sets up only
-three environment variables: USER, HOME, and SHELL.
+four environment variables: USER, LOGNAME, HOME, and SHELL.
 
 
 Our crontab format is roughly similar to that used by vixiecron. Individual

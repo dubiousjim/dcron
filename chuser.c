@@ -42,6 +42,8 @@ ChangeUser(const char *user, STRING dochdir, const char *when, const char *desc)
 
 	if (setenv("USER", pas->pw_name, (int)TRUE))
 		ChangeUserFailed("could not set USER for", NULL, user, when, desc);
+	if (setenv("LOGNAME", pas->pw_name, (int)TRUE))
+		ChangeUserFailed("could not set LOGNAME for", NULL, user, when, desc);
 	if (setenv("HOME", pas->pw_dir, (int)TRUE))
 		ChangeUserFailed("could not set HOME for", NULL, user, when, desc);
 	if (setenv("SHELL", "/bin/sh", (int)TRUE))
