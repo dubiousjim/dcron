@@ -1,10 +1,10 @@
-.TH CROND 8 "17 Jan 2010" 
+.TH CROND 8 "1 May 2011"
 .SH NAME
 .PP
 crond - dillon's lightweight cron daemon
 .SH SYNOPSIS
 .PP
-\f[B]crond [-s dir] [-c dir] [-t dir] [-m user\@host] [-M mailer] [-S|-L file] [-l loglevel] [-b|-f|-d]\f[]
+\f[B]crond [-s dir] [-c dir] [-t dir] [-m user\@host] [-M mailhandler] [-S|-L file] [-l loglevel] [-b|-f|-d]\f[]
 .SH OPTIONS
 .PP
 \f[B]crond\f[] is a background daemon that parses individual
@@ -17,19 +17,21 @@ directory of system crontabs (defaults to /etc/cron.d)
 .RE
 .TP
 .B -c dir
-directory of per-user crontabs (defaults to /var/spool/cron)
+directory of per-user crontabs (defaults to
+/var/spool/cron/crontabs)
 .RS
 .RE
 .TP
 .B -t dir
 directory of timestamps for \@freq and FREQ=\&... jobs (defaults to
-/var/spool/cronstamps)
+/var/spool/cron/cronstamps)
 .RS
 .RE
 .TP
 .B -m user\@host
-where should cron output be directed? (defaults to local user) Some
-mail handlers (like msmtp) can't route mail to local users.
+where should the output of cronjobs be directed? (defaults to local
+user) Some mail handlers (like msmtp) can't route mail to local
+users.
 If that's what you're using, then you should supply a remote
 address using this switch.
 Cron output for all users will be directed to that address.
@@ -41,26 +43,24 @@ cron jobs to /dev/null.
 .RS
 .RE
 .TP
-.B -M mailer
-When cron jobs generate any stdout or stderr, it's formatted as a
-mail message and piped to /usr/sbin/sendmail -t -oem -i.
-Attempts to mail cron output are also logged (regardless of whether
-they succeed).
-This switch permits the user to substitute a custom mail handler or
-script.
-It will be called with no arguments, and with the mail headers and
-cron output supplied to stdin.
-When a custom mail handler is supplied, mailing is no longer logged
-(have your mail handler do that if you want it).
+.B -M mailhandler
+Any output that cronjobs print to stdout or stderr gets formatted
+as an email and piped to \f[C]/usr/sbin/sendmail\ -t\ -oem\ -i\f[].
+Attempts to mail this are also logged.
+This switch permits the user to substitute a different mailhandler,
+or a script, for sendmail.
+That custom mailhandler is called with no arguments, and with the
+mail headers and cronjob output supplied to stdin.
+When a custom mailhandler is used, mailing is no longer logged
+(have your mailhandler do that if you want it).
 When cron jobs generate no stdout or stderr, nothing is sent to
-either sendmail or a custom mail handler.
+either sendmail or a custom mailhandler.
 .RS
 .RE
 .TP
 .B -S
 log events to syslog, using syslog facility LOG_CRON and identity
-`crond'.
-(This is the default behavior.)
+`crond' (this is the default behavior).
 .RS
 .RE
 .TP
@@ -70,8 +70,8 @@ log to specified file instead of syslog.
 .RE
 .TP
 .B -l loglevel
-log events <= this level.
-The default is `notice' (level 5).
+log events at the specified, or more important, loglevels.
+The default is `notice'.
 Valid level names are as described in logger(1) and syslog(3):
 alert, crit, debug, emerg, err, error (deprecated synonym for err),
 info, notice, panic (deprecated synonym for emerg), warning, warn
@@ -109,13 +109,13 @@ thousand entries without using noticeable CPU.
 .PP
 Cron jobs are not re-executed if a previous instance of them is
 still running.
-For example, if you have a crontab command \f[B]sleep\ 70\f[], that
+For example, if you have a crontab command \f[C]sleep\ 70\f[], that
 you request to be run every minute, \f[B]crond\f[] will skip this
 job when it sees it is still running.
 So the job won't be run more frequently than once every two
 minutes.
 If you do not like this feature, you can run your commands in the
-background with an \f[B]&\f[].
+background with an \f[C]&\f[].
 .PP
 \f[B]crond\f[] automatically detects when the clock has been
 changed, during its per-minute scans.
@@ -172,7 +172,7 @@ user has not tampered with the file type.
 \f[B]crontab\f[] notifies \f[B]crond\f[] that a user's crontab file
 has been modified (or created or deleted) through the
 \[lq]cron.update\[rq] file, which resides in the per-user crontabs
-directory (usually /var/spool/cron).
+directory (usually /var/spool/cron/crontabs).
 \f[B]crontab\f[] appends the filename of the modified crontab file
 to \[lq]cron.update\[rq]; and \f[B]crond\f[] inspects this file to
 determine when to reparse or otherwise update its internal list of
@@ -180,7 +180,7 @@ parsed crontabs.
 .PP
 Whenever a \[lq]cron.update\[rq] file is seen, \f[B]crond\f[] also
 re-reads timestamp files from its timestamp directory (usually
-/var/spool/cronstamps).
+/var/spool/cron/cronstamps).
 Normally these will just mirror \f[B]crond\f[]'s own internal
 representations, but this mechanism could be used to manually
 notify \f[B]crond\f[] that you've externally updated the
@@ -189,10 +189,12 @@ timestamps.
 The \[lq]cron.update\[rq] file can also be used to ask
 \f[B]crond\f[] to schedule a \[lq]named\[rq] cron job.
 To do this, append a line of the form:
-.PP
-\f[CR]
-      clio\ job1\ !job2
+.IP
+.nf
+\f[C]
+clio\ job1\ !job2
 \f[]
+.fi
 .PP
 to \[lq]cron.update\[rq].
 This request that user clio's job1 should be scheduled (waiting
@@ -210,7 +212,7 @@ When you install a package foo, it might write its own foo-specific
 crontab to /etc/cron.d/foo.
 .PP
 The superuser has a per-user crontab along with other users.
-It usually resides at /var/spool/cron/root.
+It usually resides at /var/spool/cron/crontabs/root.
 .PP
 Users can only have a crontab if they have an entry in /etc/passwd;
 however they do not need to have login shell privileges.
@@ -232,4 +234,3 @@ developer
 .PD
 Jim Pryor (profjim\@jimpryor.net): current
 developer
-

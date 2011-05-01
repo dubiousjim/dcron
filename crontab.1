@@ -1,4 +1,4 @@
-.TH CRONTAB 1 "17 Jan 2010" 
+.TH CRONTAB 1 "1 May 2011"
 .SH NAME
 .PP
 crontab - manipulate per-user crontabs (dillon's lightweight cron
@@ -45,13 +45,13 @@ Only the superuser may use the -u or -c switches to specify a
 different user and/or crontab directory.
 .PP
 The superuser also has his or her own per-user crontab, saved as
-/var/spool/cron/root.
+/var/spool/cron/crontabs/root.
 .PP
 Unlike other cron daemons, this crond/crontab package doesn't try
 to do everything under the sun.
 It doesn't try to keep track of user's preferred shells; that would
 require special-casing users with no login shell.
-Instead, it just runs all commands using \f[B]/bin/sh\f[].
+Instead, it just runs all commands using \f[C]/bin/sh\f[].
 (Commands can of course be script files written in any shell you
 like.)
 .PP
@@ -70,56 +70,62 @@ If you specify both a day in the month and a day of week, it will
 be interpreted as the Nth such day in the month.
 .PP
 Some examples:
-.PP
-\f[CR]
-      #\ MIN\ HOUR\ DAY\ MONTH\ DAYOFWEEK\ \ COMMAND
-      #\ run\ `date`\ at\ 6:10\ am\ every\ day
-      10\ 6\ *\ *\ *\ date
-      
-      #\ run\ every\ two\ hours\ at\ the\ top\ of\ the\ hour
-      0\ */2\ *\ *\ *\ date
-      
-      #\ run\ every\ two\ hours\ between\ 11\ pm\ and\ 7\ am,\ and\ again\ at\ 8\ am
-      0\ 23-7/2,8\ *\ *\ *\ date
-      
-      #\ run\ at\ 4:00\ am\ on\ January\ 1st
-      0\ 4\ 1\ jan\ *\ date
-      
-      #\ run\ every\ day\ at\ 11\ am,\ appending\ all\ output\ to\ a\ file
-      0\ 11\ *\ *\ *\ date\ >>\ /var/log/date-output\ 2>&1
+.IP
+.nf
+\f[C]
+#\ MIN\ HOUR\ DAY\ MONTH\ DAYOFWEEK\ \ COMMAND
+#\ run\ `date`\ at\ 6:10\ am\ every\ day
+10\ 6\ *\ *\ *\ date
+
+#\ run\ every\ two\ hours\ at\ the\ top\ of\ the\ hour
+0\ */2\ *\ *\ *\ date
+
+#\ run\ every\ two\ hours\ between\ 11\ pm\ and\ 7\ am,\ and\ again\ at\ 8\ am
+0\ 23-7/2,8\ *\ *\ *\ date
+
+#\ run\ at\ 4:00\ am\ on\ January\ 1st
+0\ 4\ 1\ jan\ *\ date
+
+#\ run\ every\ day\ at\ 11\ am,\ appending\ all\ output\ to\ a\ file
+0\ 11\ *\ *\ *\ date\ >>\ /var/log/date-output\ 2>&1
 \f[]
+.fi
 .PP
 To request the last Monday, etc.
 in a month, ask for the \[lq]5th\[rq] one.
 This will always match the last Monday, etc., even if there are
 only four Mondays in the month:
-.PP
-\f[CR]
-      #\ run\ at\ 11\ am\ on\ the\ first\ and\ last\ Mon,\ Tue,\ Wed\ of\ each\ month
-      0\ 11\ 1,5\ *\ mon-wed\ date
+.IP
+.nf
+\f[C]
+#\ run\ at\ 11\ am\ on\ the\ first\ and\ last\ Mon,\ Tue,\ Wed\ of\ each\ month
+0\ 11\ 1,5\ *\ mon-wed\ date
 \f[]
+.fi
 .PP
 When the fourth Monday in a month is the last, it will match
 against both the \[lq]4th\[rq] and the \[lq]5th\[rq] (it will only
 run once if both are specified).
 .PP
 The following formats are also recognized:
-.PP
-\f[CR]
-      #\ schedule\ this\ job\ only\ once,\ when\ crond\ starts\ up
-      \@reboot\ date
-      
-      #\ schedule\ this\ job\ whenever\ crond\ is\ running,\ and\ sees\ that\ at\ least\ one
-      #\ hour\ has\ elapsed\ since\ it\ last\ ran\ successfully
-      \@hourly\ ID=job1\ date
+.IP
+.nf
+\f[C]
+#\ schedule\ this\ job\ only\ once,\ when\ crond\ starts\ up
+\@reboot\ date
+
+#\ schedule\ this\ job\ whenever\ crond\ is\ running,\ and\ sees\ that\ at\ least\ one
+#\ hour\ has\ elapsed\ since\ it\ last\ ran
+\@hourly\ ID=job1\ date
 \f[]
+.fi
 .PP
 The formats \@hourly, \@daily, \@weekly, \@monthly, and \@yearly
 need to update timestamp files when their jobs have been run.
 The timestamp files are saved as
-/var/spool/cronstamps/user.jobname.
+/var/spool/cron/cronstamps/user.jobname.
 So for all of these formats, the cron command needs a jobname,
-given by prefixing the command with \f[B]ID=jobname\f[].
+given by prefixing the command with \f[C]ID=jobname\f[].
 (This syntax was chosen to maximize the chance that our crontab
 files will be readable by other cron daemons as well.
 They might just interpret the ID=jobname as a command-line
@@ -127,26 +133,30 @@ environment variable assignment.)
 .PP
 There's also this esoteric option, whose usefulness will be
 explained later:
-.PP
-\f[CR]
-      #\ don\[aq]t\ ever\ schedule\ this\ job\ on\ its\ own;\ only\ run\ it\ when\ it\[aq]s\ triggered
-      #\ as\ a\ "dependency"\ of\ another\ job\ (see\ below),\ or\ when\ the\ user\ explicitly
-      #\ requests\ it\ through\ the\ "cron.update"\ file\ (see\ crond(8))
-      \@noauto\ ID=namedjob\ date
+.IP
+.nf
+\f[C]
+#\ don\[aq]t\ ever\ schedule\ this\ job\ on\ its\ own;\ only\ run\ it\ when\ it\[aq]s\ triggered
+#\ as\ a\ "dependency"\ of\ another\ job\ (see\ below),\ or\ when\ the\ user\ explicitly
+#\ requests\ it\ through\ the\ "cron.update"\ file\ (see\ crond(8))
+\@noauto\ ID=namedjob\ date
 \f[]
+.fi
 .PP
 There's also a format available for finer-grained control of
 frequencies:
-.PP
-\f[CR]
-      #\ run\ whenever\ it\[aq]s\ between\ 2-4\ am,\ and\ at\ least\ one\ day\ (1d)
-      #\ has\ elapsed\ since\ this\ job\ ran\ successfully
-      *\ 2-4\ *\ *\ *\ ID=job2\ FREQ=1d\ date
-      
-      #\ as\ before,\ but\ re-try\ every\ 10\ minutes\ (10m)\ if\ my_command
-      #\ exits\ with\ code\ 11\ (EAGAIN)
-      *\ 2-4\ *\ *\ *\ ID=job3\ FREQ=1d/10m\ my_command
+.IP
+.nf
+\f[C]
+#\ run\ whenever\ it\[aq]s\ between\ 2-4\ am,\ and\ at\ least\ one\ day\ (1d)
+#\ has\ elapsed\ since\ this\ job\ ran
+*\ 2-4\ *\ *\ *\ ID=job2\ FREQ=1d\ date
+
+#\ as\ before,\ but\ re-try\ every\ 10\ minutes\ (10m)\ if\ my_command
+#\ exits\ with\ code\ 11\ (EAGAIN)
+*\ 2-4\ *\ *\ *\ ID=job3\ FREQ=1d/10m\ my_command
 \f[]
+.fi
 .PP
 These formats also update timestamp files, and so also require
 their jobs to be assigned IDs.
@@ -162,11 +172,13 @@ of the delay before re-trying.
 Jobs can be made to \[lq]depend\[rq] on, or wait until AFTER other
 jobs have successfully completed.
 Consider the following crontab:
-.PP
-\f[CR]
-      *\ *\ *\ *\ *\ ID=job4\ FREQ=1d\ first_command
-      *\ *\ *\ *\ *\ ID=job5\ FREQ=1h\ AFTER=job4/30m\ second_command
+.IP
+.nf
+\f[C]
+*\ *\ *\ *\ *\ ID=job4\ FREQ=1d\ first_command
+*\ *\ *\ *\ *\ ID=job5\ FREQ=1h\ AFTER=job4/30m\ second_command
 \f[]
+.fi
 .PP
 Here, whenever job5 is up to be run, if job4 is scheduled to run
 within the next 30 minutes (30m), job5 will first wait for it to
@@ -179,10 +191,12 @@ If job4 returns with any other non-zero exit code, job5 will be
 removed from the queue without running.)
 .PP
 Jobs can be told to wait for multiple other jobs, as follows:
-.PP
-\f[CR]
-      10\ *\ *\ *\ *\ ID=job6\ AFTER=job4/1h,job7\ third_command
+.IP
+.nf
+\f[C]
+10\ *\ *\ *\ *\ ID=job6\ AFTER=job4/1h,job7\ third_command
 \f[]
+.fi
 .PP
 The waiting job6 doesn't care what order job4 and job7 complete in.
 If job6 comes up to be re-scheduled (an hour later) while an
@@ -199,7 +213,7 @@ This technique can be used to have a common job scheduled as
 subroutine).
 .PP
 The command portion of a cron job is run with
-\f[B]/bin/sh\ -c\ ...\f[] and may therefore contain any valid
+\f[C]/bin/sh\ -c\ ...\f[] and may therefore contain any valid
 Bourne shell command.
 A common practice is to prefix your command with \f[B]exec\f[] to
 keep the process table uncluttered.
@@ -235,4 +249,3 @@ developer
 .PD
 Jim Pryor (profjim\@jimpryor.net): current
 developer
-
