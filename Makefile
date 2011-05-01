@@ -32,6 +32,7 @@ TABSRCS = crontab.c utils.c chuser.c
 TABOBJS = crontab.o utils.o chuser.o
 PROTOS = protos.h
 LIBS =
+LDFLAGS =
 DEFS =  -DVERSION='"$(VERSION)"' \
 		-DSCRONTABS='"$(SCRONTABS)"' -DCRONTABS='"$(CRONTABS)"' \
 		-DCRONSTAMPS='"$(CRONSTAMPS)"' -DLOG_IDENT='"$(LOG_IDENT)"' \
@@ -53,13 +54,13 @@ protos.h: $(SRCS) $(TABSRCS)
 	fgrep -h Prototype $(SRCS) $(TABSRCS) > protos.h
 
 crond: $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) $(LIBS) -o crond
+	$(CC) $(LDFLAGS) $^ $(LIBS) -o crond
 
 crontab: $(TABOBJS)
-	$(CC) $(CFLAGS) $(TABOBJS) -o crontab
+	$(CC) $(LDFLAGS) $^ -o crontab
 
 %.o: %.c defs.h $(PROTOS)
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) $(DEFS) $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(DEFS) $< -o $@
 
 install:
 	$(INSTALL_PROGRAM) -m0700 -g root crond $(DESTDIR)$(SBINDIR)/crond

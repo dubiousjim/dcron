@@ -31,6 +31,9 @@ v4.5  30-Apr-2011
   * extra/crond.logrotate now correctly gets pid from /var/run/crond.pid
     (fixes Arch FS#18039). Thanks to Kay Abendroth and revel.
 
+  * Makefile uses $LDFLAGS (fixes Arch FS#23784). Thanks to Kristoffer Tidemann
+    and Mike Frysinger.
+
   * Thanks to Juergen Daubert, Rogutės Sparnuotos, ataraxia, Spider.007,
     Chlump Chatkupt, Feifei Jia, Igor Zakharoff, Edward Hades. ???
 
