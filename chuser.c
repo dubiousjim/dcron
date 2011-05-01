@@ -25,6 +25,7 @@ ChangeUser(const char *user, char *dochdir)
 		return(-1);
 	}
 	setenv("USER", pas->pw_name, 1);
+	setenv("LOGNAME", pas->pw_name, 1);
 	setenv("HOME", pas->pw_dir, 1);
 	setenv("SHELL", "/bin/sh", 1);
 

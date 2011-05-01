@@ -8,6 +8,9 @@ v4.5  30-Apr-2011
   * @monthly was wrongly being parsed the same as @yearly (fixes Arch
     FS#19123). Thanks to Peter Johnson, Paul Gideon Dann, and Tilman Sauerbeck.
 
+  * Also set LOGNAME environment variable in cronjobs. Requested by Michael
+    Trunner; fixes Arch FS#18338.
+
   * Thanks for testing and feedback: Feifei Jia, Spider.007, Ray Kohler,
     Igor Zakharoff, Edward Hades, and Joe Lightning.
 
