@@ -10,5 +10,5 @@
 #	and so its atime won't be updated. At least its mtime will be updated when
 #	it's modified.
 
-find /var/spool/cron/cronstamps -mtime +90 -atime +90 -delete
+find /var/spool/cron/cronstamps -type f -mtime +90 -atime +90 -delete
 
