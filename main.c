@@ -326,10 +326,18 @@ main(int ac, char **av)
 			 */
 
 			if (--rescan == 0) {
-				rescan = 60;
-				SynchronizeDir(CDir, NULL, 0);
-				SynchronizeDir(SCDir, "root", 0);
-				ReadTimestamps(NULL);
+				/*
+				 * If we resynchronize while jobs are running, we'll clobber
+				 * the job pids, so we won't know what's already running.
+				 */
+				if (CheckJobs() > 0) {
+					rescan = 1;
+				} else {
+					rescan = 60;
+					SynchronizeDir(CDir, NULL, 0);
+					SynchronizeDir(SCDir, "root", 0);
+					ReadTimestamps(NULL);
+				}
 			} else {
 				CheckUpdates(CDir, NULL, t1, t2);
 				CheckUpdates(SCDir, "root", t1, t2);
