@@ -18,6 +18,9 @@ v4.5  30-Apr-2011
   * Also set LOGNAME environment variable in cronjobs. Requested by Michael
     Trunner; fixes Arch FS#18338.
 
+  * extra/crond.logrotate now correctly gets pid from /var/run/crond.pid
+    (fixes Arch FS#18039). Thanks to Kay Abendroth, revel, and Chlump Chatkupt.
+
   * Thanks for testing and feedback: Feifei Jia, Spider.007, Ray Kohler,
     Igor Zakharoff, Edward Hades, and Joe Lightning.
 
