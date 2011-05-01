@@ -1,5 +1,4 @@
 v4.4  17-Jan-2010
-
   * Finished mailjobs were being left as zombie processes. Fixed.
 
   * When using crond with logging-to-file, user jobs could only log some
@@ -19,10 +18,9 @@ v4.4  17-Jan-2010
   * Makefile improvements: `make` now caches variables for `make install`;
     don't stomp CFLAGS environment variable, and added BINDIR,SBINDIR,MANDIR.
 
-  * Thanks to Juergen Daubert for testing and suggestions.
+  * Thanks to Juergen Daubert for more testing and suggestions.
 
 v4.3  11-Jan-2010
-
   * Internal refactoring to make buffer overflow checks
     clearer and portability issues more explicit.
 
@@ -32,8 +30,9 @@ v4.3  11-Jan-2010
   * Makefile tweaks. Added CRONTAB_GROUP for `make install`.
     Renamed TIMESTAMPS -> CRONSTAMPS.
 
-v4.2  11-Jan-2010
+  * Thanks to Juergen Daubert for testing and suggestions.
 
+v4.2  11-Jan-2010
   * Makefile tweaks; moved more constants to #defines.
 
 v4.1  10-Jan-2010
@@ -96,7 +95,6 @@ v2.7
     in all major clib's )
 
 v2.4-2.6
-
     ( changes lost )
 
 v2.3
