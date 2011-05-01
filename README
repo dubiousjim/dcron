@@ -161,8 +161,8 @@ create the /etc/cron.* directories.
 prune-cronstamps
 :	crond never removes any files from your cronstamps directory. If usernames
 are abandoned, or cron job names are abandoned, unused files will accumulate
-there. This simple shell script will prune any cronstamp files older than three
-months. You might schedule it to run weekly or monthly.
+there. This simple cronjob will prune any cronstamp files older than three months.
+It will run weekly if placed in /etc/cron.d.
 
 crond.logrotate
 :	This is an example to place in /etc/logrotate.d. This config file assumes you
