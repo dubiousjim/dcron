@@ -20,11 +20,11 @@ executes commands on behalf of the users in question.
 :	directory of system crontabs (defaults to /etc/cron.d)
 
 -c dir
-:	directory of per-user crontabs (defaults to /var/spool/cron)
+:	directory of per-user crontabs (defaults to /var/spool/cron/crontabs)
 
 -t dir
 :	directory of timestamps for @freq and FREQ=... jobs
-	(defaults to /var/spool/cronstamps)
+	(defaults to /var/spool/cron/cronstamps)
 
 -m user@host
 :	where should cron output be directed? (defaults to local user)
@@ -134,13 +134,13 @@ type.
 
 **crontab** notifies **crond** that a user's crontab file has been
 modified (or created or deleted) through the "cron.update" file, which resides
-in the per-user crontabs directory (usually /var/spool/cron). **crontab**
+in the per-user crontabs directory (usually /var/spool/cron/crontabs). **crontab**
 appends the filename of the modified crontab file to "cron.update"; and
 **crond** inspects this file to determine when to reparse or otherwise update
 its internal list of parsed crontabs.
 
 Whenever a "cron.update" file is seen, **crond** also re-reads timestamp
-files from its timestamp directory (usually /var/spool/cronstamps). Normally
+files from its timestamp directory (usually /var/spool/cron/cronstamps). Normally
 these will just mirror **crond**'s own internal representations, but this
 mechanism could be used to manually notify **crond** that you've externally
 updated the timestamps.
@@ -163,7 +163,7 @@ same time. This directory can be used by packaging systems. When you install a
 package foo, it might write its own foo-specific crontab to /etc/cron.d/foo.
 
 The superuser has a per-user crontab along with other users. It usually resides
-at /var/spool/cron/root.
+at /var/spool/cron/crontabs/root.
 
 Users can only have a crontab if they have an entry in /etc/passwd; however
 they do not need to have login shell privileges. Cron jobs are always run under

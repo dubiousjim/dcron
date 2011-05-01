@@ -51,10 +51,10 @@
 #define SCRONTABS	"/etc/cron.d"
 #endif
 #ifndef CRONTABS
-#define CRONTABS	"/var/spool/cron"
+#define CRONTABS	"/var/spool/cron/crontabs"
 #endif
 #ifndef CRONSTAMPS
-#define CRONSTAMPS	"/var/spool/cronstamps"
+#define CRONSTAMPS	"/var/spool/cron/cronstamps"
 #endif
 #ifndef LOG_IDENT
 #define LOG_IDENT	"crond"

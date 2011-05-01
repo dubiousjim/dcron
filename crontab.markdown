@@ -43,7 +43,7 @@ themselves. (Even for users who don't have a login shell.) Only the superuser ma
 the -u or -c switches to specify a different user and/or crontab directory.
 
 The superuser also has his or her own per-user crontab, saved as
-/var/spool/cron/root.
+/var/spool/cron/crontabs/root.
 
 
 Unlike other cron daemons, this crond/crontab package doesn't try to do
@@ -100,7 +100,7 @@ The following formats are also recognized:
 
 The formats @hourly, @daily, @weekly, @monthly, and @yearly need to update
 timestamp files when their jobs have been run. The timestamp files are saved as
-/var/spool/cronstamps/user.jobname. So for all of these formats, the cron
+/var/spool/cron/cronstamps/user.jobname. So for all of these formats, the cron
 command needs a jobname, given by prefixing the command with `ID=jobname`.
 (This syntax was chosen to maximize the chance that our crontab files will be
 readable by other cron daemons as well. They might just interpret the
