@@ -1,28 +1,36 @@
-v4.6pre
+todo
+  * add timestamps to -d output
+
+  * manual cron.update prodding doesn't affect cl_NotUntil
+
+  * Use hash when ID=... is supplied. FS#18292.
+
+  * FS#18352: Another thing: when moving the original file to the backup name, and the edited version is written in it's place, the file is written without preserving the same permissions as the original, so if you have a umask that prevents others from reading your stuff, crontab won't be able to load the new file.
+
+git
   * Numeric loglevels specified by 'crond -l <level>' weren't being validated.
     Now we no longer accept numeric loglevels; they must be specified
-    symbolically.
+    symbolically. Thanks to Rogutės Sparnuotos.
 
   * Continued portability improvements. Makefile now uses -lbsd-compat.
     Factored allocation and string calls to utils.c.
 
   * Many internal changes and annotations to pass splint review.
 
-  * Updated manpages to refer to default install paths for crontabs and
-    timestamps. Miscellaneous other changes to docs and messages.
+  * Documentation and error message updates.
 
-v4.5  30-Apr-2011
+v4.5  1-May-2011
   * Some cron jobs were running multiple times. Now we make sure not to
     ArmJobs that are already running; and not to resynchronize while jobs are
-    running; and to poll the DST setting. (Fixes Arch FS#18681; thanks to Paul
-    Gideon Dann for identifying the second issue; and Tilman Sauerbeck for
-    identifying the third.)
+    running; and to poll the DST setting. (Fixes Arch FS#18681; thanks to Vincent
+	Cappe and Paul Gideon Dann for identifying the second issue; and Tilman
+    Sauerbeck for identifying the third.)
 
   * @monthly was wrongly being parsed the same as @yearly (fixes Arch
     FS#19123). Thanks to Peter Johnson, Paul Gideon Dann, and Tilman Sauerbeck.
 
   * extra/crond.rc: now uses $CROND_ARGS from /etc/conf.d/crond; sample included
-	as extra/crond.conf.
+    as extra/crond.conf. Suggested by Eric Bélanger.
 
   * Running `/etc/rc.d/crond start` after startup could leak unwanted
     environment into cronjobs; now we force crond to start in empty env
@@ -32,14 +40,14 @@ v4.5  30-Apr-2011
     Trunner; fixes Arch FS#18338.
 
   * extra/crond.logrotate now correctly gets pid from /var/run/crond.pid
-    (fixes Arch FS#18039). Thanks to Kay Abendroth and revel.
+    (fixes Arch FS#18039). Thanks to Kay Abendroth, revel, and Chlump Chatkupt.
 
   * extra/prune-cronstamps now only deletes files, and is formatted as a
     @weekly crontab. Thanks to Alec Moskvin <alecm@gmx.com>.
 
   * extra/crontab.vim works around an issue where vim's writebackup would
     interfere with crontab's security model (addresses Arch FS#18352).
-	Thanks to Armadillo and Simon Williams.
+    Thanks to Armadillo and Simon Williams.
 
   * Makefile uses $LDFLAGS (fixes Arch FS#23784). Thanks to Kristoffer Tidemann
     and Mike Frysinger.
@@ -49,8 +57,8 @@ v4.5  30-Apr-2011
 
   * Documentation updates.
 
-  * Thanks to Juergen Daubert, Rogutės Sparnuotos, ataraxia, Spider.007,
-    Chlump Chatkupt, Feifei Jia, Igor Zakharoff, Edward Hades. ???
+  * Thanks for testing and feedback: Feifei Jia, Spider.007, Ray Kohler,
+    Igor Zakharoff, Edward Hades, and Joe Lightning.
 
 v4.4  17-Jan-2010
   * Finished mailjobs were being left as zombie processes. Fixed.
@@ -72,7 +80,7 @@ v4.4  17-Jan-2010
   * Makefile improvements: `make` now caches variables for `make install`;
     don't stomp CFLAGS environment variable, and added BINDIR,SBINDIR,MANDIR.
 
-  * Thanks to Juergen Daubert for testing and suggestions.
+  * Thanks to Juergen Daubert for more testing and suggestions.
 
 v4.3  11-Jan-2010
   * Internal refactoring to make buffer overflow checks
@@ -83,6 +91,8 @@ v4.3  11-Jan-2010
 
   * Makefile tweaks. Added CRONTAB_GROUP for `make install`.
     Renamed TIMESTAMPS -> CRONSTAMPS.
+
+  * Thanks to Juergen Daubert for testing and suggestions.
 
 v4.2  11-Jan-2010
   * Makefile tweaks; moved more constants to #defines.
