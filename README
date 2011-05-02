@@ -151,6 +151,10 @@ expects to source this file from /etc/conf.d/crond.
 run-cron
 :	This simple shell script is a bare-bones alternative to Debian's run-parts.
 
+crond.service
+:      This is an example sysvinit service to start and stop crond. It
+could be placed in /lib/systemd/system in suitable systems.
+
 root.crontab
 :	This is an example crontab to install for the root user, or to install
 in /etc/cron.d. It runs any executable scripts located in the directories /etc/cron.hourly,
