@@ -1232,8 +1232,17 @@ CheckJobs(void)
 					}
 				}
 			}
+			nStillRunning += file->cf_Running;
 		}
-		nStillRunning += file->cf_Running;
+		/* For the purposes of this check, increase the "still running" counter if a file has lines that are waiting */
+		if (file->cf_Running == 0) {
+			for (line = file->cf_LineBase; line; line = line->cl_Next) {
+				if (line->cl_Pid == -2) {
+					nStillRunning += 1;
+					break;
+				}
+			}
+		}
 	}
 	return(nStillRunning);
 }
