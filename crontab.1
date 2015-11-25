@@ -92,20 +92,23 @@ Some examples:
 .fi
 .PP
 To request the last Monday, etc.
-in a month, ask for the \[lq]5th\[rq] one.
+in a month, ask for the \[lq]6th\[rq] one.
 This will always match the last Monday, etc., even if there are
 only four Mondays in the month:
 .IP
 .nf
 \f[C]
 #\ run\ at\ 11\ am\ on\ the\ first\ and\ last\ Mon,\ Tue,\ Wed\ of\ each\ month
-0\ 11\ 1,5\ *\ mon-wed\ date
+0\ 11\ 1,6\ *\ mon-wed\ date
+
+#\ run\ at\ noon\ on\ the\ fourth\ and\ last\ Friday\ of\ each\ month
+0\ 12\ 4,6\ *\ fri\ date
 \f[]
 .fi
 .PP
-When the fourth Monday in a month is the last, it will match
-against both the \[lq]4th\[rq] and the \[lq]5th\[rq] (it will only
-run once if both are specified).
+When the fourth Monday in a month is also the last, this will match against
+both the \[lq]4th\[rq] and the \[lq]6th\[rq] but the job is scheduled only
+once.
 .PP
 The following formats are also recognized:
 .IP
