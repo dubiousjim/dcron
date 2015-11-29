@@ -17,6 +17,7 @@
  */
 
 #define _XOPEN_SOURCE 1
+#define _DEFAULT_SOURCE 1
 #define _BSD_SOURCE 1
 
 #include <sys/types.h>
@@ -102,6 +103,16 @@
 #define MONTHLY_FREQ	30 * DAILY_FREQ
 #define YEARLY_FREQ		365 * DAILY_FREQ
 
+#define FIELD_MINUTES   60
+#define FIELD_HOURS     24
+#define FIELD_M_DAYS    32
+#define FIELD_MONTHS    12
+#define FIELD_W_DAYS     7
+
+#define JOB_NONE        0
+#define JOB_ARMED       -1
+#define JOB_WAITING     -2
+
 #define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ": "
 #define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ": "
 
@@ -111,9 +122,6 @@
 #define SMALL_BUFFER	256
 #define RW_BUFFER		1024
 #define LOG_BUFFER		2048 	/* max size of log line */
-
-
-
 
 typedef struct CronFile {
     struct CronFile *cf_Next;
@@ -141,11 +149,11 @@ typedef struct CronLine {
 	int		cl_Pid;			/* running pid, 0, or armed (-1), or waiting (-2) */
     int		cl_MailFlag;	/* running pid is for mail		*/
     int		cl_MailPos;	/* 'empty file' size			*/
-    char	cl_Mins[60];	/* 0-59				*/
-    char	cl_Hrs[24];	/* 0-23					*/
-    char	cl_Days[32];	/* 1-31					*/
-    char	cl_Mons[12];	/* 0-11				*/
-    char	cl_Dow[7];	/* 0-6, beginning sunday		*/
+    char	cl_Mins[FIELD_MINUTES];	/* 0-59				*/
+    char	cl_Hrs[FIELD_HOURS];	/* 0-23					*/
+    char	cl_Days[FIELD_M_DAYS];	/* 1-31					*/
+    char	cl_Mons[FIELD_MONTHS];	/* 0-11				*/
+    char	cl_Dow[FIELD_W_DAYS];	/* 0-6, beginning sunday		*/
 } CronLine;
 
 typedef struct CronWaiter {
