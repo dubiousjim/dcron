@@ -181,6 +181,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	struct dirent *den;
 	DIR *dir;
 	char *path;
+	size_t len;
 
 	if (DebugOpt)
 		printlogf(LOG_DEBUG, "Synchronizing %s\n", dpath);
@@ -216,7 +217,10 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	 */
 	if ((dir = opendir(dpath)) != NULL) {
 		while ((den = readdir(dir)) != NULL) {
+			len = strlen(den->d_name);
 			if (strchr(den->d_name, '.') != NULL)
+				continue;
+			if (den->d_name[len - 1] == '~' || den->d_name[len - 1] == '#')
 				continue;
 			if (strcmp(den->d_name, CRONUPDATE) == 0)
 				continue;
