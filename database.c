@@ -125,7 +125,9 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 			 */
 			fname = strtok_r(buf, " \t\n", &ptok);
 
-			if (user_override)
+			if (!strcmp(fname, "."))
+				SynchronizeDir(dpath, user_override, 0);
+			else if (user_override)
 				SynchronizeFile(dpath, fname, user_override);
 			else if (!getpwnam(fname))
 				printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
