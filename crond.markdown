@@ -1,6 +1,6 @@
 % CROND(8)
 % 
-% 1 May 2011
+% 18 Mar 2016
 
 NAME
 ====
@@ -154,12 +154,21 @@ to "cron.update". This request that user clio's job1 should be scheduled
 tag), and job2 should also be scheduled (without waiting for other jobs). See
 crontab(1) for more about tags and named jobs.
 
+Instead of naming a file inside the directory, a single dot can be
+used to name the directory as a whole.  So one can trigger a re-read
+of all user's crontabs by writing a dot to "cron.update".
+
 
 
 The directory of per-user crontabs is re-parsed once every hour in any case.
 Any crontabs in the system directory (usually /etc/cron.d) are parsed at the
 same time. This directory can be used by packaging systems. When you install a
 package foo, it might write its own foo-specific crontab to /etc/cron.d/foo.
+
+Package managers are encouraged to check whether dcron is installed,
+and if so, write a dot to /etc/cron.d/cron.update after packages got
+installed or removed, in order to more quickly trigger a re-read of
+those files.
 
 The superuser has a per-user crontab along with other users. It usually resides
 at /var/spool/cron/crontabs/root.
