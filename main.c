@@ -338,7 +338,7 @@ main(int ac, char **av)
 					SynchronizeDir(SCDir, "root", 0);
 					ReadTimestamps(NULL);
 				}
-			}
+			} 
 			if (rescan < 60) {
 				CheckUpdates(CDir, NULL, t1, t2);
 				CheckUpdates(SCDir, "root", t1, t2);
