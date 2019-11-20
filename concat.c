@@ -14,8 +14,9 @@
  * Written by Solar Designer <solar at openwall.com>  and placed in the
  * public domain.
  *
- * retrieved from http://cvsweb.openwall.com/cgi/cvsweb.cgi/Owl/packages/popa3d/popa3d/misc.c
- * see also http://seclists.org/bugtraq/2006/Nov/594
+ * Usage: result = concat(str1, "separator", str2, "separator", str3, NULL);
+ * Retrieved from https://openwall.info/wiki/people/solar/software/public-domain-source-code/concat
+ * See also http://seclists.org/bugtraq/2006/Nov/594
  *
  */
 
@@ -27,8 +28,9 @@ char *
 concat(const char *s1, ...)
 {
 	va_list args;
-	char *s, *p, *result;
-	unsigned long l, m, n;
+	const char *s;
+	char *p, *result;
+	size_t l, m, n;
 
 	m = n = strlen(s1);
 	va_start(args, s1);

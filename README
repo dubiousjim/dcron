@@ -213,6 +213,5 @@ CREDITS
 -------
 
 We use `concat`, a lightweight replacement for `asprintf`, in order to be more
-portable. This was written by Solar Designer and is in the public domain. See
-<http://www.openwall.com/popa3d/>.
+portable. This was written by Solar Designer and is in the public domain.
 
