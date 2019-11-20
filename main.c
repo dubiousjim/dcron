@@ -7,7 +7,7 @@
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
  * Copyright 2009-2019 James Pryor <dubiousjim@gmail.com>
- * May be distributed under the GNU General Public License
+ * May be distributed under the GNU General Public License version 2 or any later version.
  */
 
 #include "defs.h"

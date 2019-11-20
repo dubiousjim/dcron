@@ -4,7 +4,7 @@
  *
  * Copyright 1994-1998 Matthew Dillon (dillon@backplane.com)
  * Copyright 2009-2019 James Pryor <dubiousjim@gmail.com>
- * May be distributed under the GNU General Public License
+ * May be distributed under the GNU General Public License version 2 or any later version.
  */
 
 /*
