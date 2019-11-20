@@ -3,7 +3,7 @@ DCRON - DILLON'S LIGHTWEIGHT CRON DAEMON
 
 This lightweight cron daemon aims to be simple and secure, with just enough
 features to stay useful. It was written from scratch by Matt Dillon in 1994.
-It's now developed and maintained by Jim Pryor.
+It's now developed and maintained by James Pryor.
 
 In the author's opinion, having to combine a cron daemon with another daemon
 like anacron makes for too much complexity. So the goal is a simple cron daemon
@@ -182,8 +182,8 @@ model.
 BUG REPORTS, SUBMISSIONS
 ------------------------
 
-Send any bug reports and source code changes to Jim Pryor:
-<profjim@jimpryor.net>.
+Send any bug reports and source code changes to James Pryor:
+<dubiousjim@gmail.com>.
 
 We aim to keep this program simple, secure, and bug-free, in preference to
 adding features. Those advanced features we have added recently (such as

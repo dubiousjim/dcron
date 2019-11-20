@@ -3,7 +3,7 @@
  * DEFS.H
  *
  * Copyright 1994-1998 Matthew Dillon (dillon@backplane.com)
- * Copyright 2009-2011 James Pryor <profjim@jimpryor.net>
+ * Copyright 2009-2019 James Pryor <dubiousjim@gmail.com>
  * May be distributed under the GNU General Public License
  */
 

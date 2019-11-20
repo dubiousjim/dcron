@@ -3,7 +3,7 @@
  * CHUSER.C
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
- * Copyright 2009-2011 James Pryor <profjim@jimpryor.net>
+ * Copyright 2009-2019 James Pryor <dubiousjim@gmail.com>
  * May be distributed under the GNU General Public License
  */
 

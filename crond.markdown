@@ -1,6 +1,6 @@
 % CROND(8)
 % 
-% 1 May 2011
+% 20 Nov 2019
 
 NAME
 ====
@@ -182,4 +182,4 @@ SEE ALSO
 AUTHORS
 =======
 Matthew Dillon (dillon@apollo.backplane.com): original developer  
-Jim Pryor (profjim@jimpryor.net): current developer
+James Pryor (dubiousjim@gmail.com): current developer
