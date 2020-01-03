@@ -52,14 +52,11 @@ main(int ac, char **av)
 		"emerg",
 		"alert",
 		"crit",
-		"err",
+		"error",
 		"warning",
 		"notice",
 		"info",
 		"debug",
-		"panic",
-		"error",
-		"warn",
 		NULL
 	};
 	int i;
@@ -76,17 +73,8 @@ main(int ac, char **av)
 		switch (i) {
 			case 'l':
 				{
-					char *ptr;
-					int j;
-					ptr = optarg;
-					for (j = 0; LevelAry[j]; ++j) {
-						if (strncmp(ptr, LevelAry[j], strlen(LevelAry[j])) == 0) {
-							break;
-						}
-					}
-					switch(j) {
+					switch(atoi(optarg)) {
 						case 0:
-						case 8:
 							/* #define	LOG_EMERG	0	[* system is unusable *] */
 							LogLevel = LOG_EMERG;
 							break;
@@ -99,12 +87,10 @@ main(int ac, char **av)
 							LogLevel = LOG_CRIT;
 							break;
 						case 3:
-						case 9:
 							/* #define	LOG_ERR		3	[* error conditions *] */
 							LogLevel = LOG_ERR;
 							break;
 						case 4:
-						case 10:
 							/* #define	LOG_WARNING	4	[* warning conditions *] */
 							LogLevel = LOG_WARNING;
 							break;
@@ -121,7 +107,8 @@ main(int ac, char **av)
 							LogLevel = LOG_DEBUG;
 							break;
 						default:
-							LogLevel = atoi(optarg);
+							fprintf(stderr, "Unsupported loglevel %s.\n", optarg);
+							exit(2);
 					}
 				}
 				break;
@@ -175,6 +162,7 @@ main(int ac, char **av)
 				printf("-S            log to syslog using identity '%s' (default)\n", LOG_IDENT);
 				printf("-L file       log to specified file instead of syslog\n");
 				printf("-l loglevel   log events <= this level (defaults to %s (level %d))\n", LevelAry[LOG_LEVEL], LOG_LEVEL);
+				printf("              loglevel range is from %s (level 0) to %s (level 7)\n", LevelAry[0], LevelAry[7]);
 				printf("-b            run in background (default)\n");
 				printf("-f            run in foreground\n");
 				printf("-d            run in debugging mode\n");
