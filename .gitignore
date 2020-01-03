@@ -1,2 +1,6 @@
 *.swp
+*.o
+crond
+config
+crontab
 protos.h
