@@ -52,14 +52,11 @@ main(int ac, char **av)
 		"emerg",
 		"alert",
 		"crit",
-		"err",
+		"error",
 		"warning",
 		"notice",
 		"info",
 		"debug",
-		"panic",
-		"error",
-		"warn",
 		NULL
 	};
 	int i;
@@ -86,7 +83,6 @@ main(int ac, char **av)
 					}
 					switch(j) {
 						case 0:
-						case 8:
 							/* #define	LOG_EMERG	0	[* system is unusable *] */
 							LogLevel = LOG_EMERG;
 							break;
@@ -99,12 +95,10 @@ main(int ac, char **av)
 							LogLevel = LOG_CRIT;
 							break;
 						case 3:
-						case 9:
 							/* #define	LOG_ERR		3	[* error conditions *] */
 							LogLevel = LOG_ERR;
 							break;
 						case 4:
-						case 10:
 							/* #define	LOG_WARNING	4	[* warning conditions *] */
 							LogLevel = LOG_WARNING;
 							break;
