@@ -269,11 +269,12 @@ main(int ac, char **av)
 		/* daemon in foreground */
 
 		/* stay in existing session, but start a new process group */
-		if (setpgid(0,0)) {
-			perror("setpgid");
-			exit(1);
-		}
-
+		if (getsid(0) != getpid()) {
+			if (setpgid(0,0)) {
+				perror("setpgid");
+				exit(1);
+			}
+		}     
 		/* stderr stays open, start SIGHUP ignoring, SIGCHLD handling */
 		initsignals();
 	}
