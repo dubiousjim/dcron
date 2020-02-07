@@ -170,9 +170,12 @@ main(int ac, char **av)
 					Mailto = malloc(256);
 					FILE* file = fopen(optarg, "r");
 					if (file) {
-						if (fread(Mailto, 1, 256, file) < 1) {
+						size_t s = fread(Mailto, 1, 256, file);
+						if (s < 1) {
 							free(Mailto);
 							Mailto = NULL;
+						} else {
+							Mailto[s] = 0;
 						}
 						fclose(file);
 					}
