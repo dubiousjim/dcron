@@ -166,16 +166,16 @@ main(int ac, char **av)
 						break;
 					}
 				}
-				if (Mailto != NULL) {
-					Mailto = malloc(256);
+				if (Mailto == NULL) {
+					char *buffer = malloc(256);
 					FILE* file = fopen(optarg, "r");
 					if (file) {
-						size_t s = fread(Mailto, 1, 256, file);
+						size_t s = fread(buffer, 1, 256, file);
 						if (s < 1) {
-							free(Mailto);
-							Mailto = NULL;
+							free(buffer);
 						} else {
-							Mailto[s] = 0;
+							buffer[s] = 0;
+							Mailto = buffer;
 						}
 						fclose(file);
 					}
@@ -296,7 +296,7 @@ main(int ac, char **av)
 				perror("setpgid");
 				exit(1);
 			}
-		}     
+		}
 		/* stderr stays open, start SIGHUP ignoring, SIGCHLD handling */
 		initsignals();
 	}
@@ -361,7 +361,7 @@ main(int ac, char **av)
 					SynchronizeDir(SCDir, "root", 0);
 					ReadTimestamps(NULL);
 				}
-			} 
+			}
 			if (rescan < 60) {
 				CheckUpdates(CDir, NULL, t1, t2);
 				CheckUpdates(SCDir, "root", t1, t2);
