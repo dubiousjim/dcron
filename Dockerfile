@@ -16,7 +16,7 @@ RUN rm -rf /var/spool/cron \
 	&& install -o root -d -m0755 -g root /var/spool/cron \
 	&& install -o root -d -m0755 -g root /etc/cron.d
 
-# Copy dcron, crontab and the docker-entrypoint.sh
+# Copy crond and crontab
 COPY --from=builder /usr/local/sbin/crond /usr/local/sbin/crond
 COPY --from=builder /usr/local/bin/crontab /usr/local/bin/crontab
 
