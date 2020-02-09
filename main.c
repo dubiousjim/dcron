@@ -301,9 +301,67 @@ main(int ac, char **av)
 		long dt;
 		short rescan = 60;
 		short stime = 60;
+#ifdef USE_INOTIFY
+		int notify;
+		int wd[2];
+		const char *watchDirs[2] = { CDir, SCDir };
+		struct pollfd fds[1];
+		int poll_num;
+		notify = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
+		if (notify == -1) {
+			printlogf(LOG_ERR, "Failed to initialize inotify: %m\n");
+			exit(EXIT_FAILURE);
+		}
+		for (i = 0; i < 2; ++i) {
+			wd[i] = inotify_add_watch(notify, watchDirs[i], IN_CLOSE_WRITE | IN_DELETE);
+			if (wd[i] == -1) {
+				printlogf(LOG_ERR, "Cannot watch '%s': %m\n", watchDirs[i]);
+				exit(EXIT_FAILURE);
+			}
+		}
+		fds[0].fd = notify;
+		fds[0].events = POLLIN;
+#endif
 
 		for (;;) {
-			sleep((stime + 1) - (short)(time(NULL) % stime));
+			int seconds_to_wait = (stime + 1) - (short)(time(NULL) % stime);
+#ifdef USE_INOTIFY
+			/* Follows example from Linux inotify man page */
+			poll_num = poll(fds, 1, seconds_to_wait * 1000);
+			if (poll_num == -1) {
+				if (errno == EINTR)
+					continue;
+				printlogf(LOG_ERR, "Poll failed: %m\n");
+				exit(EXIT_FAILURE);
+			}
+			if (poll_num > 0) {
+				char buf[4096] __attribute__ ((aligned(__alignof__(struct inotify_event))));
+				const struct inotify_event *event;
+				ssize_t len;
+				char *ptr;
+				for (;;) {
+					len = read(notify, buf, sizeof buf);
+					if (len == -1 && errno != EAGAIN) {
+						printlogf(LOG_ERR, "Read from inotify failed: %m\n");
+						exit(EXIT_FAILURE);
+					}
+					if (len <= 0)
+						break;
+					for (ptr = buf; ptr < buf + len; ptr += sizeof(struct inotify_event) + event->len) {
+						event = (const struct inotify_event *) ptr;
+						if (event->mask & (IN_CLOSE_WRITE | IN_DELETE)) {
+							if (event->wd == wd[0])
+								CheckFile(CDir, event->name, NULL);
+							else
+								CheckFile(SCDir, event->name, "root");
+						}
+					}
+				}
+				continue; /* sleep again */
+			}
+#else
+			sleep(seconds_to_wait);
+#endif
 
 			t2 = time(NULL);
 			dt = t2 - t1;

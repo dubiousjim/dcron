@@ -18,6 +18,7 @@
 #define ALL_DOW    (FIRST_DOW|SECOND_DOW|THIRD_DOW|FOURTH_DOW|FIFTH_DOW|LAST_DOW)
 
 Prototype void CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2);
+Prototype void CheckFile(const char *dpath, const char *fileName, const char *user_override);
 Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
 Prototype void ReadTimestamps(const char *user);
 Prototype int TestJobs(time_t t1, time_t t2);
@@ -216,18 +217,7 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	 */
 	if ((dir = opendir(dpath)) != NULL) {
 		while ((den = readdir(dir)) != NULL) {
-			if (strchr(den->d_name, '.') != NULL)
-				continue;
-			if (strcmp(den->d_name, CRONUPDATE) == 0)
-				continue;
-			if (user_override) {
-				SynchronizeFile(dpath, den->d_name, user_override);
-			} else if (getpwnam(den->d_name)) {
-				SynchronizeFile(dpath, den->d_name, den->d_name);
-			} else {
-				printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n",
-						dpath, den->d_name);
-			}
+			CheckFile(dpath, den->d_name, user_override);
 		}
 		closedir(dir);
 	} else {
@@ -237,6 +227,22 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 	}
 }
 
+void
+CheckFile(const char *dpath, const char *fileName, const char *user_override)
+{
+	if (strchr(fileName, '.') != NULL)
+		return;
+	if (strcmp(fileName, CRONUPDATE) == 0)
+		return;
+	if (user_override) {
+		SynchronizeFile(dpath, fileName, user_override);
+	} else if (getpwnam(fileName)) {
+		SynchronizeFile(dpath, fileName, fileName);
+	} else {
+		printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n",
+				dpath, fileName);
+	}
+}
 
 void
 ReadTimestamps(const char *user)

@@ -45,6 +45,11 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef USE_INOTIFY
+#include <poll.h>
+#include <sys/inotify.h>
+#endif
+
 #define Prototype extern
 #define arysize(ary)	(sizeof(ary)/sizeof((ary)[0]))
 
