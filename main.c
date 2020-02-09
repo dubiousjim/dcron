@@ -28,12 +28,14 @@ Prototype const char *Mailto;
 Prototype char *TempDir;
 Prototype char *TempFileFmt;
 
+short Quit = 0;
 short DebugOpt = 0;
 short LogLevel = LOG_LEVEL;
 short ForegroundOpt = 0;
 short SyslogOpt = 1;
-const char  *CDir = CRONTABS;
-const char  *SCDir = SCRONTABS;
+short CreateCronDirsOpt = 0;
+const char *CDir = CRONTABS;
+const char *SCDir = SCRONTABS;
 const char *TSDir = CRONSTAMPS;
 const char *LogFile = NULL; 	/* opened with mode 0600 */
 const char *LogHeader = LOGHEADER;
@@ -72,7 +74,7 @@ main(int ac, char **av)
 
 	opterr = 0;
 
-	while ((i = getopt(ac,av,"dl:L:fbSc:s:m:M:t:")) != -1) {
+	while ((i = getopt(ac,av,"dl:L:fbSc:s:m:M:t:C")) != -1) {
 		switch (i) {
 			case 'l':
 				{
@@ -160,13 +162,15 @@ main(int ac, char **av)
 				break;
 			case 'm':
 				if (*optarg == 0) break;
+
 				for (const char *c = optarg; *c != 0; ++c) {
 					if (*c == '@') {
 						Mailto = optarg;
 						break;
 					}
 				}
-				if (Mailto == NULL) {
+
+				if (Mailto == NULL && *optarg == '/') {
 					char *buffer = malloc(256);
 					FILE* file = fopen(optarg, "r");
 					if (file) {
@@ -181,6 +185,10 @@ main(int ac, char **av)
 					}
 				}
 				break;
+			case 'C':
+				CreateCronDirsOpt = 1;
+				break;
+
 			default:
 				/*
 				 * check for parse error
@@ -190,9 +198,9 @@ main(int ac, char **av)
 				printf("-s                 directory of system crontabs (defaults to %s)\n", SCRONTABS);
 				printf("-c                 directory of per-user crontabs (defaults to %s)\n", CRONTABS);
 				printf("-t                 directory of timestamps (defaults to %s)\n", CRONSTAMPS);
-				printf("-m user@host|file  where should cron output be directed?\n");
-				printf("                   if you specify a file it contents is grepped.\n");
-				printf("                   (defaults to local user)\n");
+				printf("-C                 create per-user crontabs and timestamps directories, if they do not exists\n");
+				printf("-m user@host|file  where should cron output be directed? (defaults to local user)\n");
+				printf("                   if you specify a file, the email address will be read from the file.\n");
 				printf("-M mailer          (defaults to %s)\n", SENDMAIL);
 				printf("-S                 log to syslog using identity '%s' (default)\n", LOG_IDENT);
 				printf("-L file            log to specified file instead of syslog\n");
@@ -235,6 +243,19 @@ main(int ac, char **av)
 		errno = ENOMEM;
 		perror("main");
 		exit(1);
+	}
+
+	if (CreateCronDirsOpt) {
+		if (mkdir(CDir, 0755) == -1 && errno != EEXIST) {
+			fdprintf(2, "failed to create %s", CDir);
+			perror(": ");
+			exit(1);
+		}
+		if (mkdir(TSDir, 0755) == -1 && errno != EEXIST) {
+			fdprintf(2, "failed to create %s", TSDir);
+			perror(": ");
+			exit(1);
+		}
 	}
 
 	if (ForegroundOpt == 0) {
@@ -328,6 +349,11 @@ main(int ac, char **av)
 		for (;;) {
 			sleep((stime + 1) - (short)(time(NULL) % stime));
 
+			if (Quit) {
+				fdprintf(2, "\n"); // print new line in case of Ctrl-C
+				break;
+			}
+
 			t2 = time(NULL);
 			dt = t2 - t1;
 
@@ -383,6 +409,5 @@ main(int ac, char **av)
 			}
 		}
 	}
-	/* not reached */
 }
 
