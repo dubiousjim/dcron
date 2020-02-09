@@ -268,9 +268,9 @@ ReadTimestamps(const char *user)
 							if (ptr && (*ptr == 0 || *ptr == '\n')) {
 								/* strptime uses current seconds when seconds not specified? anyway, we don't get round minutes */
 								tm.tm_sec = 0;
+								tm.tm_isdst = -1;
+								sec = mktime(&tm);
 							}
-							tm.tm_isdst = -1;
-							sec = mktime(&tm);
 							if (sec == (time_t)-1) {
 								printlogf(LOG_ERR, "unable to parse timestamp (user %s job %s)\n", file->cf_UserName, line->cl_JobName);
 								/* we continue checking other timestamps in this CronFile */
