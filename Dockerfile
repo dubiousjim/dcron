@@ -20,11 +20,9 @@ RUN rm -rf /var/spool/cron \
 COPY --from=builder /usr/local/sbin/crond /usr/local/sbin/crond
 COPY --from=builder /usr/local/bin/crontab /usr/local/bin/crontab
 
-# The entrypoint makes sure the cron directories exists.
-ENTRYPOINT ["/usr/local/sbin/crond"]
-
-# Default options
-CMD ["-C", "-f", "-L", "-"]
+# Start dcron
+ENTRYPOINT ["/usr/local/sbin/crond", "-C", "-f", "-L", "-"]
+CMD []
 
 # Mark /var/spool/cron as a volume so cron settings are persisted there
 VOLUME /var/spool/cron
