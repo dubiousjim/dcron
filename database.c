@@ -545,6 +545,115 @@ ParseAttributes(CronFile *file, CronLine *line, char *ptr,
 	}
 }
 
+/*
+ * Parse a single line in the file
+ *
+ * Return: 1 if "line" was fully populated, otherwise 0
+ */
+int
+ParseLine(CronFile *file, const char *userName, int parseUser, CronLine *line, char *buf, time_t tnow, const char *path)
+{
+	char *ptr = buf;
+	int len;
+
+	while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
+		++ptr;
+
+	len = strlen(ptr);
+	if (len && ptr[len-1] == '\n')
+		ptr[--len] = 0;
+
+	if (*ptr == 0 || *ptr == '#')
+		return 0;
+
+	memset(line, 0, sizeof(*line));
+
+	if (DebugOpt)
+		printlogf(LOG_DEBUG, "%s as %s: %s\n", path, userName, buf);
+
+	if (*ptr == '@') {
+		ptr = ParseTimeInterval(line, ptr);
+		if (!ptr) {
+			printlogf(LOG_WARNING, "%s: Failed parsing '@' interval: %s\n", path, buf);
+			return 0;
+		}
+	} else {
+		ptr = ParseTimeSpec(line, ptr);
+		if (!ptr) {
+			printlogf(LOG_WARNING, "%s: Failed to parse date/time specification: %s\n", path, buf);
+			return 0;
+		}
+	}
+
+	/* check for ID=... and AFTER=... and FREQ=... */
+	ptr = ParseAttributes(file, line, ptr, path, buf);
+
+	if (line->cl_JobName && (!ptr || *line->cl_JobName == 0)) {
+		/* we're aborting, or ID= was empty */
+		free(line->cl_Description);
+		line->cl_Description = NULL;
+		line->cl_JobName = NULL;
+	}
+	if (ptr && line->cl_Delay > 0 && !line->cl_JobName) {
+		printlogf(LOG_WARNING, "%s: Writing timestamp requries job to be named: %s\n", path, buf);
+		ptr = NULL;
+	}
+	if (!ptr) {
+		/* couldn't parse so we abort; free any cl_Waiters */
+		if (line->cl_Waiters) {
+			CronWaiter **pwaiters, *waiters;
+			pwaiters = &line->cl_Waiters;
+			while ((waiters = *pwaiters) != NULL) {
+				*pwaiters = waiters->cw_Next;
+				/* leave the Notifier allocated but disabled */
+				waiters->cw_Notifier->cn_Waiter = NULL;
+				free(waiters);
+			}
+		}
+		return 0;
+	}
+	/* now we've added any ID=... or AFTER=... */
+
+	/*
+	 * system crontabs (cron.d) have an extra field for username
+	 */
+	if (parseUser)
+		line->cl_UserName = strdup(strsep(&ptr, " \t"));
+	else
+		line->cl_UserName = strdup(userName);
+
+	if (!ptr) {
+		printlogf(LOG_WARNING, "%s: Could not parse system crontab; username expected per-job: %s\n", path, buf);
+		abort();
+	}
+
+	/*
+	 * copy command string
+	 */
+	line->cl_Shell = strdup(ptr);
+
+	if (line->cl_Delay > 0) {
+		if (!(line->cl_Timestamp = concat(TSDir, "/", userName, ".", line->cl_JobName, NULL))) {
+			errno = ENOMEM;
+			perror("SynchronizeFile");
+			exit(1);
+		}
+		line->cl_NotUntil = tnow + line->cl_Delay;
+	}
+
+	if (line->cl_JobName) {
+		if (DebugOpt)
+			printlogf(LOG_DEBUG, "    Command %s Job %s\n\n", line->cl_Shell, line->cl_JobName);
+	} else {
+		/* when cl_JobName is NULL, we point cl_Description to cl_Shell */
+		line->cl_Description = line->cl_Shell;
+		if (DebugOpt)
+			printlogf(LOG_DEBUG, "    Command %s\n\n", line->cl_Shell);
+	}
+
+	return 1;
+}
+
 void
 SynchronizeFile(const char *dpath, const char *fileName, const char *userName, int parseUser)
 {
@@ -601,106 +710,12 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 			/* fgets reads at most size-1 chars until \n or EOF, then adds a\0; \n if present is stored in buf */
 			while (fgets(buf, sizeof(buf), fi) != NULL && --maxLines) {
 				CronLine line;
-				char *ptr = buf;
-				int len;
-
-				while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
-					++ptr;
-
-				len = strlen(ptr);
-				if (len && ptr[len-1] == '\n')
-					ptr[--len] = 0;
-
-				if (*ptr == 0 || *ptr == '#')
-					continue;
 
 				if (--maxEntries == 0)
 					break;
 
-				memset(&line, 0, sizeof(line));
-
-				if (DebugOpt)
-					printlogf(LOG_DEBUG, "%s as %s: %s\n", path, userName, buf);
-
-				if (*ptr == '@') {
-					ptr = ParseTimeInterval(&line, ptr);
-					if (!ptr) {
-						printlogf(LOG_WARNING, "%s: Failed parsing '@' interval: %s\n", path, buf);
-						continue;
-					}
-				} else {
-					ptr = ParseTimeSpec(&line, ptr);
-					if (!ptr) {
-						printlogf(LOG_WARNING, "%s: Failed to parse date/time specification: %s\n", path, buf);
-						continue;
-					}
-				}
-
-				/* check for ID=... and AFTER=... and FREQ=... */
-				ptr = ParseAttributes(file, &line, ptr, path, buf);
-
-				if (line.cl_JobName && (!ptr || *line.cl_JobName == 0)) {
-					/* we're aborting, or ID= was empty */
-					free(line.cl_Description);
-					line.cl_Description = NULL;
-					line.cl_JobName = NULL;
-				}
-				if (ptr && line.cl_Delay > 0 && !line.cl_JobName) {
-					printlogf(LOG_WARNING, "%s: Writing timestamp requries job to be named: %s\n", path, buf);
-					ptr = NULL;
-				}
-				if (!ptr) {
-					/* couldn't parse so we abort; free any cl_Waiters */
-					if (line.cl_Waiters) {
-						CronWaiter **pwaiters, *waiters;
-						pwaiters = &line.cl_Waiters;
-						while ((waiters = *pwaiters) != NULL) {
-							*pwaiters = waiters->cw_Next;
-							/* leave the Notifier allocated but disabled */
-							waiters->cw_Notifier->cn_Waiter = NULL;
-							free(waiters);
-						}
-					}
+				if (!ParseLine(file, userName, parseUser, &line, buf, tnow, path))
 					continue;
-				}
-				/* now we've added any ID=... or AFTER=... */
-
-				/*
-				 * system crontabs (cron.d) have an extra field for username
-				 */
-				if (parseUser)
-					line.cl_UserName = strdup(strsep(&ptr, " \t"));
-				else
-					line.cl_UserName = strdup(userName);
-
-				if (!ptr) {
-					printlogf(LOG_WARNING, "%s: Could not parse system crontab; username expected per-job: %s\n", path, buf);
-					abort();
-				}
-
-				/*
-				 * copy command string
-				 */
-				line.cl_Shell = strdup(ptr);
-
-				if (line.cl_Delay > 0) {
-					if (!(line.cl_Timestamp = concat(TSDir, "/", userName, ".", line.cl_JobName, NULL))) {
-						errno = ENOMEM;
-						perror("SynchronizeFile");
-						exit(1);
-					}
-					line.cl_NotUntil = tnow + line.cl_Delay;
-				}
-
-				if (line.cl_JobName) {
-					if (DebugOpt)
-						printlogf(LOG_DEBUG, "    Command %s Job %s\n\n", line.cl_Shell, line.cl_JobName);
-				} else {
-					/* when cl_JobName is NULL, we point cl_Description to cl_Shell */
-					line.cl_Description = line.cl_Shell;
-					if (DebugOpt)
-						printlogf(LOG_DEBUG, "    Command %s\n\n", line.cl_Shell);
-				}
 
 				*pline = calloc(1, sizeof(CronLine));
 				/* copy working CronLine to newly allocated one */
