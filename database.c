@@ -587,32 +587,22 @@ ParseLine(CronFile *file, const char *userName, int parseUser, CronLine *line, c
 
 	/* check for ID=... and AFTER=... and FREQ=... */
 	ptr = ParseAttributes(file, line, ptr, path, buf);
+	if (!ptr)
+		return 0;  /* error already logged */
 
-	if (line->cl_JobName && (!ptr || *line->cl_JobName == 0)) {
-		/* we're aborting, or ID= was empty */
+	/*
+	 * Filter out a job name which is the empty string
+	 */
+	if (line->cl_JobName && line->cl_JobName[0] == '\0') {
 		free(line->cl_Description);
 		line->cl_Description = NULL;
 		line->cl_JobName = NULL;
 	}
-	if (ptr && line->cl_Delay > 0 && !line->cl_JobName) {
+
+	if (line->cl_Delay > 0 && !line->cl_JobName) {
 		printlogf(LOG_WARNING, "%s: Writing timestamp requries job to be named: %s\n", path, buf);
-		ptr = NULL;
-	}
-	if (!ptr) {
-		/* couldn't parse so we abort; free any cl_Waiters */
-		if (line->cl_Waiters) {
-			CronWaiter **pwaiters, *waiters;
-			pwaiters = &line->cl_Waiters;
-			while ((waiters = *pwaiters) != NULL) {
-				*pwaiters = waiters->cw_Next;
-				/* leave the Notifier allocated but disabled */
-				waiters->cw_Notifier->cn_Waiter = NULL;
-				free(waiters);
-			}
-		}
 		return 0;
 	}
-	/* now we've added any ID=... or AFTER=... */
 
 	/*
 	 * system crontabs (cron.d) have an extra field for username
@@ -624,7 +614,7 @@ ParseLine(CronFile *file, const char *userName, int parseUser, CronLine *line, c
 
 	if (!ptr) {
 		printlogf(LOG_WARNING, "%s: Could not parse system crontab; username expected per-job: %s\n", path, buf);
-		abort();
+		return 0;
 	}
 
 	/*
@@ -714,8 +704,10 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 				if (--maxEntries == 0)
 					break;
 
-				if (!ParseLine(file, userName, parseUser, &line, buf, tnow, path))
+				if (!ParseLine(file, userName, parseUser, &line, buf, tnow, path)) {
+					DeleteLineContent(&line);
 					continue;
+				}
 
 				*pline = calloc(1, sizeof(CronLine));
 				/* copy working CronLine to newly allocated one */
