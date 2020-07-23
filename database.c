@@ -613,7 +613,7 @@ ParseLine(CronFile *file, const char *userName, int parseUser, CronLine *line, c
 		line->cl_UserName = strdup(userName);
 
 	if (!ptr) {
-		printlogf(LOG_WARNING, "%s: Could not parse system crontab; username expected per-job: %s\n", path, buf);
+		printlogf(LOG_WARNING, "%s: Could not parse; a username and command is expected in a system crontab: %s\n", path, buf);
 		return 0;
 	}
 
