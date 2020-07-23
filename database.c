@@ -442,7 +442,6 @@ ParseOneAttribute(CronFile *file, CronLine *line, char *ptr,
 			printlogf(LOG_WARNING, "%s: Multiple use of " FREQ_TAG " is invalid: %s\n", path, buf);
 			ptr = NULL;
 		} else {
-			char *base = ptr;
 			ptr += strlen(FREQ_TAG);
 			ptr = ParseInterval(&line->cl_Freq, ptr);
 			if (ptr && *ptr == '/')
