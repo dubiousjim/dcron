@@ -411,6 +411,140 @@ ParseTimeSpec(CronLine *line, char *ptr)
 	return ptr;
 }
 
+static char*
+ParseOneAttribute(CronFile *file, CronLine *line, char *ptr,
+		const char *path, const char *buf)
+{
+	if (strncmp(ptr, ID_TAG, strlen(ID_TAG)) == 0) {
+		if (line->cl_JobName) {
+			/* only assign ID_TAG once */
+			printlogf(LOG_WARNING, "%s: Multiple use of " ID_TAG " is invalid: %s\n", path, buf);
+			ptr = NULL;
+		} else {
+			ptr += strlen(ID_TAG);
+			/*
+			 * name = strsep(&ptr, seps):
+			 * return name = ptr, and if ptr contains sep chars, overwrite first with 0 and point ptr to next char
+			 *                    else set ptr=NULL
+			 */
+			if (!(line->cl_Description = concat("job ", strsep(&ptr, " \t"), NULL))) {
+				errno = ENOMEM;
+				perror("SynchronizeFile");
+				exit(1);
+			}
+			line->cl_JobName = line->cl_Description + 4;
+			if (!ptr)
+				printlogf(LOG_WARNING, "%s: Entry ends unexpectedly after " ID_TAG "%s: %s\n", path, line->cl_JobName, buf);
+		}
+	} else if (strncmp(ptr, FREQ_TAG, strlen(FREQ_TAG)) == 0) {
+		if (line->cl_Freq) {
+			/* only assign FREQ_TAG once */
+			printlogf(LOG_WARNING, "%s: Multiple use of " FREQ_TAG " is invalid: %s\n", path, buf);
+			ptr = NULL;
+		} else {
+			char *base = ptr;
+			ptr += strlen(FREQ_TAG);
+			ptr = ParseInterval(&line->cl_Freq, ptr);
+			if (ptr && *ptr == '/')
+				ptr = ParseInterval(&line->cl_Delay, ++ptr);
+			else
+				line->cl_Delay = line->cl_Freq;
+			if (!ptr)
+				printlogf(LOG_WARNING, "%s: Entry ends unexpectedly after " FREQ_TAG ": %s", path, buf);
+		}
+	} else if (strncmp(ptr, WAIT_TAG, strlen(WAIT_TAG)) == 0) {
+		if (line->cl_Waiters) {
+			/* only assign WAIT_TAG once */
+			printlogf(LOG_WARNING, "%s: Multiple use of " WAIT_TAG " is invalid: %s\n", path, buf);
+			ptr = NULL;
+		} else {
+			short more = 1;
+			char *name;
+			ptr += strlen(WAIT_TAG);
+			do {
+				CronLine *job, **pjob;
+				if (strcspn(ptr,",") < strcspn(ptr," \t"))
+					name = strsep(&ptr, ",");
+				else {
+					more = 0;
+					name = strsep(&ptr, " \t");
+				}
+				if (!ptr || *ptr == 0) {
+					/* unexpectedly this was the last token in buf; so abort */
+					printlogf(LOG_WARNING, "%s: Entry ends unexpectedly after " WAIT_TAG "%s: %s", path, name, buf);
+					ptr = NULL;
+				} else {
+					int waitfor = 0;
+					char *w, *wsave;
+					if ((w = strchr(name, '/')) != NULL) {
+						wsave = w++;
+						w = ParseInterval(&waitfor, w);
+						if (!w || *w != 0) {
+							printlogf(LOG_WARNING, "%s: Could not parse interval for " WAIT_TAG "%s: %s\n", path, name, buf);
+							ptr = NULL;
+						} else
+							/* truncate name */
+							*wsave = 0;
+					}
+					if (ptr) {
+						/* look for a matching CronLine */
+						pjob = &file->cf_LineBase;
+						while ((job = *pjob) != NULL) {
+							if (job->cl_JobName && strcmp(job->cl_JobName, name) == 0) {
+								CronWaiter *waiter = malloc(sizeof(CronWaiter));
+								CronNotifier *notif = malloc(sizeof(CronNotifier));
+								waiter->cw_Flag = -1;
+								waiter->cw_MaxWait = waitfor;
+								waiter->cw_NotifLine = job;
+								waiter->cw_Notifier = notif;
+								waiter->cw_Next = line->cl_Waiters;	/* add to head of line->cl_Waiters */
+								line->cl_Waiters = waiter;
+								notif->cn_Waiter = waiter;
+								notif->cn_Next = job->cl_Notifs;	/* add to head of job->cl_Notifs */
+								job->cl_Notifs = notif;
+								break;
+							} else
+								pjob = &job->cl_Next;
+						}
+						if (!job) {
+							printlogf(LOG_WARNING, "%s: Ignoring unknown job: " WAIT_TAG "%s: %s\n", path, name, buf);
+							/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
+						}
+					}
+				}
+			} while (ptr && more);
+		}
+	}
+
+	return ptr;
+}
+
+/*
+ * Parse as many things as we can that look like attributes
+ *
+ * Parsing stops when we encounter something that isn't identifiable
+ * and its assumed to be the next field.
+ *
+ * Return NULL on error
+ */
+static char*
+ParseAttributes(CronFile *file, CronLine *line, char *ptr,
+		const char *path, const char *buf)
+{
+	for (;;) {
+		char *prev = ptr;
+
+		ptr = ParseOneAttribute(file, line, ptr, path, buf);
+		if (!ptr)
+			return NULL; /* error */
+		if (ptr == prev)
+			return ptr; /* nothing consumed; not understood */
+
+		while (*ptr == ' ' || *ptr == '\t')
+			++ptr;
+	}
+}
+
 void
 SynchronizeFile(const char *dpath, const char *fileName, const char *userName, int parseUser)
 {
@@ -503,113 +637,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 				}
 
 				/* check for ID=... and AFTER=... and FREQ=... */
-				do {
-					if (strncmp(ptr, ID_TAG, strlen(ID_TAG)) == 0) {
-						if (line.cl_JobName) {
-							/* only assign ID_TAG once */
-							printlogf(LOG_WARNING, "%s: Multiple use of " ID_TAG " is invalid: %s\n", path, buf);
-							ptr = NULL;
-						} else {
-							ptr += strlen(ID_TAG);
-							/*
-							 * name = strsep(&ptr, seps):
-							 * return name = ptr, and if ptr contains sep chars, overwrite first with 0 and point ptr to next char
-							 *                    else set ptr=NULL
-							 */
-							if (!(line.cl_Description = concat("job ", strsep(&ptr, " \t"), NULL))) {
-								errno = ENOMEM;
-								perror("SynchronizeFile");
-								exit(1);
-							}
-							line.cl_JobName = line.cl_Description + 4;
-							if (!ptr)
-								printlogf(LOG_WARNING, "%s: Entry ends unexpectedly after " ID_TAG "%s: %s\n", path, line.cl_JobName, buf);
-						}
-					} else if (strncmp(ptr, FREQ_TAG, strlen(FREQ_TAG)) == 0) {
-						if (line.cl_Freq) {
-							/* only assign FREQ_TAG once */
-							printlogf(LOG_WARNING, "%s: Multiple use of " FREQ_TAG " is invalid: %s\n", path, buf);
-							ptr = NULL;
-						} else {
-							char *base = ptr;
-							ptr += strlen(FREQ_TAG);
-							ptr = ParseInterval(&line.cl_Freq, ptr);
-							if (ptr && *ptr == '/')
-								ptr = ParseInterval(&line.cl_Delay, ++ptr);
-							else
-								line.cl_Delay = line.cl_Freq;
-							if (!ptr)
-								printlogf(LOG_WARNING, "%s: Entry ends unexpectedly after " FREQ_TAG ": %s", path, buf);
-						}
-					} else if (strncmp(ptr, WAIT_TAG, strlen(WAIT_TAG)) == 0) {
-						if (line.cl_Waiters) {
-							/* only assign WAIT_TAG once */
-							printlogf(LOG_WARNING, "%s: Multiple use of " WAIT_TAG " is invalid: %s\n", path, buf);
-							ptr = NULL;
-						} else {
-							short more = 1;
-							char *name;
-							ptr += strlen(WAIT_TAG);
-							do {
-								CronLine *job, **pjob;
-								if (strcspn(ptr,",") < strcspn(ptr," \t"))
-									name = strsep(&ptr, ",");
-								else {
-									more = 0;
-									name = strsep(&ptr, " \t");
-								}
-								if (!ptr || *ptr == 0) {
-									/* unexpectedly this was the last token in buf; so abort */
-									printlogf(LOG_WARNING, "%s: Entry ends unexpectedly after " WAIT_TAG "%s: %s", path, name, buf);
-									ptr = NULL;
-								} else {
-									int waitfor = 0;
-									char *w, *wsave;
-									if ((w = strchr(name, '/')) != NULL) {
-										wsave = w++;
-										w = ParseInterval(&waitfor, w);
-										if (!w || *w != 0) {
-											printlogf(LOG_WARNING, "%s: Could not parse interval for " WAIT_TAG "%s: %s\n", path, name, buf);
-											ptr = NULL;
-										} else
-											/* truncate name */
-											*wsave = 0;
-									}
-									if (ptr) {
-										/* look for a matching CronLine */
-										pjob = &file->cf_LineBase;
-										while ((job = *pjob) != NULL) {
-											if (job->cl_JobName && strcmp(job->cl_JobName, name) == 0) {
-												CronWaiter *waiter = malloc(sizeof(CronWaiter));
-												CronNotifier *notif = malloc(sizeof(CronNotifier));
-												waiter->cw_Flag = -1;
-												waiter->cw_MaxWait = waitfor;
-												waiter->cw_NotifLine = job;
-												waiter->cw_Notifier = notif;
-												waiter->cw_Next = line.cl_Waiters;	/* add to head of line.cl_Waiters */
-												line.cl_Waiters = waiter;
-												notif->cn_Waiter = waiter;
-												notif->cn_Next = job->cl_Notifs;	/* add to head of job->cl_Notifs */
-												job->cl_Notifs = notif;
-												break;
-											} else
-												pjob = &job->cl_Next;
-										}
-										if (!job) {
-											printlogf(LOG_WARNING, "%s: Ignoring unknown job: " WAIT_TAG "%s: %s\n", path, name, buf);
-											/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
-										}
-									}
-								}
-							} while (ptr && more);
-						}
-					} else
-						break;
-					if (!ptr)
-						break;
-					while (*ptr == ' ' || *ptr == '\t')
-						++ptr;
-				} while (!line.cl_JobName || !line.cl_Waiters || !line.cl_Freq);
+				ptr = ParseAttributes(file, &line, ptr, path, buf);
 
 				if (line.cl_JobName && (!ptr || *line.cl_JobName == 0)) {
 					/* we're aborting, or ID= was empty */
