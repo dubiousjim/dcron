@@ -28,6 +28,7 @@ Prototype int CheckJobs(void);
 
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname, int parseUser);
 void DeleteFile(CronFile **pfile);
+void DeleteLineContent(CronLine *line);
 char *ParseInterval(int *interval, char *ptr);
 char *ParseField(char *ary, int modvalue, int offset, int onvalue, const char **names, char *ptr);
 void FixDayDow(CronLine *line);
@@ -900,8 +901,6 @@ DeleteFile(CronFile **pfile)
 	CronFile *file = *pfile;
 	CronLine **pline = &file->cf_LineBase;
 	CronLine *line;
-	CronWaiter **pwaiters, *waiters;
-	CronNotifier **pnotifs, *notifs;
 
 	file->cf_Running = 0;
 	file->cf_Deleted = 1;
@@ -912,34 +911,7 @@ DeleteFile(CronFile **pfile)
 			pline = &line->cl_Next;
 		} else {
 			*pline = line->cl_Next;
-			free(line->cl_Shell);
-			free(line->cl_UserName);
-
-			if (line->cl_JobName)
-				/* this frees both cl_Description and cl_JobName
-				 * if cl_JobName is NULL, Description pointed to ch_Shell, which was already freed
-				 */
-				free(line->cl_Description);
-			if (line->cl_Timestamp)
-				free(line->cl_Timestamp);
-
-			pnotifs = &line->cl_Notifs;
-			while ((notifs = *pnotifs) != NULL) {
-				*pnotifs = notifs->cn_Next;
-				if (notifs->cn_Waiter) {
-					notifs->cn_Waiter->cw_NotifLine = NULL;
-					notifs->cn_Waiter->cw_Notifier = NULL;
-				}
-				free(notifs);
-			}
-			pwaiters = &line->cl_Waiters;
-			while ((waiters = *pwaiters) != NULL) {
-				*pwaiters = waiters->cw_Next;
-				if (waiters->cw_Notifier)
-					waiters->cw_Notifier->cn_Waiter = NULL;
-				free(waiters);
-			}
-
+			DeleteLineContent(line);
 			free(line);
 		}
 	}
@@ -952,6 +924,42 @@ DeleteFile(CronFile **pfile)
 	}
 }
 
+/*
+ * Free resources associated with the given line, which may be incomplete.
+ */
+void DeleteLineContent(CronLine *line)
+{
+	CronWaiter **pwaiters, *waiters;
+	CronNotifier **pnotifs, *notifs;
+
+	free(line->cl_Shell);
+	free(line->cl_UserName);
+
+	if (line->cl_JobName)
+		/* this frees both cl_Description and cl_JobName
+		 * if cl_JobName is NULL, Description pointed to ch_Shell, which was already freed
+		 */
+		free(line->cl_Description);
+	if (line->cl_Timestamp)
+		free(line->cl_Timestamp);
+
+	pnotifs = &line->cl_Notifs;
+	while ((notifs = *pnotifs) != NULL) {
+		*pnotifs = notifs->cn_Next;
+		if (notifs->cn_Waiter) {
+			notifs->cn_Waiter->cw_NotifLine = NULL;
+			notifs->cn_Waiter->cw_Notifier = NULL;
+		}
+		free(notifs);
+	}
+	pwaiters = &line->cl_Waiters;
+	while ((waiters = *pwaiters) != NULL) {
+		*pwaiters = waiters->cw_Next;
+		if (waiters->cw_Notifier)
+			waiters->cw_Notifier->cn_Waiter = NULL;
+		free(waiters);
+	}
+}
 
 /*
  * TestJobs()
