@@ -29,7 +29,7 @@ Prototype int CheckJobs(void);
 void SynchronizeFile(const char *dpath, const char *fname, const char *uname, int parseUser);
 void DeleteFile(CronFile **pfile);
 char *ParseInterval(int *interval, char *ptr);
-char *ParseField(char *userName, char *ary, int modvalue, int offset, int onvalue, const char **names, char *ptr);
+char *ParseField(char *ary, int modvalue, int offset, int onvalue, const char **names, char *ptr);
 void FixDayDow(CronLine *line);
 void PrintLine(CronLine *line);
 void PrintFile(CronFile *file, char* loc, char* fname, int line);
@@ -382,7 +382,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 				memset(&line, 0, sizeof(line));
 
 				if (DebugOpt)
-					printlogf(LOG_DEBUG, "User %s Entry %s\n", userName, buf);
+					printlogf(LOG_DEBUG, "%s as %s: %s\n", path, userName, buf);
 
 				if (*ptr == '@') {
 					/*
@@ -429,7 +429,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 					}
 
 					if (!line.cl_Freq || (*ptr != ' ' && *ptr != '\t')) {
-						printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s\n", userName, buf);
+						printlogf(LOG_WARNING, "%s: Failed parsing '@' interval: %s\n", path, buf);
 						continue;
 					}
 
@@ -463,22 +463,20 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 					 * parse date ranges
 					 */
 
-					ptr = ParseField(file->cf_UserName, line.cl_Mins, FIELD_MINUTES, 0, 1,
-							NULL, ptr);
-					ptr = ParseField(file->cf_UserName, line.cl_Hrs,  FIELD_HOURS, 0, 1,
-							NULL, ptr);
-					ptr = ParseField(file->cf_UserName, line.cl_Days, FIELD_M_DAYS, 0, 1,
-							NULL, ptr);
-					ptr = ParseField(file->cf_UserName, line.cl_Mons, FIELD_MONTHS, -1, 1,
-							MonAry, ptr);
-					ptr = ParseField(file->cf_UserName, line.cl_Dow,  FIELD_W_DAYS, 0, ALL_DOW,
-							DowAry, ptr);
+					ptr = ParseField(line.cl_Mins, FIELD_MINUTES, 0, 1, NULL, ptr);
+					ptr = ParseField(line.cl_Hrs,  FIELD_HOURS, 0, 1, NULL, ptr);
+					ptr = ParseField(line.cl_Days, FIELD_M_DAYS, 0, 1, NULL, ptr);
+					ptr = ParseField(line.cl_Mons, FIELD_MONTHS, -1, 1, MonAry, ptr);
+					ptr = ParseField(line.cl_Dow,  FIELD_W_DAYS, 0, ALL_DOW, DowAry, ptr);
+
 					/*
 					 * check failure
 					 */
 
-					if (ptr == NULL)
+					if (ptr == NULL) {
+						printlogf(LOG_WARNING, "%s: Failed to parse date/time specification: %s\n", path, buf);
 						continue;
+					}
 
 					/*
 					 * fix days and dow - if one is not * and the other
@@ -493,7 +491,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 					if (strncmp(ptr, ID_TAG, strlen(ID_TAG)) == 0) {
 						if (line.cl_JobName) {
 							/* only assign ID_TAG once */
-							printlogf(LOG_WARNING, "failed parsing crontab for user %s: repeated %s\n", userName, ptr);
+							printlogf(LOG_WARNING, "%s: Multiple use of " ID_TAG " is invalid: %s\n", path, buf);
 							ptr = NULL;
 						} else {
 							ptr += strlen(ID_TAG);
@@ -509,12 +507,12 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 							}
 							line.cl_JobName = line.cl_Description + 4;
 							if (!ptr)
-								printlogf(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, ID_TAG, line.cl_JobName);
+								printlogf(LOG_WARNING, "%s: Entry ends unexpectedly after " ID_TAG "%s: %s\n", path, line.cl_JobName, buf);
 						}
 					} else if (strncmp(ptr, FREQ_TAG, strlen(FREQ_TAG)) == 0) {
 						if (line.cl_Freq) {
 							/* only assign FREQ_TAG once */
-							printlogf(LOG_WARNING, "failed parsing crontab for user %s: repeated %s\n", userName, ptr);
+							printlogf(LOG_WARNING, "%s: Multiple use of " FREQ_TAG " is invalid: %s\n", path, buf);
 							ptr = NULL;
 						} else {
 							char *base = ptr;
@@ -524,17 +522,13 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 								ptr = ParseInterval(&line.cl_Delay, ++ptr);
 							else
 								line.cl_Delay = line.cl_Freq;
-							if (!ptr) {
-								printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s\n", userName, base);
-							} else if (*ptr != ' ' && *ptr != '\t') {
-								printlogf(LOG_WARNING, "failed parsing crontab for user %s: no command after %s\n", userName, base);
-								ptr = NULL;
-							}
+							if (!ptr)
+								printlogf(LOG_WARNING, "%s: Entry ends unexpectedly after " FREQ_TAG ": %s", path, buf);
 						}
 					} else if (strncmp(ptr, WAIT_TAG, strlen(WAIT_TAG)) == 0) {
 						if (line.cl_Waiters) {
 							/* only assign WAIT_TAG once */
-							printlogf(LOG_WARNING, "failed parsing crontab for user %s: repeated %s\n", userName, ptr);
+							printlogf(LOG_WARNING, "%s: Multiple use of " WAIT_TAG " is invalid: %s\n", path, buf);
 							ptr = NULL;
 						} else {
 							short more = 1;
@@ -550,7 +544,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 								}
 								if (!ptr || *ptr == 0) {
 									/* unexpectedly this was the last token in buf; so abort */
-									printlogf(LOG_WARNING, "failed parsing crontab for user %s: no command after %s%s\n", userName, WAIT_TAG, name);
+									printlogf(LOG_WARNING, "%s: Entry ends unexpectedly after " WAIT_TAG "%s: %s", path, name, buf);
 									ptr = NULL;
 								} else {
 									int waitfor = 0;
@@ -559,7 +553,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 										wsave = w++;
 										w = ParseInterval(&waitfor, w);
 										if (!w || *w != 0) {
-											printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s%s\n", userName, WAIT_TAG, name);
+											printlogf(LOG_WARNING, "%s: Could not parse interval for " WAIT_TAG "%s: %s\n", path, name, buf);
 											ptr = NULL;
 										} else
 											/* truncate name */
@@ -586,7 +580,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 												pjob = &job->cl_Next;
 										}
 										if (!job) {
-											printlogf(LOG_WARNING, "failed parsing crontab for user %s: unknown job %s\n", userName, name);
+											printlogf(LOG_WARNING, "%s: Ignoring unknown job: " WAIT_TAG "%s: %s\n", path, name, buf);
 											/* we can continue parsing this line, we just don't install any CronWaiter for the requested job */
 										}
 									}
@@ -608,7 +602,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 					line.cl_JobName = NULL;
 				}
 				if (ptr && line.cl_Delay > 0 && !line.cl_JobName) {
-					printlogf(LOG_WARNING, "failed parsing crontab for user %s: writing timestamp requires job %s to be named\n", userName, ptr);
+					printlogf(LOG_WARNING, "%s: Writing timestamp requries job to be named: %s\n", path, buf);
 					ptr = NULL;
 				}
 				if (!ptr) {
@@ -636,7 +630,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 					line.cl_UserName = strdup(userName);
 
 				if (!ptr) {
-					printlogf(LOG_WARNING, "failed parsing system crontab: no username found for job");
+					printlogf(LOG_WARNING, "%s: Could not parse system crontab; username expected per-job: %s\n", path, buf);
 					abort();
 				}
 
@@ -677,7 +671,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 			FileBase = file;
 
 			if (maxLines == 0 || maxEntries == 0)
-				printlogf(LOG_WARNING, "maximum number of lines reached for user %s\n", userName);
+				printlogf(LOG_WARNING, "%s: Limit on number of entries has been reached\n", path);
 		}
 		fclose(fi);
 	}
@@ -713,7 +707,7 @@ ParseInterval(int *interval, char *ptr)
 }
 
 char *
-ParseField(char *user, char *ary, int modvalue, int offset, int onvalue, const char **names, char *ptr)
+ParseField(char *ary, int modvalue, int offset, int onvalue, const char **names, char *ptr)
 {
 	char *base = ptr;
 	int n1 = -1;
@@ -762,10 +756,8 @@ ParseField(char *user, char *ary, int modvalue, int offset, int onvalue, const c
 		 * handle optional range '-'
 		 */
 
-		if (skip == 0) {
-			printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s\n", user, base);
+		if (skip == 0)
 			return(NULL);
-		}
 		if (*ptr == '-' && n2 < 0) {
 			++ptr;
 			continue;
@@ -803,10 +795,8 @@ ParseField(char *user, char *ary, int modvalue, int offset, int onvalue, const c
 				}
 			} while (n1 != n2 && --failsafe);
 
-			if (failsafe == 0) {
-				printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s\n", user, base);
+			if (failsafe == 0)
 				return(NULL);
-			}
 		}
 		if (*ptr != ',')
 			break;
@@ -815,10 +805,8 @@ ParseField(char *user, char *ary, int modvalue, int offset, int onvalue, const c
 		n2 = -1;
 	}
 
-	if (*ptr != ' ' && *ptr != '\t' && *ptr != '\n') {
-		printlogf(LOG_WARNING, "failed parsing crontab for user %s: %s\n", user, base);
+	if (*ptr != ' ' && *ptr != '\t' && *ptr != '\n')
 		return(NULL);
-	}
 
 	while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
 		++ptr;
