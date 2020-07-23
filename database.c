@@ -381,6 +381,7 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					break;
 
 				memset(&line, 0, sizeof(line));
+				line.cl_UserName = strdup(userName);
 
 				if (DebugOpt)
 					printlogf(LOG_DEBUG, "User %s Entry %s\n", userName, buf);
@@ -913,6 +914,7 @@ DeleteFile(CronFile **pfile)
 		} else {
 			*pline = line->cl_Next;
 			free(line->cl_Shell);
+			free(line->cl_UserName);
 
 			if (line->cl_JobName)
 				/* this frees both cl_Description and cl_JobName
@@ -1281,6 +1283,7 @@ PrintLine(CronLine *line)
 
 	printlogf(LOG_DEBUG, "CronLine:\n------------\n");
 	printlogf(LOG_DEBUG, "  Command: %s\n", line->cl_Shell);
+	printlogf(LOG_DEBUG, "  User: %s\n", line->cl_UserName);
 	//printlogf(LOG_DEBUG, "  Desc:    %s\n", line->cl_Description);
 	printlogf(LOG_DEBUG, "  Freq:    %s\n", (line->cl_Freq ?
 				(line->cl_Freq == -1 ? "(noauto)" : "(startup") : "(use arrays)"));

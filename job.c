@@ -62,9 +62,9 @@ RunJob(CronFile *file, CronLine *line)
 		 * Change running state to the user in question
 		 */
 
-		if (ChangeUser(file->cf_UserName, TempDir) < 0) {
+		if (ChangeUser(line->cl_UserName, TempDir) < 0) {
 			printlogf(LOG_ERR, "unable to ChangeUser (user %s %s)\n",
-					file->cf_UserName,
+					line->cl_UserName,
 					line->cl_Description
 					);
 			exit(0);
@@ -112,7 +112,7 @@ RunJob(CronFile *file, CronLine *line)
 		 * Complain to our log (now associated with fd 8)
 		 */
 		fdprintlogf(LOG_ERR, 8, "unable to exec (user %s cmd /bin/sh -c %s)\n",
-				file->cf_UserName,
+				line->cl_UserName,
 				line->cl_Shell
 			   );
 		/*
@@ -128,7 +128,7 @@ RunJob(CronFile *file, CronLine *line)
 		 * Complain to log (with regular fd 2)
 		 */
 		printlogf(LOG_ERR, "unable to fork (user %s %s)\n",
-				file->cf_UserName,
+				line->cl_UserName,
 				line->cl_Description
 				);
 		line->cl_Pid = 0;
