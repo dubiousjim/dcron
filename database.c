@@ -26,7 +26,7 @@ Prototype int ArmJob(CronFile *file, CronLine *line, time_t t1, time_t t2);
 Prototype void RunJobs(void);
 Prototype int CheckJobs(void);
 
-void SynchronizeFile(const char *dpath, const char *fname, const char *uname);
+void SynchronizeFile(const char *dpath, const char *fname, const char *uname, int parseUser);
 void DeleteFile(CronFile **pfile);
 char *ParseInterval(int *interval, char *ptr);
 char *ParseField(char *userName, char *ary, int modvalue, int offset, int onvalue, const char **names, char *ptr);
@@ -126,11 +126,11 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 			fname = strtok_r(buf, " \t\n", &ptok);
 
 			if (user_override)
-				SynchronizeFile(dpath, fname, user_override);
+				SynchronizeFile(dpath, fname, user_override, 0);
 			else if (!getpwnam(fname))
 				printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
 			else if (*ptok == 0 || *ptok == '\n') {
-				SynchronizeFile(dpath, fname, fname);
+				SynchronizeFile(dpath, fname, fname, 0);
 				ReadTimestamps(fname);
 			} else {
 				/* if fname is followed by whitespace, we prod any following jobs */
@@ -221,9 +221,9 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 			if (strcmp(den->d_name, CRONUPDATE) == 0)
 				continue;
 			if (user_override) {
-				SynchronizeFile(dpath, den->d_name, user_override);
+				SynchronizeFile(dpath, den->d_name, user_override, 0);
 			} else if (getpwnam(den->d_name)) {
-				SynchronizeFile(dpath, den->d_name, den->d_name);
+				SynchronizeFile(dpath, den->d_name, den->d_name, 0);
 			} else {
 				printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n",
 						dpath, den->d_name);
@@ -309,7 +309,7 @@ ReadTimestamps(const char *user)
 }
 
 void
-SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
+SynchronizeFile(const char *dpath, const char *fileName, const char *userName, int parseUser)
 {
 	CronFile **pfile;
 	CronFile *file;
@@ -381,7 +381,6 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					break;
 
 				memset(&line, 0, sizeof(line));
-				line.cl_UserName = strdup(userName);
 
 				if (DebugOpt)
 					printlogf(LOG_DEBUG, "User %s Entry %s\n", userName, buf);
@@ -628,6 +627,19 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 					continue;
 				}
 				/* now we've added any ID=... or AFTER=... */
+
+				/*
+				 * system crontabs (cron.d) have an extra field for username
+				 */
+				if (parseUser)
+					line.cl_UserName = strdup(strsep(&ptr, " \t"));
+				else
+					line.cl_UserName = strdup(userName);
+
+				if (!ptr) {
+					printlogf(LOG_WARNING, "failed parsing system crontab: no username found for job");
+					abort();
+				}
 
 				/*
 				 * copy command string
