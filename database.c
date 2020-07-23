@@ -387,6 +387,30 @@ ParseTimeInterval(CronLine *line, char *ptr)
 	return ptr;
 }
 
+/*
+ * parse time and date fields
+ */
+static char*
+ParseTimeSpec(CronLine *line, char *ptr)
+{
+	ptr = ParseField(line->cl_Mins, FIELD_MINUTES, 0, 1, NULL, ptr);
+	ptr = ParseField(line->cl_Hrs,  FIELD_HOURS, 0, 1, NULL, ptr);
+	ptr = ParseField(line->cl_Days, FIELD_M_DAYS, 0, 1, NULL, ptr);
+	ptr = ParseField(line->cl_Mons, FIELD_MONTHS, -1, 1, MonAry, ptr);
+	ptr = ParseField(line->cl_Dow,  FIELD_W_DAYS, 0, ALL_DOW, DowAry, ptr);
+
+	if (!ptr)
+		return NULL;
+
+	/*
+	 * fix days and dow - if one is not * and the other
+	 * is *, the other is set to 0, and vise-versa
+	 */
+	FixDayDow(line);
+
+	return ptr;
+}
+
 void
 SynchronizeFile(const char *dpath, const char *fileName, const char *userName, int parseUser)
 {
@@ -471,31 +495,11 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 						continue;
 					}
 				} else {
-					/*
-					 * parse date ranges
-					 */
-
-					ptr = ParseField(line.cl_Mins, FIELD_MINUTES, 0, 1, NULL, ptr);
-					ptr = ParseField(line.cl_Hrs,  FIELD_HOURS, 0, 1, NULL, ptr);
-					ptr = ParseField(line.cl_Days, FIELD_M_DAYS, 0, 1, NULL, ptr);
-					ptr = ParseField(line.cl_Mons, FIELD_MONTHS, -1, 1, MonAry, ptr);
-					ptr = ParseField(line.cl_Dow,  FIELD_W_DAYS, 0, ALL_DOW, DowAry, ptr);
-
-					/*
-					 * check failure
-					 */
-
-					if (ptr == NULL) {
+					ptr = ParseTimeSpec(&line, ptr);
+					if (!ptr) {
 						printlogf(LOG_WARNING, "%s: Failed to parse date/time specification: %s\n", path, buf);
 						continue;
 					}
-
-					/*
-					 * fix days and dow - if one is not * and the other
-					 * is *, the other is set to 0, and vise-versa
-					 */
-
-					FixDayDow(&line);
 				}
 
 				/* check for ID=... and AFTER=... and FREQ=... */
