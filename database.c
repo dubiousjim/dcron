@@ -308,6 +308,85 @@ ReadTimestamps(const char *user)
 	}
 }
 
+/*
+ * parse @hourly, etc
+ *
+ * Return: NULL on parse error
+ */
+static char*
+ParseTimeInterval(CronLine *line, char *ptr)
+{
+	int	j;
+	line->cl_Delay = -1;
+	ptr += 1;
+	for (j = 0; FreqAry[j]; ++j) {
+		if (strncmp(ptr, FreqAry[j], strlen(FreqAry[j])) == 0) {
+			break;
+		}
+	}
+	if (FreqAry[j]) {
+		ptr += strlen(FreqAry[j]);
+		switch(j) {
+		case 0:
+			/* noauto */
+			line->cl_Freq = -2;
+			line->cl_Delay = 0;
+			break;
+		case 1:
+			/* reboot */
+			line->cl_Freq = -1;
+			line->cl_Delay = 0;
+			break;
+		case 2:
+			line->cl_Freq = HOURLY_FREQ;
+			break;
+		case 3:
+			line->cl_Freq = DAILY_FREQ;
+			break;
+		case 4:
+			line->cl_Freq = WEEKLY_FREQ;
+			break;
+		case 5:
+			line->cl_Freq = MONTHLY_FREQ;
+			break;
+		case 6:
+			line->cl_Freq = YEARLY_FREQ;
+			break;
+			/* else line->cl_Freq will remain 0 */
+		}
+	}
+
+	if (!line->cl_Freq || (*ptr != ' ' && *ptr != '\t'))
+		return NULL;
+
+	if (line->cl_Delay < 0) {
+		/*
+		 * delays on @daily, @hourly, etc are 1/20 of the frequency
+		 * so they don't all start at once
+		 * this also affects how they behave when the job returns EAGAIN
+		 */
+		line->cl_Delay = line->cl_Freq / 20;
+		line->cl_Delay -= line->cl_Delay % 60;
+		if (line->cl_Delay == 0)
+			line->cl_Delay = 60;
+		/* all minutes are permitted */
+		for (j=0; j<60; ++j)
+			line->cl_Mins[j] = 1;
+		for (j=0; j<24; ++j)
+			line->cl_Hrs[j] = 1;
+		for (j=1; j<32; ++j)
+			/* days are numbered 1..31 */
+			line->cl_Days[j] = 1;
+		for (j=0; j<12; ++j)
+			line->cl_Mons[j] = 1;
+	}
+
+	while (*ptr == ' ' || *ptr == '\t')
+		++ptr;
+
+	return ptr;
+}
+
 void
 SynchronizeFile(const char *dpath, const char *fileName, const char *userName, int parseUser)
 {
@@ -386,79 +465,11 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName, i
 					printlogf(LOG_DEBUG, "%s as %s: %s\n", path, userName, buf);
 
 				if (*ptr == '@') {
-					/*
-					 * parse @hourly, etc
-					 */
-					int	j;
-					line.cl_Delay = -1;
-					ptr += 1;
-					for (j = 0; FreqAry[j]; ++j) {
-						if (strncmp(ptr, FreqAry[j], strlen(FreqAry[j])) == 0) {
-							break;
-						}
-					}
-					if (FreqAry[j]) {
-						ptr += strlen(FreqAry[j]);
-						switch(j) {
-							case 0:
-								/* noauto */
-								line.cl_Freq = -2;
-								line.cl_Delay = 0;
-								break;
-							case 1:
-								/* reboot */
-								line.cl_Freq = -1;
-								line.cl_Delay = 0;
-								break;
-							case 2:
-								line.cl_Freq = HOURLY_FREQ;
-								break;
-							case 3:
-								line.cl_Freq = DAILY_FREQ;
-								break;
-							case 4:
-								line.cl_Freq = WEEKLY_FREQ;
-								break;
-							case 5:
-								line.cl_Freq = MONTHLY_FREQ;
-								break;
-							case 6:
-								line.cl_Freq = YEARLY_FREQ;
-								break;
-							/* else line.cl_Freq will remain 0 */
-						}
-					}
-
-					if (!line.cl_Freq || (*ptr != ' ' && *ptr != '\t')) {
+					ptr = ParseTimeInterval(&line, ptr);
+					if (!ptr) {
 						printlogf(LOG_WARNING, "%s: Failed parsing '@' interval: %s\n", path, buf);
 						continue;
 					}
-
-					if (line.cl_Delay < 0) {
-						/*
-						 * delays on @daily, @hourly, etc are 1/20 of the frequency
-						 * so they don't all start at once
-						 * this also affects how they behave when the job returns EAGAIN
-						 */
-						line.cl_Delay = line.cl_Freq / 20;
-						line.cl_Delay -= line.cl_Delay % 60;
-						if (line.cl_Delay == 0)
-							line.cl_Delay = 60;
-						/* all minutes are permitted */
-						for (j=0; j<60; ++j)
-							line.cl_Mins[j] = 1;
-						for (j=0; j<24; ++j)
-							line.cl_Hrs[j] = 1;
-						for (j=1; j<32; ++j)
-							/* days are numbered 1..31 */
-							line.cl_Days[j] = 1;
-						for (j=0; j<12; ++j)
-							line.cl_Mons[j] = 1;
-					}
-
-					while (*ptr == ' ' || *ptr == '\t')
-						++ptr;
-
 				} else {
 					/*
 					 * parse date ranges
