@@ -17,8 +17,8 @@
 #define LAST_DOW   (1 << 5)
 #define ALL_DOW    (FIRST_DOW|SECOND_DOW|THIRD_DOW|FOURTH_DOW|FIFTH_DOW|LAST_DOW)
 
-Prototype void CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2);
-Prototype void SynchronizeDir(const char *dpath, const char *user_override, int initial_scan);
+Prototype void CheckUpdates(const char *dpath, int is_system, time_t t1, time_t t2);
+Prototype void SynchronizeDir(const char *dpath, int is_system, int initial_scan);
 Prototype void ReadTimestamps(const char *user);
 Prototype int TestJobs(time_t t1, time_t t2);
 Prototype int TestStartupJobs(void);
@@ -96,12 +96,11 @@ const char *FreqAry[] = {
 };
 
 /*
- * Check the cron.update file in the specified directory.  If user_override
- * is NULL then the files in the directory belong to the user whose name is
- * the file, otherwise they belong to the user_override user.
+ * Check the cron.update file in the specified directory.  System crontabs
+ * are 'owned' by root but parse a username to run each job as.
  */
 void
-CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
+CheckUpdates(const char *dpath, int is_system, time_t t1, time_t t2)
 {
 	FILE *fi;
 	char buf[SMALL_BUFFER];
@@ -125,8 +124,8 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 			 */
 			fname = strtok_r(buf, " \t\n", &ptok);
 
-			if (user_override)
-				SynchronizeFile(dpath, fname, user_override, 0);
+			if (is_system)
+				SynchronizeFile(dpath, fname, "root", 1);
 			else if (!getpwnam(fname))
 				printlogf(LOG_WARNING, "ignoring %s/%s (non-existent user)\n", dpath, fname);
 			else if (*ptok == 0 || *ptok == '\n') {
@@ -174,7 +173,7 @@ CheckUpdates(const char *dpath, const char *user_override, time_t t1, time_t t2)
 }
 
 void
-SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
+SynchronizeDir(const char *dpath, int is_system, int initial_scan)
 {
 	CronFile **pfile;
 	CronFile *file;
@@ -220,8 +219,8 @@ SynchronizeDir(const char *dpath, const char *user_override, int initial_scan)
 				continue;
 			if (strcmp(den->d_name, CRONUPDATE) == 0)
 				continue;
-			if (user_override) {
-				SynchronizeFile(dpath, den->d_name, user_override, 0);
+			if (is_system) {
+				SynchronizeFile(dpath, den->d_name, "root", 1);
 			} else if (getpwnam(den->d_name)) {
 				SynchronizeFile(dpath, den->d_name, den->d_name, 0);
 			} else {
