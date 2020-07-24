@@ -78,8 +78,8 @@ clean: force
 force: ;
 
 man: force
-	-pandoc -t man -f markdown -s crontab.markdown -o crontab.1
-	-pandoc -t man -f markdown -s crond.markdown -o crond.8
+	-pandoc -t man -f markdown -s crontab.1.markdown -o crontab.1
+	-pandoc -t man -f markdown -s crond.8.markdown -o crond.8
 
 # for maintainer's use only
 TARNAME = /home/abs/_dcron/dcron-$(VERSION).tar.gz
