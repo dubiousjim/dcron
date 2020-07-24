@@ -51,7 +51,8 @@ day of month    1-31
 month           1-12; jan-dec
 day of week     0-7; sun-sun
 
-For any time field, ranges can be given, and sub-ranges can be
+For any field, ranges can be given either numerically (eg. "1-3") or
+using the text equivalents (eg. "mon-wed"). Sub-ranges can be
 separated with a comma:
 
 	# run every two hours between 11pm and 7am, and again at 8am
