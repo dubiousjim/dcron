@@ -227,3 +227,4 @@ AUTHORS
 =======
 Matthew Dillon (dillon@apollo.backplane.com): original developer
 James Pryor (dubiousjim@gmail.com): current developer
+Mark Hills (mark@xwax.org): contributor

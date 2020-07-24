@@ -4,6 +4,7 @@
  *
  * Copyright 1994 Matthew Dillon (dillon@apollo.backplane.com)
  * Copyright 2009-2019 James Pryor <dubiousjim@gmail.com>
+ * Copyright 2020 Mark Hills <mark@xwax.org>
  * May be distributed under the GNU General Public License version 2 or any later version.
  */
 
