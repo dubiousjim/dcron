@@ -29,6 +29,9 @@ Generally the -e option is used to edit your crontab. **crontab** will use
 the editor specified by your EDITOR or VISUAL environment
 variable (or /usr/bin/vi) to edit the crontab.
 
+NOTES
+=====
+
 **crontab** doesn't provide the kinds of protections that programs like **visudo** do
 against syntax errors and simultaneous edits. Errors won't be detected until
 **crond** reads the crontab file. What **crontab** does is provide a mechanism for
