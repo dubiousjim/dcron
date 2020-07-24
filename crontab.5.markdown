@@ -97,6 +97,9 @@ available), and so should be tried again after a brief delay. This works for
 jobs using either @freq or FREQ=... formats; but the FREQ=.../10m syntax is the
 only way to customize the length of the delay before re-trying.
 
+Dependencies
+------------
+
 Jobs can be made to "depend" on, or wait until AFTER other jobs have
 successfully completed. Consider the following crontab:
 
@@ -124,6 +127,9 @@ next 1h) will again have to complete before job6 will run.
 If a job waits on a @reboot or @noauto job, the target job being waited on will
 also be scheduled to run. This technique can be used to have a common job scheduled as @noauto
 that several other jobs depend on (and so call as a subroutine).
+
+Command execution
+-----------------
 
 The command portion of a cron job is run with `/bin/sh -c ...` and may
 therefore contain any valid Bourne shell command. A common practice is to
