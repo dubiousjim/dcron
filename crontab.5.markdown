@@ -23,9 +23,11 @@ four environment variables: USER, LOGNAME, HOME, and SHELL.
 Our crontab format is roughly similar to that used by vixiecron. Individual
 fields may contain a time, a time range, a time range with a skip factor, a
 symbolic range for the day of week and month in year, and additional subranges
-delimited with commas. Blank lines in the crontab or lines that begin with a
-hash (#) are ignored. If you specify both a day in the month and a day of week,
-it will be interpreted as the Nth such day in the month.
+delimited with commas. "System" crontabs (typically in /etc/cron.d) have an
+additional field which specifies which user the job will run as. Blank lines
+in the crontab or lines that begin with a hash (#) are ignored. If you
+specify both a day in the month and a day of week, it will be
+interpreted as the Nth such day in the month.
 
 Some examples:
 
