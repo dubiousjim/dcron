@@ -560,6 +560,9 @@ ParseLine(CronFile *file, const char *userName, int parseUser, CronLine *line, c
 	char *ptr = buf;
 	int len;
 
+	/* Always return with the parsed line in a defined state */
+	memset(line, 0, sizeof(*line));
+
 	while (*ptr == ' ' || *ptr == '\t' || *ptr == '\n')
 		++ptr;
 
@@ -569,8 +572,6 @@ ParseLine(CronFile *file, const char *userName, int parseUser, CronLine *line, c
 
 	if (*ptr == 0 || *ptr == '#')
 		return 0;
-
-	memset(line, 0, sizeof(*line));
 
 	if (DebugOpt)
 		printlogf(LOG_DEBUG, "%s as %s: %s\n", path, userName, buf);
