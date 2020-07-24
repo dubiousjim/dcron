@@ -8,18 +8,6 @@ crontab - table of cron jobs
 
 DESCRIPTION
 ===========
-
-Unlike other cron daemons, this crond/crontab package doesn't try to do
-everything under the sun. It doesn't try to keep track of user's preferred
-shells; that would require special-casing users with no login shell. Instead,
-it just runs all commands using `/bin/sh`. (Commands can of course be script
-files written in any shell you like.)
-
-Nor does it do any special environment handling. A shell script is
-better-suited to doing that than a cron daemon. This cron daemon sets up only
-four environment variables: USER, LOGNAME, HOME, and SHELL.
-
-
 Our crontab format is roughly similar to that used by vixiecron. Individual
 fields may contain a time, a time range, a time range with a skip factor, a
 symbolic range for the day of week and month in year, and additional subranges
@@ -146,6 +134,18 @@ will be logged, regardless of whether any stdout or stderr is generated. The job
 timestamp will also be updated, and it won't be run again until it would next
 be normally scheduled. Any jobs waiting on the failed job will be canceled; they
 won't be run until they're next scheduled.
+
+NOTES
+=====
+Unlike other cron daemons, this crond/crontab package doesn't try to do
+everything under the sun. It doesn't try to keep track of user's preferred
+shells; that would require special-casing users with no login shell. Instead,
+it just runs all commands using `/bin/sh`. (Commands can of course be script
+files written in any shell you like.)
+
+Nor does it do any special environment handling. A shell script is
+better-suited to doing that than a cron daemon. This cron daemon sets up only
+four environment variables: USER, LOGNAME, HOME, and SHELL.
 
 SEE ALSO
 ========
