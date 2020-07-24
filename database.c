@@ -547,6 +547,10 @@ ParseAttributes(CronFile *file, CronLine *line, char *ptr,
 /*
  * Parse a single line in the file
  *
+ * On completion the caller is always responsible for deallocating the
+ * content of "line", whether this function fully populated the line
+ * or not.
+ *
  * Return: 1 if "line" was fully populated, otherwise 0
  */
 int
