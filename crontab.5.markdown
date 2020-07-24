@@ -8,63 +8,89 @@ crontab - table of cron jobs
 
 DESCRIPTION
 ===========
-Our crontab format is roughly similar to that used by vixiecron. Individual
-fields may contain a time, a time range, a time range with a skip factor, a
-symbolic range for the day of week and month in year, and additional subranges
-delimited with commas. "System" crontabs (typically in /etc/cron.d) have an
-additional field which specifies which user the job will run as. Blank lines
-in the crontab or lines that begin with a hash (#) are ignored. If you
-specify both a day in the month and a day of week, it will be
-interpreted as the Nth such day in the month.
 
-Some examples:
+This page describes the crontab format used by **dcron**. Where
+possible, the format follows the conventions of other cron
+implementations, such as Vixie cron.
 
-	# MIN HOUR DAY MONTH DAYOFWEEK	COMMAND
-	# run `date` at 6:10 am every day
-	10 6 * * * date
+You may wish to skip to the comprehensive section of **EXAMPLES**.
 
-	# run every two hours at the top of the hour
-	0 */2 * * * date
+A crontab consists of one row for each job. Blank lines in the crontab
+are ignored, as are lines which begin with a hash (#) and are used for
+comments.
 
-	# run every two hours between 11 pm and 7 am, and again at 8 am
+A job consists of a time specification, and command to run:
+
+	* * * * * date
+
+Additional attributes may be specified:
+
+	* * * * * ID=myjob date
+
+Shorthand time specifications can be given, in which case cron will
+decide when the job runs:
+
+	@hourly ID=myjob date
+
+"System" crontabs (typically in /etc/cron.d; see the section **System
+crontabs**) have an extended format which includes the user to execute
+a job as.
+
+	* * * * * matthew date
+
+Time specification
+------------------
+
+The time specification fields are, in order:
+
+field           values
+------          -------
+minute          0-59
+hour            0-23
+day of month    1-31
+month           1-12; jan-dec
+day of week     0-7; sun-sun
+
+For any time field, ranges can be given, and sub-ranges can be
+separated with a comma:
+
+	# run every two hours between 11pm and 7am, and again at 8am
 	0 23-7/2,8 * * * date
 
-	# run at 4:00 am on January 1st
-	0 4 1 jan * date
+If you specify both a day in the month and a day of week, it will be
+interpreted as the Nth such day in the month.
 
-	# run every day at 11 am, appending all output to a file
-	0 11 * * * date >> /var/log/date-output 2>&1
+The alternative time specifications of @hourly, @daily, @weekly,
+@monthly, and @yearly may also be used. In this case cron will keep a
+log of when the job was last run, and use this to decide when to next
+run the job. This means it is necessary to set the **ID=** attribute
+to uniquely identify the job:
 
-To request the last Monday, etc. in a month, ask for the "5th" one. This will always match the last Monday, etc., even if there are only four Mondays in the month:
-
-	# run at 11 am on the first and last Mon, Tue, Wed of each month
-	0 11 1,5 * mon-wed date
-
-When the fourth Monday in a month is the last, it will match against both the "4th" and the "5th" (it will only run once if both are specified).
-
-The following formats are also recognized:
-
-	# schedule this job only once, when crond starts up
-	@reboot date
-
-	# schedule this job whenever crond is running, and sees that at least one
-	# hour has elapsed since it last ran
+	# at least one hour has elapsed since it last ran
 	@hourly ID=job1 date
 
-The formats @hourly, @daily, @weekly, @monthly, and @yearly need to update
-timestamp files when their jobs have been run. The timestamp files are saved as
-/var/spool/cron/cronstamps/user.jobname. So for all of these formats, the cron
-command needs a jobname, given by prefixing the command with `ID=jobname`.
-(This syntax was chosen to maximize the chance that our crontab files will be
-readable by other cron daemons as well. They might just interpret the
-ID=jobname as a command-line environment variable assignment.)
+A special time specification @reboot will begin the job on startup,
+and no idenfier is required:
 
-There's also this esoteric option, whose usefulness will be explained later:
+	@reboot date
 
-	# don't ever schedule this job on its own; only run it when it's triggered
-	# as a "dependency" of another job (see below), or when the user explicitly
-	# requests it through the "cron.update" file (see crond(8))
-	@noauto ID=namedjob date
+System crontabs
+---------------
+
+"System" crontabs are files located in /etc/cron.d, and it is normal
+for these files to be placed by a package manager.
+
+The jobs run as a user specified on a per-job basis, following the
+convention of other cron implementations:
+
+	# switch to user "matthew" and run the command
+	* * * * * matthew date
+
+System crontabs remain are "owned" by root, which will be the email
+recipient of output or errors.
+
+Fine-grained control
+--------------------
 
 There's also a format available for finer-grained control of frequencies:
 
@@ -116,6 +142,11 @@ If a job waits on a @reboot or @noauto job, the target job being waited on will
 also be scheduled to run. This technique can be used to have a common job scheduled as @noauto
 that several other jobs depend on (and so call as a subroutine).
 
+	# don't ever schedule this job on its own; only run it when it's triggered
+	# as a "dependency" of another job (see below), or when the user explicitly
+	# requests it through the "cron.update" file (see crond(8))
+	@noauto ID=namedjob date
+
 Command execution
 -----------------
 
@@ -134,6 +165,45 @@ will be logged, regardless of whether any stdout or stderr is generated. The job
 timestamp will also be updated, and it won't be run again until it would next
 be normally scheduled. Any jobs waiting on the failed job will be canceled; they
 won't be run until they're next scheduled.
+
+EXAMPLES
+========
+
+Examples of regular user's crontab entries:
+
+	# MIN HOUR DAY MONTH DAYOFWEEK	COMMAND
+
+	# run `date` at 6:10 am every day
+	10 6 * * * date
+
+	# run every two hours at the top of the hour
+	0 */2 * * * date
+
+	# run every two hours between 11 pm and 7 am, and again at 8 am
+	0 23-7/2,8 * * * date
+
+	# run at 4:00 am on January 1st
+	0 4 1 jan * date
+
+	# run every day at 11 am, appending all output to a file
+	0 11 * * * date >> /var/log/date-output 2>&1
+
+	# schedule this job only once, when crond starts up
+	@reboot date
+
+	# at least one hour has elapsed since it last ran
+	@hourly ID=job1 date
+
+To request the last Monday, etc. in a month, ask for the "5th"
+one. This will always match the last Monday, etc., even if there are
+only four Mondays in the month:
+
+	# run at 11 am on the first and last Mon, Tue, Wed of each month
+	0 11 1,5 * mon-wed date
+
+When the fourth Monday in a month is the last, it will match against
+both the "4th" and the "5th" (it will only run once if both are
+specified).
 
 NOTES
 =====
