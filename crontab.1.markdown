@@ -28,7 +28,9 @@ looking for the format of these files, see "man 5 crontab".
 
 Generally the -e option is used to edit your crontab. **crontab** will use
 the editor specified by your EDITOR or VISUAL environment
-variable (or /usr/bin/vi) to edit the crontab.
+variable (or /usr/bin/vi) to edit the crontab:
+
+	$ crontab -e
 
 Just as a regular user, the superuser also has his or her own per-user
 crontab.
