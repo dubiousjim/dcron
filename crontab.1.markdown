@@ -23,7 +23,8 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-**crontab** manipulates the per-user crontabs.
+The **crontab** command manipulates the per-user crontabs. If you are
+looking for the format of these files, see "man 5 crontab".
 
 Generally the -e option is used to edit your crontab. **crontab** will use
 the editor specified by your EDITOR or VISUAL environment
