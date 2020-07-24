@@ -66,6 +66,7 @@ install:
 	$(INSTALL_PROGRAM) -m0700 -g root crond $(DESTDIR)$(SBINDIR)/crond
 	$(INSTALL_PROGRAM) -m4750 -g $(CRONTAB_GROUP) crontab $(DESTDIR)$(BINDIR)/crontab
 	$(INSTALL_DATA) crontab.1 $(DESTDIR)$(MANDIR)/man1/crontab.1
+	$(INSTALL_DATA) crontab.5 $(DESTDIR)$(MANDIR)/man5/crontab.5
 	$(INSTALL_DATA) crond.8 $(DESTDIR)$(MANDIR)/man8/crond.8
 	$(INSTALL_DIR) $(DESTDIR)$(SCRONTABS)
 	$(INSTALL_DIR) $(DESTDIR)$(CRONTABS)
@@ -78,8 +79,9 @@ clean: force
 force: ;
 
 man: force
-	-pandoc -t man -f markdown -s crontab.markdown -o crontab.1
-	-pandoc -t man -f markdown -s crond.markdown -o crond.8
+	-pandoc -t man -f markdown -s crontab.1.markdown -o crontab.1
+	-pandoc -t man -f markdown -s crontab.5.markdown -o crontab.5
+	-pandoc -t man -f markdown -s crond.8.markdown -o crond.8
 
 # for maintainer's use only
 TARNAME = /home/abs/_dcron/dcron-$(VERSION).tar.gz

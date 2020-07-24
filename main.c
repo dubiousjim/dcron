@@ -290,8 +290,8 @@ main(int ac, char **av)
 	 */
 
 	printlogf(LOG_NOTICE,"%s " VERSION " dillon's cron daemon, started with loglevel %s\n", av[0], LevelAry[LogLevel]);
-	SynchronizeDir(CDir, NULL, 1);
-	SynchronizeDir(SCDir, "root", 1);
+	SynchronizeDir(CDir, 0, 1);
+	SynchronizeDir(SCDir, 1, 1);
 	ReadTimestamps(NULL);
 	TestStartupJobs(); /* @startup jobs only run when crond is started, not when their crontab is loaded */
 
@@ -334,14 +334,14 @@ main(int ac, char **av)
 					rescan = 1;
 				} else {
 					rescan = 60;
-					SynchronizeDir(CDir, NULL, 0);
-					SynchronizeDir(SCDir, "root", 0);
+					SynchronizeDir(CDir, 0, 0);
+					SynchronizeDir(SCDir, 1, 0);
 					ReadTimestamps(NULL);
 				}
 			} 
 			if (rescan < 60) {
-				CheckUpdates(CDir, NULL, t1, t2);
-				CheckUpdates(SCDir, "root", t1, t2);
+				CheckUpdates(CDir, 0, t1, t2);
+				CheckUpdates(SCDir, 1, t1, t2);
 			}
 			if (DebugOpt)
 				printlogf(LOG_DEBUG, "Wakeup dt=%d\n", dt);
