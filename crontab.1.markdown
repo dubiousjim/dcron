@@ -48,12 +48,6 @@ install crontabs even for users who don't have the privileges to install them
 themselves. (Even for users who don't have a login shell.) Only the superuser may use
 the -u or -c switches to specify a different user and/or crontab directory.
 
-TODO
-====
-Ought to be able to have several crontab files for any given user, as
-an organizational tool.
-
-
 SEE ALSO
 ========
 **crontab**(5)
