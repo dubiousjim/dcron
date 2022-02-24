@@ -178,6 +178,7 @@ out of descriptors.
 SEE ALSO
 ========
 **crontab**(1)
+**crontab**(5)
 
 AUTHORS
 =======

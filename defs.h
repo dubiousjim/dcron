@@ -137,6 +137,7 @@ typedef struct CronFile {
 typedef struct CronLine {
     struct CronLine *cl_Next;
     char	*cl_Shell;	/* shell command			*/
+    char        *cl_UserName;   /* to execute as                        */
 	char	*cl_Description;	/* either "<cl_Shell>" or "job <cl_JobName>" */
 	char	*cl_JobName;	/* job name, if any			*/
 	char	*cl_Timestamp;	/* path to timestamp file, if cl_Freq defined */
