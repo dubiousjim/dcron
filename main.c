@@ -261,7 +261,7 @@ main(int ac, char **av)
 				dup2(fd, 2);
 			} else {
 				int n = errno;
-				fdprintf(2, "failed to open logfile '%s', reason: %s", LogFile, strerror(n));
+				fdprintf(2, "failed to open logfile '%s', reason: %s\n", LogFile, strerror(n));
 				exit(n);
 			}
 		}
