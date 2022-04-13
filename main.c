@@ -355,7 +355,11 @@ main(int ac, char **av)
 				if (CheckJobs() > 0)
 					stime = 10;
 				else
-					stime = 60;
+					/* Used to be 60 but this skips aminute when,
+					 * time is at :55 because of sleep(5), which happens
+					 * on heavy filesystem load.
+					 */
+					stime = 30;
 				t1 = t2;
 			}
 		}
