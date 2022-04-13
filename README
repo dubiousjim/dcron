@@ -71,7 +71,7 @@ wanting to edit defs.h directly, try editing the DEFS line in the Makefile inste
 	make PREFIX=/usr CRONTAB_GROUP=users
 
 (3) If you're using the git version, you might also want to `make man`,
-to be sure the manpages are updated. This requires 
+to be sure the manpages are updated. This requires
 [pandoc](http://johnmacfarlane.net/pandoc/).
 
 
@@ -116,6 +116,30 @@ are normally in /var/spool/cron/cronstamps. These directories normally have perm
 Here is the superuser's crontab, created using `sudo crontab -e`:
 
 	-rw-------  0 root   root      513 Jan  6 18:58 /var/spool/cron/crontabs/root
+
+DOCKER
+------
+
+Using `dcron` with docker is rather straight forward.
+
+To build the base image use:
+
+	docker build -t dcron dcron-source-dir
+
+To add on any additional scripts:
+
+	cd your-project-dir
+	echo dcron.dockerfile <<DOCKERFILE
+	FROM dcron
+	COPY jobs /etc/crond.d/
+	COPY mailer /usr/local/bin/mailer
+	CMD ["-M", "/usr/local/bin/mailer"]
+	DOCKERFILE
+	docker build -t mycron -f dcron.dockerfile .
+
+To run the resulting docker image:
+
+	docker run -d -v cron_data:/var/spool/cron mycron
 
 TESTING
 -------
