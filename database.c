@@ -455,6 +455,8 @@ SynchronizeFile(const char *dpath, const char *fileName, const char *userName)
 							line.cl_Days[j] = 1;
 						for (j=0; j<12; ++j)
 							line.cl_Mons[j] = 1;
+						for (j=0; j<7; ++j)
+							line.cl_Dow[j] = ALL_DOW;
 					}
 
 					while (*ptr == ' ' || *ptr == '\t')
