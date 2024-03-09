@@ -54,6 +54,9 @@
 #ifndef CRONTABS
 #define CRONTABS	"/var/spool/cron/crontabs"
 #endif
+#ifndef PIDFILE
+#define PIDFILE     "/var/run/crond.pid"
+#endif
 #ifndef CRONSTAMPS
 #define CRONSTAMPS	"/var/spool/cron/cronstamps"
 #endif
