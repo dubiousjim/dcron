@@ -56,10 +56,10 @@ protos.h: $(SRCS) $(TABSRCS)
 	fgrep -h Prototype $(SRCS) $(TABSRCS) > protos.h
 
 crond: $(OBJS)
-	$(CC) $(LDFLAGS) $^ $(LIBS) -o crond
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o crond
 
 crontab: $(TABOBJS)
-	$(CC) $(LDFLAGS) $^ -o crontab
+	$(CC) $(CLFAGS) $(LDFLAGS) $^ -o crontab
 
 %.o: %.c defs.h $(PROTOS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(DEFS) $< -o $@
