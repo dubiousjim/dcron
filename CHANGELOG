@@ -21,6 +21,17 @@ git
 
   * Documentation and error message updates.
 
+v4.6 09-March-2024
+  * Took over ownership of project, since last version was over a decade ago. Changed associated URLs.
+
+  * Fixed several bugs, both performance and output issues
+
+  * Added pid file when run in daemon mode.
+
+  * Documentation updates
+
+  * Added hardened CFLAGS and changed linking process. No idea when last eyes were on this with security in mind.
+
 v4.5  1-May-2011
   * Some cron jobs were running multiple times. Now we make sure not to
     ArmJobs that are already running; and not to resynchronize while jobs are

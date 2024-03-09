@@ -34,12 +34,10 @@ crond and close attention to preventing crond from running away.
 DOWNLOADING
 -----------
 
-The project is hosted at: <http://www.jimpryor.net/linux/dcron.html>.
+The project is hosted at: <https://github.com/ptchinster/dcron>.
 
-The latest version is 4.5, which can be downloaded here:
-<http://www.jimpryor.net/linux/releases/dcron-4.5.tar.gz>.
-
-A public git repo is available at: <https://github.com/dubiousjim/dcron>.
+The latest version is 4.6, which can be downloaded here:
+<https://github.com/ptchinster/dcron/archive/refs/tags/v4.6.tar.gz>.
 
 
 COMPILING
