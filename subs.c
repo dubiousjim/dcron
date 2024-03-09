@@ -111,6 +111,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 }
 
 void reopenlogger(int sig) {
+    UNUSED(sig);
 	int fd;
 	if (getpid() == DaemonPid) {
 		/* only daemon handles, children should ignore */
@@ -124,6 +125,7 @@ void reopenlogger(int sig) {
 }
 
 void waitmailjob(int sig) {
+    UNUSED(sig);
 	/*
 	 * Wait for any children in our process group.
 	 * These will all be mailjobs.

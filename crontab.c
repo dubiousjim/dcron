@@ -253,6 +253,8 @@ main(int ac, char **av)
 void
 printlogf(int level, const char *ctl, ...)
 {
+    UNUSED(level);
+
 	va_list va;
 	char buf[LOG_BUFFER];
 

@@ -116,6 +116,9 @@
 #define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ": "
 #define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ": "
 
+//For removing warnings from -Wunused-parameter
+#define UNUSED(X)               ((void)(X))
+
 /* Limits */
 #define MAXOPEN			256		/* close fds < this limit */ 
 #define MAXLINES		256		/* max lines in non-root crontabs */
