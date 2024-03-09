@@ -78,11 +78,11 @@ main(int ac, char **av)
 							exit(1);
 						}
 					} else {
-						printlogf(0, "user '%s' unknown", optarg);
+						printlogf(0, "user '%s' unknown\n", optarg);
 						exit(1);
 					}
 				} else {
-					printlogf(0, "-u option: superuser only");
+					printlogf(0, "-u option: superuser only\n");
 					exit(1);
 				}
 				break;
@@ -91,7 +91,7 @@ main(int ac, char **av)
 				if (*optarg != 0 && getuid() == geteuid()) {
 					CDir = optarg;
 				} else {
-					printlogf(0, "-c option: superuser only");
+					printlogf(0, "-c option: superuser only\n");
 					exit(1);
 				}
 				break;
@@ -122,7 +122,7 @@ main(int ac, char **av)
 	if (repFile) {
 		repFd = GetReplaceStream(caller, repFile);
 		if (repFd < 0) {
-			printlogf(0, "unable to read replacement file %s", repFile);
+			printlogf(0, "unable to read replacement file %s\n", repFile);
 			exit(1);
 		}
 	}
@@ -132,7 +132,7 @@ main(int ac, char **av)
 	 */
 
 	if (chdir(CDir) < 0) {
-		printlogf(0, "cannot change dir to %s: %s", CDir, strerror(errno));
+		printlogf(0, "cannot change dir to %s: %s\n", CDir, strerror(errno));
 		exit(1);
 	}
 
@@ -181,7 +181,7 @@ main(int ac, char **av)
 					lseek(fd, 0L, 0);
 					repFd = fd;
 				} else {
-					printlogf(0, "unable to create %s: %s", tmp, strerror(errno));
+					printlogf(0, "unable to create %s: %s\n", tmp, strerror(errno));
 					exit(1);
 				}
 
