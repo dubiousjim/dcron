@@ -25,7 +25,9 @@ INSTALL_PROGRAM = $(INSTALL) -D
 INSTALL_DATA = $(INSTALL) -D -m0644 -g root
 INSTALL_DIR = $(INSTALL) -d -m0755 -g root
 CFLAGS ?= -O2
-CFLAGS += -Wall -Wstrict-prototypes -Wno-missing-field-initializers
+CFLAGS += -Wall -Wextra -Wstrict-prototypes -Wno-missing-field-initializers -Wfloat-equal -fstack-protector-all -Wformat-security -Wformat=2 -fPIE 
+CFLAGS += -Wl,-z,nodump -Wl,-z,noexecstack -Wl,-z,noexecheap -Wl,-z,relro -Wl,-z,now -Wl,-z,nodlopen -Wl,-z,-pie
+CFLAGS += -Wno-format-nonliteral -Wno-sign-compare
 SRCS = main.c subs.c database.c job.c concat.c chuser.c
 OBJS = main.o subs.o database.o job.o concat.o chuser.o
 TABSRCS = crontab.c chuser.c
@@ -54,10 +56,10 @@ protos.h: $(SRCS) $(TABSRCS)
 	fgrep -h Prototype $(SRCS) $(TABSRCS) > protos.h
 
 crond: $(OBJS)
-	$(CC) $(LDFLAGS) $^ $(LIBS) -o crond
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LIBS) -o crond
 
 crontab: $(TABOBJS)
-	$(CC) $(LDFLAGS) $^ -o crontab
+	$(CC) $(CLFAGS) $(LDFLAGS) $^ -o crontab
 
 %.o: %.c defs.h $(PROTOS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $(DEFS) $< -o $@

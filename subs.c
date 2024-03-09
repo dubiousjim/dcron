@@ -11,7 +11,7 @@
 
 Prototype void printlogf(int level, const char *ctl, ...);
 Prototype void fdprintlogf(int level, int fd, const char *ctl, ...);
-Prototype void fdprintf(int fd, const char *ctl, ...);
+Prototype int fdprintf(int fd, const char *ctl, ...);
 Prototype void initsignals(void);
 Prototype char Hostname[SMALL_BUFFER];
 
@@ -40,16 +40,19 @@ fdprintlogf(int level, int fd, const char *ctl, ...)
 	va_end(va);
 }
 
-void
+int
 fdprintf(int fd, const char *ctl, ...)
 {
 	va_list va;
 	char buf[LOG_BUFFER];
+    int n;
 
 	va_start(va, ctl);
 	vsnprintf(buf, sizeof(buf), ctl, va);
-	write(fd, buf, strlen(buf));
+	n = write(fd, buf, strlen(buf));
 	va_end(va);
+
+    return n;
 }
 
 void
@@ -111,6 +114,7 @@ vlog(int level, int fd, const char *ctl, va_list va)
 }
 
 void reopenlogger(int sig) {
+    UNUSED(sig);
 	int fd;
 	if (getpid() == DaemonPid) {
 		/* only daemon handles, children should ignore */
@@ -124,6 +128,7 @@ void reopenlogger(int sig) {
 }
 
 void waitmailjob(int sig) {
+    UNUSED(sig);
 	/*
 	 * Wait for any children in our process group.
 	 * These will all be mailjobs.

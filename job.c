@@ -14,6 +14,7 @@ Prototype void EndJob(CronFile *file, CronLine *line, int exit_status);
 
 Prototype const char *SendMail;
 
+//__attribute__((__format__ (__printf__, 1, 0)))
 void
 RunJob(CronFile *file, CronLine *line)
 {

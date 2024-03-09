@@ -4,7 +4,7 @@
 crond - dillon's lightweight cron daemon
 .SH SYNOPSIS
 .PP
-\f[B]crond [-s dir] [-c dir] [-t dir] [-m user\@host] [-M mailhandler] [-S|-L file] [-l loglevel] [-b|-f|-d]\f[]
+\f[B]crond [-s dir] [-c dir] [-t dir] [-m user\@host] [-M mailhandler] [-S|-L file] [-P|-p file] [-l loglevel] [-b|-f|-d]\f[]
 .SH OPTIONS
 .PP
 \f[B]crond\f[] is a background daemon that parses individual
@@ -66,6 +66,16 @@ log events to syslog, using syslog facility LOG_CRON and identity
 .TP
 .B -L file
 log to specified file instead of syslog.
+.RS
+.RE
+.TP
+.B -P
+do not create a process-id file.
+.RS
+.RE
+.TP
+.B -L file
+Write process-id to specified file instead of /var/run/crond.pi
 .RS
 .RE
 .TP

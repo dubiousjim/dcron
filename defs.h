@@ -54,6 +54,9 @@
 #ifndef CRONTABS
 #define CRONTABS	"/var/spool/cron/crontabs"
 #endif
+#ifndef PIDFILE
+#define PIDFILE     "/var/run/crond.pid"
+#endif
 #ifndef CRONSTAMPS
 #define CRONSTAMPS	"/var/spool/cron/cronstamps"
 #endif
@@ -115,6 +118,9 @@
 
 #define LOGHEADER TIMESTAMP_FMT " %%s " LOG_IDENT ": "
 #define LOCALE_LOGHEADER "%c %%s " LOG_IDENT ": "
+
+//For removing warnings from -Wunused-parameter
+#define UNUSED(X)               ((void)(X))
 
 /* Limits */
 #define MAXOPEN			256		/* close fds < this limit */ 
