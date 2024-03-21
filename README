@@ -1,6 +1,9 @@
 DCRON - DILLON'S LIGHTWEIGHT CRON DAEMON
 ========================================
 
+**I (dubiousjim) haven't been able to maintain this project for a while and am not actively using the code myself. Here is [a fork](https://github.com/ptchinster/dcron) 
+with active development. I recommend users to follow there instead, and submit issues and pull requests over there.**
+
 This lightweight cron daemon aims to be simple and secure, with just enough
 features to stay useful. It was written from scratch by Matt Dillon in 1994.
 It's now developed and maintained by James Pryor.
