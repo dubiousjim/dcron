@@ -171,7 +171,7 @@ main(int ac, char **av)
 				 * Then we delete the temp file, keeping its fd as repFd
 				 */
 				if ((fd = mkstemp(tmp)) >= 0) {
-					chown(tmp, getuid(), getgid());
+					fchown(fd, getuid(), getgid());
 					if ((fi = fopen(pas->pw_name, "r"))) {
 						while ((n = fread(buf, 1, sizeof(buf), fi)) > 0)
 							write(fd, buf, n);
