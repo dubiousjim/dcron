@@ -51,6 +51,9 @@
 #ifndef SCRONTABS
 #define SCRONTABS	"/etc/cron.d"
 #endif
+#ifndef PIDFILE
+#define PIDFILE		"/var/run/crond.pid"
+#endif
 #ifndef CRONTABS
 #define CRONTABS	"/var/spool/cron/crontabs"
 #endif
